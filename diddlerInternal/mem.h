@@ -1,5 +1,4 @@
 #pragma once
-#include "stdafx.h"
 #include <windows.h>
 #include <vector>
 //https://guidedhacking.com/threads/how-to-hack-any-game-first-internal-hack-dll-tutorial.12142/
