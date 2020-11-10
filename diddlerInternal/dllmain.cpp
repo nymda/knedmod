@@ -4,8 +4,9 @@
 #include <iostream>
 #include <iomanip>
 #include <windows.h>
-#define CHAR_NOT_SELECTED "="
+#define CHAR_NOT_SELECTED "|"
 #define CHAR_SELECTED ">"
+#define BASE_GAME_SPEED 0.016f
 
 void hidecursor()
 {
@@ -40,10 +41,6 @@ DWORD WINAPI main(HMODULE hModule)
     uintptr_t player = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0xA0, 0x0 });
     uintptr_t scene = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x40, 0x0 });
 
-    std::cout << "Game: " << std::hex << game << std::endl;
-    std::cout << "Player: " << std::hex << player << std::endl;
-    std::cout << "Scene: " << std::hex << scene << std::endl;
-
     //handles only ctivating a function on keyDown [uparrow, downarrow, rightarrow, q, i, k, space, leftarrow]
     bool kpHandler[7] = { true, true, true, true, true, true, true };
     bool kpHandler2[7] = { true, true, true, true, true, true, true };
@@ -61,12 +58,16 @@ DWORD WINAPI main(HMODULE hModule)
     float* x = (float*)(player);
     float* y = (float*)(player + 4);
     float* z = (float*)(player + 8);
-
     float* yVelo = (float*)(player + 0x38 + 4);
-
     float* pHealth = (float*)(player + 0x015C);
     float* pSpeed = (float*)(player + 0x0160);
+
+    //game vars and stuff
     float desiredSpeed = 1.0f;
+    int desiredGameSpeedMultiple = 1;
+    float desitedGameSpeed = BASE_GAME_SPEED;
+    float* gamespeed = (float*)(game + 0x144);
+
     float setVelo = 0;
 
     float savedX = 0.00;
@@ -78,11 +79,10 @@ DWORD WINAPI main(HMODULE hModule)
 
     int i = 0;
 
-    //patch health to speed instructions for speedhack
-    mem::Nop((byte*)(moduleBase + 0xA6182), 8);
-    mem::Patch((byte*)(moduleBase + 0xA618a), (byte*)"\xF3\x0F\x10\x81\x60\x01\x00\x00", 8);
-
-
+    //patch basic instructions
+    mem::Nop((byte*)(moduleBase + 0xA6182), 8); //stop setting health value
+    mem::Patch((byte*)(moduleBase + 0xA618a), (byte*)"\xF3\x0F\x10\x81\x60\x01\x00\x00", 8); //health value patch
+    mem::Nop((byte*)(moduleBase + 0x242D8), 10); //stop setting gamespeed
 
     while (true) {
 
@@ -100,7 +100,7 @@ DWORD WINAPI main(HMODULE hModule)
 
         if (selectedItem == 0) { std::cout << CHAR_SELECTED; }
         else { std::cout << CHAR_NOT_SELECTED; }
-        std::cout << "Godmode        : ";
+        std::cout << "Godmode         : ";
         if (cheatHandler[0]) {
             SetConsoleTextAttribute(hConsole, 10);
             std::cout << "Enabled    " << std::endl;
@@ -114,7 +114,7 @@ DWORD WINAPI main(HMODULE hModule)
 
         if (selectedItem == 1) { std::cout << CHAR_SELECTED; }
         else { std::cout << CHAR_NOT_SELECTED; }
-        std::cout << "Slow motion    : ";
+        std::cout << "Slow motion [" << desiredGameSpeedMultiple <<"] : ";
         if (cheatHandler[1]) {
             SetConsoleTextAttribute(hConsole, 10);
             std::cout << "Enabled [Q]   " << std::endl;
@@ -128,7 +128,7 @@ DWORD WINAPI main(HMODULE hModule)
 
         if (selectedItem == 2) { std::cout << CHAR_SELECTED; }
         else { std::cout << CHAR_NOT_SELECTED; }
-        std::cout << "Jetpack        : ";
+        std::cout << "Jetpack         : ";
         if (cheatHandler[2]) {
             SetConsoleTextAttribute(hConsole, 10);
             std::cout << "Enabled    " << std::endl;
@@ -142,7 +142,7 @@ DWORD WINAPI main(HMODULE hModule)
 
         if (selectedItem == 3) { std::cout << CHAR_SELECTED; }
         else { std::cout << CHAR_NOT_SELECTED; }
-        std::cout << "Speedhack [" << desiredSpeed << "]  : ";
+        std::cout << "Speedhack   [" << desiredSpeed << "] : ";
         if (cheatHandler[3]) {
             SetConsoleTextAttribute(hConsole, 10);
             std::cout << "Enabled    " << std::endl;
@@ -156,7 +156,7 @@ DWORD WINAPI main(HMODULE hModule)
 
         if (selectedItem == 4) { std::cout << CHAR_SELECTED; }
         else { std::cout << CHAR_NOT_SELECTED; }
-        std::cout << "Del. walls     : ";
+        std::cout << "Del. walls      : ";
         if (cheatHandler[4]) {
             SetConsoleTextAttribute(hConsole, 10);
             std::cout << "Enabled    " << std::endl;
@@ -165,6 +165,12 @@ DWORD WINAPI main(HMODULE hModule)
             SetConsoleTextAttribute(hConsole, 12);
             std::cout << "Disabled    " << std::endl;
         }
+
+        SetConsoleTextAttribute(hConsole, 15);
+
+        std::cout << "Game: " << std::hex << game << std::endl;
+        std::cout << "Player: " << std::hex << player << std::endl;
+        std::cout << "Scene: " << std::hex << scene << std::endl;
 
 		//handle keypresses
 
@@ -184,7 +190,7 @@ DWORD WINAPI main(HMODULE hModule)
 		//down
 		if (((GetAsyncKeyState(VK_DOWN) & 0x0001) != 0)) {
 			if (kpHandler[1]) {
-				if (selectedItem < 5) {
+				if (selectedItem < 3) {
 					selectedItem++;
 				}
 				kpHandler[1] = false;
@@ -208,11 +214,20 @@ DWORD WINAPI main(HMODULE hModule)
 		//left
 		if (((GetAsyncKeyState(VK_LEFT) & 0x0001) != 0)) {
 			if (kpHandler2[1]) {
-				desiredSpeed += 1.0f;
-				if (desiredSpeed > 9) {
-					desiredSpeed = 1;
-				}
-				kpHandler2[1] = false;
+                if (selectedItem == 3) {
+                    desiredSpeed += 1.0f;
+                    if (desiredSpeed > 9) {
+                        desiredSpeed = 1;
+                    }
+                }
+                else if (selectedItem == 1) {
+                    desiredGameSpeedMultiple += 1;
+                    desitedGameSpeed = BASE_GAME_SPEED / desiredGameSpeedMultiple;
+                    if (desiredGameSpeedMultiple > 9) {
+                        desiredGameSpeedMultiple = 1;
+                    }
+                }
+                kpHandler2[1] = false;
 			}
 		}
 		else {
@@ -313,6 +328,13 @@ DWORD WINAPI main(HMODULE hModule)
 		if (cheatHandler[4] && *(byte*)(scene + 0x530) != 0x00) {
 			mem::Null((byte*)(scene + 0x530), 8);
 		}
+
+        if (cheatHandler[1]) {
+            *gamespeed = desitedGameSpeed;
+        }
+        else {
+            *gamespeed = BASE_GAME_SPEED;
+        }
 
 		memcpy(prevCheatHandler, cheatHandler, sizeof cheatHandler);
 
