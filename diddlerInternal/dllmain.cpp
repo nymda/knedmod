@@ -1,9 +1,9 @@
-// dllmain.cpp : Defines the entry point for the DLL application.
+#define _WIN32_WINNT 0x0500
 #include "mem.h"
 #include <sstream>
 #include <iostream>
 #include <iomanip>
-
+#include <windows.h>
 #define CHAR_NOT_SELECTED "="
 #define CHAR_SELECTED ">"
 
@@ -23,12 +23,16 @@ DWORD WINAPI main(HMODULE hModule)
     AllocConsole();
     std::wstring strW = L"Internal diddler";
     SetConsoleTitle(strW.c_str());
-    DeleteMenu(GetSystemMenu(GetConsoleWindow(), false), SC_CLOSE, MF_BYCOMMAND);
+    HWND console = GetConsoleWindow();
+    DeleteMenu(GetSystemMenu(console, false), SC_CLOSE, MF_BYCOMMAND);
+    SetWindowLong(console, GWL_STYLE, GetWindowLong(console, GWL_STYLE) & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX);
     FILE* f;
     freopen_s(&f, "CONOUT$", "w", stdout);
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     hidecursor();
     std::cout.precision(2);
+    SMALL_RECT tmp = { 0, 0, 60, 10 };
+    SetConsoleWindowInfo(GetStdHandle(STD_OUTPUT_HANDLE), true, &tmp);
 
     HANDLE mainHandle = GetModuleHandle(L"teardown.exe");
     uintptr_t moduleBase = (uintptr_t)mainHandle;
@@ -40,8 +44,8 @@ DWORD WINAPI main(HMODULE hModule)
     std::cout << "Player: " << std::hex << player << std::endl;
     std::cout << "Scene: " << std::hex << scene << std::endl;
 
-    //handles only activating a function on keyDown [uparrow, downarrow, rightarrow, q, i, k]
-    bool kpHandler[6] = { true, true, true, true, true, true };
+    //handles only activating a function on keyDown [uparrow, downarrow, rightarrow, q, i, k, space]
+    bool kpHandler[7] = { true, true, true, true, true, true, true };
 
     //handles if a cheat is enabled / disabled
     bool cheatHandler[5] = { false, false, false, false, false };
@@ -51,18 +55,24 @@ DWORD WINAPI main(HMODULE hModule)
 
     //contains teleport location
     byte teleportPosition[12];
+
     float* x = (float*)(player);
     float* y = (float*)(player+4);
     float* z = (float*)(player+8);
+
+    float* yVelo = (float*)(player + 0x38 + 4);
 
     float savedX = 0.00;
     float savedY = 0.00;
     float savedZ = 0.00;
 
+    byte campos[84] = {};
+    byte camang[84] = {};
+
     while (true) {
 
         //draw the menu
-
+        hidecursor();
         COORD tl = { 0,0 };
         SetConsoleCursorPosition(hConsole, tl);
         SetConsoleTextAttribute(hConsole, 15);
@@ -75,7 +85,7 @@ DWORD WINAPI main(HMODULE hModule)
 
         if (selectedItem == 0) { std::cout << CHAR_SELECTED; }
         else{ std::cout << CHAR_NOT_SELECTED; }
-        std::cout << "Godmode: ";
+        std::cout << "Godmode:     ";
         if (cheatHandler[0]) {
             SetConsoleTextAttribute(hConsole, 10);
             std::cout << "Enabled    " << std::endl;
@@ -103,7 +113,7 @@ DWORD WINAPI main(HMODULE hModule)
 
         if (selectedItem == 2) { std::cout << CHAR_SELECTED; }
         else { std::cout << CHAR_NOT_SELECTED; }
-        std::cout << "Jetpack: ";
+        std::cout << "Jetpack:     ";
         if (cheatHandler[2]) {
             SetConsoleTextAttribute(hConsole, 10);
             std::cout << "Enabled    " << std::endl;
@@ -117,7 +127,7 @@ DWORD WINAPI main(HMODULE hModule)
 
         if (selectedItem == 3) { std::cout << CHAR_SELECTED; }
         else { std::cout << CHAR_NOT_SELECTED; }
-        std::cout << "Speedhack: ";
+        std::cout << "Speedhack:   ";
         if (cheatHandler[3]) {
             SetConsoleTextAttribute(hConsole, 10);
             std::cout << "Enabled    " << std::endl;
@@ -180,6 +190,8 @@ DWORD WINAPI main(HMODULE hModule)
                 savedX = *x;
                 savedY = *y;
                 savedZ = *z;
+                memcpy(campos, (void*)(player + 0x0060), sizeof campos);
+                memcpy(campos, (void*)(player + 0x00C4), sizeof campos);
                 kpHandler[4] = false;
             }
         }
@@ -193,12 +205,16 @@ DWORD WINAPI main(HMODULE hModule)
                 *x = savedX;
                 *y = savedY;
                 *z = savedZ;
+                memcpy((void*)(player + 0x0060), campos, sizeof campos);
+                memcpy((void*)(player + 0x00C4), campos, sizeof campos);
                 kpHandler[5] = false;
             }
         }
         else {
             kpHandler[5] = true;
-        }
+        } 
+
+        //space
 
         Sleep(16.6);
     }
