@@ -18,6 +18,14 @@ void mem::Nop(BYTE* dst, unsigned int size)
 	VirtualProtect(dst, size, oldprotect, &oldprotect);
 }
 
+void mem::Null(BYTE* dst, unsigned int size)
+{
+	DWORD oldprotect;
+	VirtualProtect(dst, size, PAGE_EXECUTE_READWRITE, &oldprotect);
+	memset(dst, 0x00, size);
+	VirtualProtect(dst, size, oldprotect, &oldprotect);
+}
+
 uintptr_t mem::FindDMAAddy(uintptr_t ptr, std::vector<unsigned int> offsets)
 {
 	uintptr_t addr = ptr;

@@ -44,23 +44,30 @@ DWORD WINAPI main(HMODULE hModule)
     std::cout << "Player: " << std::hex << player << std::endl;
     std::cout << "Scene: " << std::hex << scene << std::endl;
 
-    //handles only activating a function on keyDown [uparrow, downarrow, rightarrow, q, i, k, space]
+    //handles only ctivating a function on keyDown [uparrow, downarrow, rightarrow, q, i, k, space, leftarrow]
     bool kpHandler[7] = { true, true, true, true, true, true, true };
+    bool kpHandler2[7] = { true, true, true, true, true, true, true };
 
     //handles if a cheat is enabled / disabled
-    bool cheatHandler[5] = { false, false, false, false, false };
+    bool prevCheatHandler[6] = { false, false, false, false, false, false };
+    bool cheatHandler[6] = { false, false, false, false, false, false };
 
     //contains cursor position
     int selectedItem = 0;
 
-    //contains teleport location
+    //misc player values
     byte teleportPosition[12];
 
     float* x = (float*)(player);
-    float* y = (float*)(player+4);
-    float* z = (float*)(player+8);
+    float* y = (float*)(player + 4);
+    float* z = (float*)(player + 8);
 
     float* yVelo = (float*)(player + 0x38 + 4);
+
+    float* pHealth = (float*)(player + 0x015C);
+    float* pSpeed = (float*)(player + 0x0160);
+    float desiredSpeed = 1.0f;
+    float setVelo = 0;
 
     float savedX = 0.00;
     float savedY = 0.00;
@@ -68,6 +75,14 @@ DWORD WINAPI main(HMODULE hModule)
 
     byte campos[84] = {};
     byte camang[84] = {};
+
+    int i = 0;
+
+    //patch health to speed instructions for speedhack
+    mem::Nop((byte*)(moduleBase + 0xA6182), 8);
+    mem::Patch((byte*)(moduleBase + 0xA618a), (byte*)"\xF3\x0F\x10\x81\x60\x01\x00\x00", 8);
+
+
 
     while (true) {
 
@@ -84,8 +99,8 @@ DWORD WINAPI main(HMODULE hModule)
         SetConsoleTextAttribute(hConsole, 15);
 
         if (selectedItem == 0) { std::cout << CHAR_SELECTED; }
-        else{ std::cout << CHAR_NOT_SELECTED; }
-        std::cout << "Godmode:     ";
+        else { std::cout << CHAR_NOT_SELECTED; }
+        std::cout << "Godmode        : ";
         if (cheatHandler[0]) {
             SetConsoleTextAttribute(hConsole, 10);
             std::cout << "Enabled    " << std::endl;
@@ -99,7 +114,7 @@ DWORD WINAPI main(HMODULE hModule)
 
         if (selectedItem == 1) { std::cout << CHAR_SELECTED; }
         else { std::cout << CHAR_NOT_SELECTED; }
-        std::cout << "Slow motion: ";
+        std::cout << "Slow motion    : ";
         if (cheatHandler[1]) {
             SetConsoleTextAttribute(hConsole, 10);
             std::cout << "Enabled [Q]   " << std::endl;
@@ -113,7 +128,7 @@ DWORD WINAPI main(HMODULE hModule)
 
         if (selectedItem == 2) { std::cout << CHAR_SELECTED; }
         else { std::cout << CHAR_NOT_SELECTED; }
-        std::cout << "Jetpack:     ";
+        std::cout << "Jetpack        : ";
         if (cheatHandler[2]) {
             SetConsoleTextAttribute(hConsole, 10);
             std::cout << "Enabled    " << std::endl;
@@ -127,7 +142,7 @@ DWORD WINAPI main(HMODULE hModule)
 
         if (selectedItem == 3) { std::cout << CHAR_SELECTED; }
         else { std::cout << CHAR_NOT_SELECTED; }
-        std::cout << "Speedhack:   ";
+        std::cout << "Speedhack [" << desiredSpeed << "]  : ";
         if (cheatHandler[3]) {
             SetConsoleTextAttribute(hConsole, 10);
             std::cout << "Enabled    " << std::endl;
@@ -137,86 +152,172 @@ DWORD WINAPI main(HMODULE hModule)
             std::cout << "Disabled    " << std::endl;
         }
 
-        //handle keypresses
+        SetConsoleTextAttribute(hConsole, 15);
 
-        if (((GetAsyncKeyState(VK_UP) & 0x0001) != 0)) {
-            if (kpHandler[0]) {
-                if (selectedItem > 0) {
-                    selectedItem--;
-                }
-                kpHandler[0] = false;
-            }
+        if (selectedItem == 4) { std::cout << CHAR_SELECTED; }
+        else { std::cout << CHAR_NOT_SELECTED; }
+        std::cout << "Del. walls     : ";
+        if (cheatHandler[4]) {
+            SetConsoleTextAttribute(hConsole, 10);
+            std::cout << "Enabled    " << std::endl;
         }
         else {
-            kpHandler[0] = true;
+            SetConsoleTextAttribute(hConsole, 12);
+            std::cout << "Disabled    " << std::endl;
         }
 
-        if (((GetAsyncKeyState(VK_DOWN) & 0x0001) != 0)) {
-            if (kpHandler[1]) {
-                if (selectedItem < 3) {
-                    selectedItem++;
-                }
-                kpHandler[1] = false;
-            }
-        }
-        else {
-            kpHandler[1] = true;
-        }
+		//handle keypresses
 
-        if (((GetAsyncKeyState(VK_RIGHT) & 0x0001) != 0)) {
-            if (kpHandler[2]) {
-                cheatHandler[selectedItem] = !cheatHandler[selectedItem];
-                kpHandler[2] = false;
-            }
-        }
-        else {
-            kpHandler[2] = true;
-        }
+		//up
+		if (((GetAsyncKeyState(VK_UP) & 0x0001) != 0)) {
+			if (kpHandler[0]) {
+				if (selectedItem > 0) {
+					selectedItem--;
+				}
+				kpHandler[0] = false;
+			}
+		}
+		else {
+			kpHandler[0] = true;
+		}
 
-        //Q
-        if (((GetAsyncKeyState(0x51) & 0x0001) != 0)) {
-            if (kpHandler[3]) {
-                cheatHandler[1] = !cheatHandler[1];
-                kpHandler[3] = false;
-            }
-        }
-        else {
-            kpHandler[3] = true;
-        }
+		//down
+		if (((GetAsyncKeyState(VK_DOWN) & 0x0001) != 0)) {
+			if (kpHandler[1]) {
+				if (selectedItem < 5) {
+					selectedItem++;
+				}
+				kpHandler[1] = false;
+			}
+		}
+		else {
+			kpHandler[1] = true;
+		}
 
-        //I
-        if (((GetAsyncKeyState(0x49) & 0x0001) != 0)) {
-            if (kpHandler[4]) {
-                savedX = *x;
-                savedY = *y;
-                savedZ = *z;
-                memcpy(campos, (void*)(player + 0x0060), sizeof campos);
-                memcpy(campos, (void*)(player + 0x00C4), sizeof campos);
-                kpHandler[4] = false;
-            }
-        }
-        else {
-            kpHandler[4] = true;
-        }
+		//right
+		if (((GetAsyncKeyState(VK_RIGHT) & 0x0001) != 0)) {
+			if (kpHandler[2]) {
+				cheatHandler[selectedItem] = !cheatHandler[selectedItem];
+				kpHandler[2] = false;
+			}
+		}
+		else {
+			kpHandler[2] = true;
+		}
 
-        //K
-        if (((GetAsyncKeyState(0x4B) & 0x0001) != 0)) {
-            if (kpHandler[5]) {
-                *x = savedX;
-                *y = savedY;
-                *z = savedZ;
-                memcpy((void*)(player + 0x0060), campos, sizeof campos);
-                memcpy((void*)(player + 0x00C4), campos, sizeof campos);
-                kpHandler[5] = false;
-            }
-        }
-        else {
-            kpHandler[5] = true;
-        } 
+		//left
+		if (((GetAsyncKeyState(VK_LEFT) & 0x0001) != 0)) {
+			if (kpHandler2[1]) {
+				desiredSpeed += 1.0f;
+				if (desiredSpeed > 9) {
+					desiredSpeed = 1;
+				}
+				kpHandler2[1] = false;
+			}
+		}
+		else {
+			kpHandler2[1] = true;
+		}
 
-        //space
+		//Q
+		if (((GetAsyncKeyState(0x51) & 0x0001) != 0)) {
+			if (kpHandler[3]) {
+				cheatHandler[1] = !cheatHandler[1];
+				kpHandler[3] = false;
+			}
+		}
+		else {
+			kpHandler[3] = true;
+		}
 
-        Sleep(16.6);
+		//I
+		if (((GetAsyncKeyState(0x49) & 0x0001) != 0)) {
+			if (kpHandler[4]) {
+				savedX = *x;
+				savedY = *y;
+				savedZ = *z;
+				memcpy(campos, (void*)(player + 0x0060), sizeof campos);
+				memcpy(campos, (void*)(player + 0x00C4), sizeof campos);
+				kpHandler[4] = false;
+			}
+		}
+		else {
+			kpHandler[4] = true;
+		}
+
+		//K
+		if (((GetAsyncKeyState(0x4B) & 0x0001) != 0)) {
+			if (kpHandler[5]) {
+				*x = savedX;
+				*y = savedY;
+				*z = savedZ;
+				memcpy((void*)(player + 0x0060), campos, sizeof campos);
+				memcpy((void*)(player + 0x00C4), campos, sizeof campos);
+				kpHandler[5] = false;
+			}
+		}
+		else {
+			kpHandler[5] = true;
+		}
+
+		//space & jetpack
+		if (((GetAsyncKeyState(VK_SPACE) >> 15) & 0x0001) == 0x0001) {
+			if (cheatHandler[2]) {
+				if (kpHandler[6]) {
+					setVelo = *yVelo;
+					kpHandler[6] = false;
+				}
+				if (setVelo > 12)
+				{
+					setVelo = 12;
+				}
+				else
+				{
+					setVelo += 0.5f;
+				}
+				*yVelo = setVelo;
+			}
+		}
+		else {
+			kpHandler[6] = true;
+		}
+
+		//general cheat stuff
+
+		if (cheatHandler[0] != prevCheatHandler[0]) {
+			if (cheatHandler[0]) {
+				//enable godmode
+				mem::Nop((byte*)(moduleBase + 0xA6182), 8); // cant remember
+				mem::Nop((byte*)(moduleBase + 0xA8CF3), 8); // basic damage
+				mem::Nop((byte*)(moduleBase + 0xA7FB7), 8); // fall damage
+				mem::Nop((byte*)(moduleBase + 0xA9E95), 8); // fire damage
+				*pHealth = 1.0f; //set health to full
+			}
+			else {
+				//disable godmode
+				mem::Patch((byte*)(moduleBase + 0xA6182), (byte*)"\xF3\x0F\x11\x81\x5C\x01\x00\x00", 8); // ???
+				mem::Patch((byte*)(moduleBase + 0xA8CF3), (byte*)"\xF3\x0F\x11\x91\x5C\x01\x00\x00", 8); // basic damage
+				mem::Patch((byte*)(moduleBase + 0xA7FB7), (byte*)"\xF3\x0F\x11\x86\x5C\x01\x00\x00", 8); // fall damage
+				mem::Patch((byte*)(moduleBase + 0xA9E95), (byte*)"\xF3\x0F\x11\x87\x5C\x01\x00\x00", 8); // fire damage
+			}
+		}
+
+		//if speedhack is enabled then set speed to 5, if not then set speed to the health value
+		if (cheatHandler[3]) {
+			*pSpeed = (desiredSpeed);
+		}
+		else {
+			*pSpeed = *pHealth;
+		}
+
+		if (cheatHandler[4] && *(byte*)(scene + 0x530) != 0x00) {
+			mem::Null((byte*)(scene + 0x530), 8);
+		}
+
+		memcpy(prevCheatHandler, cheatHandler, sizeof cheatHandler);
+
+		Sleep(16.6);
+
     }
 }
 
@@ -240,3 +341,5 @@ BOOL APIENTRY DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpRese
     }
     return TRUE;
 }
+
+
