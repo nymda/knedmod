@@ -65,7 +65,7 @@ DWORD WINAPI main(HMODULE hModule)
 
     //game vars and stuff
     float desiredSpeed = 1.0f;
-    int desiredGameSpeedMultiple = 1;
+    int desiredGameSpeedMultiple = 9;
     float desitedGameSpeed = BASE_GAME_SPEED;
     float* gamespeed = (float*)(game + 0x144);
 
@@ -191,12 +191,11 @@ DWORD WINAPI main(HMODULE hModule)
         std::cout << "Game: 0x" << std::hex << game << std::endl;
         std::cout << "Player: 0x" << std::hex << player << std::endl;
         std::cout << "Scene: 0x" << std::hex << scene << std::endl;
-        std::cout << "Loop time: " << elapsed_secs << std::endl;
 
 		//handle keypresses
 
 		//up
-		if (((GetAsyncKeyState(VK_UP) & 0x0001) != 0)) {
+		if (((GetAsyncKeyState(VK_UP) >> 15) & 0x0001) == 0x0001) {
 			if (kpHandler[0]) {
 				if (selectedItem > 0) {
 					selectedItem--;
@@ -209,7 +208,7 @@ DWORD WINAPI main(HMODULE hModule)
 		}
 
 		//down
-		if (((GetAsyncKeyState(VK_DOWN) & 0x0001) != 0)) {
+		if (((GetAsyncKeyState(VK_DOWN) >> 15) & 0x0001) == 0x0001) {
 			if (kpHandler[1]) {
 				if (selectedItem < CHEAT_COUNT) {
 					selectedItem++;
@@ -222,7 +221,7 @@ DWORD WINAPI main(HMODULE hModule)
 		}
 
 		//right
-		if (((GetAsyncKeyState(VK_RIGHT) & 0x0001) != 0)) {
+		if (((GetAsyncKeyState(VK_RIGHT) >> 15) & 0x0001) == 0x0001) {
 			if (kpHandler[2]) {
                 //toggle selected cheat
 				cheatHandler[selectedItem] = !cheatHandler[selectedItem];
@@ -234,7 +233,7 @@ DWORD WINAPI main(HMODULE hModule)
 		}
 
 		//left
-		if (((GetAsyncKeyState(VK_LEFT) & 0x0001) != 0)) {
+		if (((GetAsyncKeyState(VK_LEFT) >> 15) & 0x0001) == 0x0001) {
 			if (kpHandler[7]) {
                 //set player run speed
                 if (selectedItem == 3) {
@@ -246,8 +245,7 @@ DWORD WINAPI main(HMODULE hModule)
 
                 //set slow motion speed
                 else if (selectedItem == 1) {
-                    desiredGameSpeedMultiple += 1;
-                    desitedGameSpeed = BASE_GAME_SPEED / desiredGameSpeedMultiple;
+                    desiredGameSpeedMultiple += 1;             
                     if (desiredGameSpeedMultiple > 9) {
                         desiredGameSpeedMultiple = 1;
                     }
@@ -260,7 +258,7 @@ DWORD WINAPI main(HMODULE hModule)
 		}
 
 		//Q
-		if (((GetAsyncKeyState(0x51) & 0x0001) != 0)) {
+		if (((GetAsyncKeyState(0x51) >> 15) & 0x0001) == 0x0001) {
 			if (kpHandler[3]) {
 				cheatHandler[1] = !cheatHandler[1];
 				kpHandler[3] = false;
@@ -271,7 +269,7 @@ DWORD WINAPI main(HMODULE hModule)
 		}
 
 		//I
-		if (((GetAsyncKeyState(0x49) & 0x0001) != 0)) {
+		if (((GetAsyncKeyState(0x49) >> 15) & 0x0001) == 0x0001) {
 			if (kpHandler[4]) {
 				savedX = *x;
 				savedY = *y;
@@ -286,7 +284,7 @@ DWORD WINAPI main(HMODULE hModule)
 		}
 
 		//K
-		if (((GetAsyncKeyState(0x4B) & 0x0001) != 0)) {
+		if (((GetAsyncKeyState(0x4B) >> 15) & 0x0001) == 0x0001) {
 			if (kpHandler[5]) {
 				*x = savedX;
 				*y = savedY;
@@ -344,6 +342,7 @@ DWORD WINAPI main(HMODULE hModule)
 
         //set game to either the custom speed or the base speed if slowmo is enabled or disabled
         if (cheatHandler[1]) {
+            desitedGameSpeed = BASE_GAME_SPEED / desiredGameSpeedMultiple;
             *gamespeed = desitedGameSpeed;
         }
         else {
