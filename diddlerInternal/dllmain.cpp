@@ -389,7 +389,7 @@ DWORD WINAPI main(HMODULE hModule)
             }
             else {
                 //disable bigger explosions
-                mem::Patch((byte*)(moduleBase + 0xC40DB), (byte*)"\xF3\x41\x0F\x59\xF1\xF3\x41\x0F\x5F\xF5\xF3\x41\x0F\x5D\xF3", 15); //unpatch mulss
+                mem::Patch((byte*)(moduleBase + 0xC40DB), (byte*)"\xF3\x41\x0F\x59\xF1\xF3\x41\x0F\x5F\xF5\xF3\x41\x0F\x5D\xF3", 15); //unpatch 
             }
         }
 
@@ -406,7 +406,7 @@ DWORD WINAPI main(HMODULE hModule)
 void explosionPatch(float explosionMultiplier, uintptr_t moduleBase) {
     float finStrength = (5 + (2 * explosionMultiplier));
     unsigned char const * p = reinterpret_cast<unsigned char const*>(&finStrength);
-    byte bytecode[15] = { 0xBA, p[0], p[1], p[2], p[3], 0x66, 0x0F, 0x6E, 0xF2, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 };
+    byte bytecode[15] = { 0xBA, p[0], p[1], p[2], p[3], 0x66, 0x0F, 0x6E, 0xF2, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 }; // (mov edx,[finStrength]) , (movd xmm6,edx)
     mem::Patch((byte*)(moduleBase + 0xC40DB), (byte*)bytecode, 15);
 }
 
