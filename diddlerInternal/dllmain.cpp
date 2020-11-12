@@ -18,6 +18,8 @@ void hidecursor()
     SetConsoleCursorInfo(consoleHandle, &info);
 }
 
+void explosionPatch(float explosionMultiplier, uintptr_t moduleBase);
+
 DWORD WINAPI main(HMODULE hModule)
 {
     //number of cheats for menu
@@ -74,6 +76,8 @@ DWORD WINAPI main(HMODULE hModule)
     float savedX = 0.00;
     float savedY = 0.00;
     float savedZ = 0.00;
+
+    int explosionMultiplier = 1;
 
     byte campos[84] = {};
     byte camang[84] = {};
@@ -174,7 +178,7 @@ DWORD WINAPI main(HMODULE hModule)
 
         if (selectedItem == 5) { std::cout << CHAR_SELECTED; }
         else { std::cout << CHAR_NOT_SELECTED; }
-        std::cout << "Nuclear bombs   : ";
+        std::cout << "Big bombs   [" << explosionMultiplier << "] : ";
         if (cheatHandler[5]) {
             SetConsoleTextAttribute(hConsole, 10);
             std::cout << "Enabled    " << std::endl;
@@ -248,6 +252,17 @@ DWORD WINAPI main(HMODULE hModule)
                     desiredGameSpeedMultiple += 1;             
                     if (desiredGameSpeedMultiple > 9) {
                         desiredGameSpeedMultiple = 1;
+                    }
+                }
+
+                //set 'splode multiplier
+                else if (selectedItem == 5) {
+                    explosionMultiplier += 1;
+                    if (explosionMultiplier > 9) {
+                        explosionMultiplier = 1;
+                    }
+                    if (cheatHandler[5]) {
+                        explosionPatch(explosionMultiplier, moduleBase);
                     }
                 }
                 kpHandler[7] = false;
@@ -365,15 +380,16 @@ DWORD WINAPI main(HMODULE hModule)
         if (cheatHandler[5] != prevCheatHandler[5]) {
             if (cheatHandler[5]) {
                 //enable bigger explosions
+
+                //explosion API patches for other mods
                 mem::Nop((byte*)(moduleBase + 0x112579), 8); //api min
                 mem::Nop((byte*)(moduleBase + 0x112595), 8); //api max
-                mem::Patch((byte*)(moduleBase + 0xC40DB), (byte*)"\xF3\x0F\x59\x35\x6D\xBC\x22\x00\x90\x90\x90\x90\x90\x90\x90", 15); //patch rockets
-                mem::Patch((byte*)(moduleBase + 0xA5090), (byte*)"\xF3\x0F\x59\x35\xB8\xAC\x24\x00\x90\x90\x90\x90\x90\x90", 14); //patch bombs
+
+                explosionPatch(explosionMultiplier, moduleBase);
             }
             else {
                 //disable bigger explosions
                 mem::Patch((byte*)(moduleBase + 0xC40DB), (byte*)"\xF3\x41\x0F\x59\xF1\xF3\x41\x0F\x5F\xF5\xF3\x41\x0F\x5D\xF3", 15); //unpatch mulss
-                mem::Patch((byte*)(moduleBase + 0xA5090), (byte*)"\xF3\x41\x0F\x5F\xF0\xF3\x41\x0F\x5D\xF4\xF3\x0F\x59\xF7", 14); //unpatch bombs
             }
         }
 
@@ -385,6 +401,13 @@ DWORD WINAPI main(HMODULE hModule)
         //as the game runs at 60fps, run the cheat loop 60 times a second
 		Sleep(16.6 - elapsed_secs);
     }
+}
+
+void explosionPatch(float explosionMultiplier, uintptr_t moduleBase) {
+    float finStrength = (5 + (2 * explosionMultiplier));
+    unsigned char const * p = reinterpret_cast<unsigned char const*>(&finStrength);
+    byte bytecode[15] = { 0xBA, p[0], p[1], p[2], p[3], 0x66, 0x0F, 0x6E, 0xF2, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 };
+    mem::Patch((byte*)(moduleBase + 0xC40DB), (byte*)bytecode, 15);
 }
 
 //idk, dont touch this
