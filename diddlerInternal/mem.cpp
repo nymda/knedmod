@@ -1,4 +1,8 @@
 #include "mem.h"
+#include <Windows.h>
+#include <TlHelp32.h>
+#include <Psapi.h>
+#include <winternl.h>
 
 //https://guidedhacking.com/threads/how-to-hack-any-game-first-internal-hack-dll-tutorial.12142/
 
@@ -35,4 +39,31 @@ uintptr_t mem::FindDMAAddy(uintptr_t ptr, std::vector<unsigned int> offsets)
 		addr += offsets[i];
 	}
 	return addr;
+}
+
+
+bool mem::Compare(const BYTE* pData, const BYTE* bMask, const char* szMask)
+{
+	for (; *szMask; ++szMask, ++pData, ++bMask)
+	{
+		if (*szMask == 'x' && *pData != *bMask)
+			return false;
+	}
+	return true;
+}
+
+DWORD64 mem::FindPattern(BYTE* bMask, const char* szMask, HMODULE hModule)
+{
+	MODULEINFO moduleInfo = { 0 };
+	GetModuleInformation(GetCurrentProcess(), hModule, &moduleInfo, sizeof(MODULEINFO));
+
+	DWORD64 dwBaseAddress = (DWORD64)hModule;
+	DWORD64 dwModuleSize = (DWORD64)moduleInfo.SizeOfImage;
+
+	for (DWORD64 i = 0; i < dwModuleSize; i++)
+	{
+		if (Compare((BYTE*)(dwBaseAddress + i), bMask, szMask))
+			return (DWORD64)(dwBaseAddress + i);
+	}
+	return 0;
 }

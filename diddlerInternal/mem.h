@@ -9,4 +9,6 @@ namespace mem
 	void Nop(BYTE* dst, unsigned int size);
 	void Null(BYTE* dst, unsigned int size);
 	uintptr_t FindDMAAddy(uintptr_t ptr, std::vector<unsigned int> offsets);
+	bool Compare(const BYTE* pData, const BYTE* bMask, const char* szMask);
+	DWORD64 FindPattern(BYTE* bMask, const char* szMask, HMODULE hModule);
 }

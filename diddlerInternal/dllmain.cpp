@@ -5,25 +5,25 @@
 #include <iomanip>
 #include <windows.h>
 #include <ctime>
-#define CHAR_NOT_SELECTED "|"
+#define CHAR_NOT_SELECTED " "
 #define CHAR_SELECTED ">"
 #define BASE_GAME_SPEED 0.016f
 
-void hidecursor()
-{
-    HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_CURSOR_INFO info;
-    info.dwSize = 100;
-    info.bVisible = FALSE;
-    SetConsoleCursorInfo(consoleHandle, &info);
-}
+class Vector3 {
+public:
+    float x;
+    float y;
+    float z;
+};
 
+void hidecursor();
 void explosionPatch(float explosionMultiplier, uintptr_t moduleBase);
+void pewpewPatch(float pewMultiplier, uintptr_t moduleBase);
 
 DWORD WINAPI main(HMODULE hModule)
 {
     //number of cheats for menu
-    int CHEAT_COUNT = 5;
+    int CHEAT_COUNT = 7;
 
     //make console window and enable stdout
     int selectedIndex = 0;
@@ -51,8 +51,8 @@ DWORD WINAPI main(HMODULE hModule)
     bool kpHandler[8] = { true, true, true, true, true, true, true, true };
 
     //handles if a cheat is enabled / disabled
-    bool prevCheatHandler[6] = { false, false, false, false, false, false };
-    bool cheatHandler[6] = { false, false, false, false, false, false };
+    bool prevCheatHandler[12] = { false, false, false, false, false, false, false, false , false , false , false , false };
+    bool cheatHandler[12] = { false, false, false, false, false, false, false, false , false , false , false , false };
 
     //contains cursor position
     int selectedItem = 0;
@@ -64,6 +64,7 @@ DWORD WINAPI main(HMODULE hModule)
     float* yVelo = (float*)(player + 0x38 + 4);
     float* pHealth = (float*)(player + 0x015C);
     float* pSpeed = (float*)(player + 0x0160);
+    Vector3 cpos = Vector3();
 
     //game vars and stuff
     float desiredSpeed = 1.0f;
@@ -78,6 +79,7 @@ DWORD WINAPI main(HMODULE hModule)
     float savedZ = 0.00;
 
     int explosionMultiplier = 1;
+    int shootyMultiplier = 1;
 
     byte campos[84] = {};
     byte camang[84] = {};
@@ -93,6 +95,9 @@ DWORD WINAPI main(HMODULE hModule)
     while (true) {
 
         clock_t begin = clock();
+        cpos.x = *x;
+        cpos.y = *x;
+        cpos.z = *x;
 
         //draw the menu
         hidecursor();
@@ -188,6 +193,34 @@ DWORD WINAPI main(HMODULE hModule)
             std::cout << "Disabled    " << std::endl;
         }
 
+        SetConsoleTextAttribute(hConsole, 15);
+
+        if (selectedItem == 6) { std::cout << CHAR_SELECTED; }
+        else { std::cout << CHAR_NOT_SELECTED; }
+        std::cout << "Big guns    [" << shootyMultiplier << "] : ";
+        if (cheatHandler[6]) {
+            SetConsoleTextAttribute(hConsole, 10);
+            std::cout << "Enabled    " << std::endl;
+        }
+        else {
+            SetConsoleTextAttribute(hConsole, 12);
+            std::cout << "Disabled    " << std::endl;
+        }
+
+        SetConsoleTextAttribute(hConsole, 15);
+
+        if (selectedItem == 7) { std::cout << CHAR_SELECTED; }
+        else { std::cout << CHAR_NOT_SELECTED; }
+        std::cout << "No use cooldown : ";
+        if (cheatHandler[7]) {
+            SetConsoleTextAttribute(hConsole, 10);
+            std::cout << "Enabled    " << std::endl;
+        }
+        else {
+            SetConsoleTextAttribute(hConsole, 12);
+            std::cout << "Disabled    " << std::endl;
+        }
+
         SetConsoleTextAttribute(hConsole, 79);
 
         std::cout << std::endl;
@@ -263,6 +296,17 @@ DWORD WINAPI main(HMODULE hModule)
                     }
                     if (cheatHandler[5]) {
                         explosionPatch(explosionMultiplier, moduleBase);
+                    }
+                }
+
+                //set 'hoot multiplier
+                else if (selectedItem == 6) {
+                    shootyMultiplier += 1;
+                    if (shootyMultiplier > 9) {
+                        shootyMultiplier = 1;
+                    }
+                    if (cheatHandler[6]) {
+                        pewpewPatch(shootyMultiplier, moduleBase);
                     }
                 }
                 kpHandler[7] = false;
@@ -390,6 +434,31 @@ DWORD WINAPI main(HMODULE hModule)
             else {
                 //disable bigger explosions
                 mem::Patch((byte*)(moduleBase + 0xC40DB), (byte*)"\xF3\x41\x0F\x59\xF1\xF3\x41\x0F\x5F\xF5\xF3\x41\x0F\x5D\xF3", 15); //unpatch 
+                mem::Patch((byte*)(moduleBase + 0xA508C), (byte*)"\xF3\x0F\x59\xF7\xF3\x41\x0F\x5F\xF0\xF3\x41\x0F\x5D\xF4\xF3\x0F\x59\xF7\xF3\x0F\x58\x35\xA2\xAC\x24\x00", 18); //unpatch 
+            }
+        }
+
+        if (cheatHandler[6] != prevCheatHandler[6]) {
+            if (cheatHandler[6]) {
+                //enable bigger guns
+                pewpewPatch(explosionMultiplier, moduleBase);
+            }
+            else {
+                //disable bigger guns
+                mem::Patch((byte*)(moduleBase + 0xC3C88), (byte*)"\x0F\x28\xF8\xF3\x41\x0F\x5C\xFB\xF3\x41\x0F\x59\xF9\xF3\x41\x0F\x5F\xFD\xF3\x41\x0F\x5D\xFB", 23); //unpatch 
+            }
+        }
+
+        if (cheatHandler[7] != prevCheatHandler[7]) {
+            if (cheatHandler[7]) {
+                //enable no cooldown
+                mem::Nop((byte*)(moduleBase + 0xAE281), 8);
+                mem::Nop((byte*)(moduleBase + 0xA44D9), 6);
+            }
+            else {
+                //enable cooldown again
+                mem::Patch((byte*)(moduleBase + 0xAE281), (byte*)"\xF3\x0F\x11\x81\x20\x04\x00\x00", 8);
+                mem::Patch((byte*)(moduleBase + 0xA44D9), (byte*)"\x89\x87\x20\x04\x00\x00", 6);
             }
         }
 
@@ -406,8 +475,26 @@ DWORD WINAPI main(HMODULE hModule)
 void explosionPatch(float explosionMultiplier, uintptr_t moduleBase) {
     float finStrength = (5 + (2 * explosionMultiplier));
     unsigned char const * p = reinterpret_cast<unsigned char const*>(&finStrength);
-    byte bytecode[15] = { 0xBA, p[0], p[1], p[2], p[3], 0x66, 0x0F, 0x6E, 0xF2, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 }; // (mov edx,[finStrength]) , (movd xmm6,edx)
-    mem::Patch((byte*)(moduleBase + 0xC40DB), (byte*)bytecode, 15);
+    byte bytecode_rocket[15] = { 0xBA, p[0], p[1], p[2], p[3], 0x66, 0x0F, 0x6E, 0xF2, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 }; // (mov edx,[finStrength]) , (movd xmm6,edx)
+    byte bytecode_bomb[26] = { 0xBA, p[0], p[1], p[2], p[3], 0x66, 0x0F, 0x6E, 0xF2, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 }; // (mov edx,[finStrength]) , (movd xmm6,edx)
+    mem::Patch((byte*)(moduleBase + 0xC40DB), (byte*)bytecode_rocket, 15);
+    mem::Patch((byte*)(moduleBase + 0xA508C), (byte*)bytecode_bomb, 18);
+}
+
+void pewpewPatch(float pewMultiplier, uintptr_t moduleBase) {
+    float finStrength = (5 + (2 * pewMultiplier));
+    unsigned char const* p = reinterpret_cast<unsigned char const*>(&finStrength);
+    byte bytecode_gun[23] = { 0xBA, p[0], p[1], p[2], p[3], 0x66, 0x0F, 0x6E, 0xFA, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 }; // (mov edx,[finStrength]) , (movd xmm6,edx)
+    mem::Patch((byte*)(moduleBase + 0xC3C88), (byte*)bytecode_gun, 23);
+}
+
+void hidecursor()
+{
+    HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_CURSOR_INFO info;
+    info.dwSize = 100;
+    info.bVisible = FALSE;
+    SetConsoleCursorInfo(consoleHandle, &info);
 }
 
 //idk, dont touch this
@@ -430,5 +517,7 @@ BOOL APIENTRY DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpRese
     }
     return TRUE;
 }
+
+
 
 
