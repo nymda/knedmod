@@ -45,6 +45,7 @@ DWORD WINAPI main(HMODULE hModule)
     uintptr_t moduleBase = (uintptr_t)mainHandle;
     uintptr_t game = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x0 });
     uintptr_t player = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0xA0, 0x0 });
+    uintptr_t renderer = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x38, 0x0 });
     uintptr_t scene = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x40, 0x0 });
 
     //handles only ctivating a function on keyDown [uparrow, downarrow, rightarrow, q, i, k, space, leftarrow]
@@ -64,6 +65,7 @@ DWORD WINAPI main(HMODULE hModule)
     float* yVelo = (float*)(player + 0x38 + 4);
     float* pHealth = (float*)(player + 0x015C);
     float* pSpeed = (float*)(player + 0x0160);
+    bool* isPaused = (bool*)(game + 0x0138);
     Vector3 cpos = Vector3();
 
     //game vars and stuff
@@ -224,10 +226,11 @@ DWORD WINAPI main(HMODULE hModule)
         SetConsoleTextAttribute(hConsole, 79);
 
         std::cout << std::endl;
-        std::cout << "Base: 0x" << std::hex << moduleBase << std::endl;
-        std::cout << "Game: 0x" << std::hex << game << std::endl;
-        std::cout << "Player: 0x" << std::hex << player << std::endl;
-        std::cout << "Scene: 0x" << std::hex << scene << std::endl;
+        std::cout << "Base     : 0x" << std::hex << moduleBase << std::endl;
+        std::cout << "Game     : 0x" << std::hex << game << std::endl;
+        std::cout << "Player   : 0x" << std::hex << player << std::endl;
+        std::cout << "Renderer : 0x" << std::hex << renderer << std::endl;
+        std::cout << "Scene    : 0x" << std::hex << scene << std::endl;
 
 		//handle keypresses
 
@@ -388,6 +391,7 @@ DWORD WINAPI main(HMODULE hModule)
 				mem::Nop((byte*)(moduleBase + 0xA8CF3), 8); // basic damage
 				mem::Nop((byte*)(moduleBase + 0xA7FB7), 8); // fall damage
 				mem::Nop((byte*)(moduleBase + 0xA9E95), 8); // fire damage
+                mem::Nop((byte*)(moduleBase + 0xA9F18), 8); // drowning damage
 				*pHealth = 1.0f; //set health to full
 			}
 			else {
@@ -396,6 +400,7 @@ DWORD WINAPI main(HMODULE hModule)
 				mem::Patch((byte*)(moduleBase + 0xA8CF3), (byte*)"\xF3\x0F\x11\x91\x5C\x01\x00\x00", 8); // basic damage
 				mem::Patch((byte*)(moduleBase + 0xA7FB7), (byte*)"\xF3\x0F\x11\x86\x5C\x01\x00\x00", 8); // fall damage
 				mem::Patch((byte*)(moduleBase + 0xA9E95), (byte*)"\xF3\x0F\x11\x87\x5C\x01\x00\x00", 8); // fire damage
+                mem::Patch((byte*)(moduleBase + 0xA9F18), (byte*)"\xF3\x0F\x11\x87\x5C\x01\x00\x00", 8); // drowning damage
 			}
 		}
 
