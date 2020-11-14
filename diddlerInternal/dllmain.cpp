@@ -23,7 +23,7 @@ void pewpewPatch(float pewMultiplier, uintptr_t moduleBase);
 DWORD WINAPI main(HMODULE hModule)
 {
     //number of cheats for menu
-    int CHEAT_COUNT = 7;
+    int CHEAT_COUNT = 8;
 
     //make console window and enable stdout
     int selectedIndex = 0;
@@ -38,7 +38,7 @@ DWORD WINAPI main(HMODULE hModule)
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     hidecursor();
     std::cout.precision(2);
-    SMALL_RECT tmp = { 0, 0, 60, 15 };
+    SMALL_RECT tmp = { 0, 0, 120, 15 };
     SetConsoleWindowInfo(GetStdHandle(STD_OUTPUT_HANDLE), true, &tmp);
 
     HANDLE mainHandle = GetModuleHandle(L"teardown.exe");
@@ -48,8 +48,8 @@ DWORD WINAPI main(HMODULE hModule)
     uintptr_t renderer = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x38, 0x0 });
     uintptr_t scene = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x40, 0x0 });
 
-    //handles only ctivating a function on keyDown [uparrow, downarrow, rightarrow, q, i, k, space, leftarrow]
-    bool kpHandler[8] = { true, true, true, true, true, true, true, true };
+    //handles only ctivating a function on keyDown [uparrow, downarrow, rightarrow, q, i, k, space, leftarrow, v]
+    bool kpHandler[10] = { true, true, true, true, true, true, true, true, true, true };
 
     //handles if a cheat is enabled / disabled
     bool prevCheatHandler[12] = { false, false, false, false, false, false, false, false , false , false , false , false };
@@ -67,6 +67,23 @@ DWORD WINAPI main(HMODULE hModule)
     float* pSpeed = (float*)(player + 0x0160);
     bool* isPaused = (bool*)(game + 0x0138);
     Vector3 cpos = Vector3();
+
+    //handling flight
+    float* vx = (float*)(player + 0x007C);
+    float* vy = (float*)(player + 0x007C+4);
+    float* vz = (float*)(player + 0x007C+8);
+
+    float* qx = (float*)(player + 0x0088);
+    float* qy = (float*)(player + 0x0088+4);
+    float* qz = (float*)(player + 0x0088+8);
+    float* qw = (float*)(player + 0x0088+12);
+
+    float saved_x = 0;
+    float saved_y = 0;
+    float saved_z = 0;
+
+    float* fMov = (float*)(player + 0x00D4);
+    float* fMovSide = (float*)(player + 0x00D4 + 4);
 
     //game vars and stuff
     float desiredSpeed = 1.0f;
@@ -223,6 +240,20 @@ DWORD WINAPI main(HMODULE hModule)
             std::cout << "Disabled    " << std::endl;
         }
 
+        SetConsoleTextAttribute(hConsole, 15);
+
+        if (selectedItem == 8) { std::cout << CHAR_SELECTED; }
+        else { std::cout << CHAR_NOT_SELECTED; }
+        std::cout << "Freecam / Fly   : ";
+        if (cheatHandler[8]) {
+            SetConsoleTextAttribute(hConsole, 10);
+            std::cout << "Enabled [V]    " << std::endl;
+        }
+        else {
+            SetConsoleTextAttribute(hConsole, 12);
+            std::cout << "Disabled [V]    " << std::endl;
+        }
+
         SetConsoleTextAttribute(hConsole, 79);
 
         std::cout << std::endl;
@@ -360,6 +391,17 @@ DWORD WINAPI main(HMODULE hModule)
 			kpHandler[5] = true;
 		}
 
+        //V
+        if (((GetAsyncKeyState(0x56) >> 15) & 0x0001) == 0x0001) {
+            if (kpHandler[9]) {
+                cheatHandler[8] = !cheatHandler[8];
+                kpHandler[9] = false;
+            }
+        }
+        else {
+            kpHandler[9] = true;
+        }
+
 		//space & jetpack
 		if (((GetAsyncKeyState(VK_SPACE) >> 15) & 0x0001) == 0x0001) {
 			if (cheatHandler[2]) {
@@ -465,6 +507,70 @@ DWORD WINAPI main(HMODULE hModule)
                 mem::Patch((byte*)(moduleBase + 0xAE281), (byte*)"\xF3\x0F\x11\x81\x20\x04\x00\x00", 8);
                 mem::Patch((byte*)(moduleBase + 0xA44D9), (byte*)"\x89\x87\x20\x04\x00\x00", 6);
             }
+        }
+
+        if (cheatHandler[8] != prevCheatHandler[8]) {
+            if (cheatHandler[8]) {
+                //enable fly
+
+                //nop instructions for camera movement
+                mem::Nop((byte*)(moduleBase + 0xA6621), 5);
+                mem::Nop((byte*)(moduleBase + 0xA6626), 8);
+                mem::Nop((byte*)(moduleBase + 0xA665F), 8);
+
+                saved_x = *x;
+                saved_y = *y + 20;
+                saved_x = *z;
+            }
+            else {
+                //disable fly
+                mem::Patch((byte*)(moduleBase + 0xA6621), (byte*)"\xF3\x0F\x11\x43\x7C", 5); //OK
+                mem::Patch((byte*)(moduleBase + 0xA6626), (byte*)"\xF3\x0F\x11\x8B\x84\x00\x00\x00", 8); //OK
+                mem::Patch((byte*)(moduleBase + 0xA665F), (byte*)"\xF3\x0F\x11\x93\x80\x00\x00\x00", 8); //OK
+
+                *x = *vx;
+                *y = *vy - 1.7f;
+                *z = *vz;
+            }
+        }
+
+        if (cheatHandler[8]) {
+
+            //forward vector
+            float nvX = 2 * (*qx * *qz + *qw * *qy);
+            float nvY = 2 * (*qy * *qz - *qw * *qx);
+            float nvZ = 1 - 2 * (*qx * *qx + *qy * *qy);
+
+            float nvXl = 1 - 2 * (*qy * *qy + *qz * *qz);
+            float nvYl = 2 * (*qx * *qy + *qw * *qz);
+            float nvZl = 2 * (*qx * *qz - *qw * *qy);
+
+            if (*fMov == 1) {
+                *vx -= (nvX * 0.3);
+                *vy -= (nvY * 0.3);
+                *vz -= (nvZ * 0.3);
+            }
+            else if (*fMov == -1) {
+                *vx += (nvX * 0.3);
+                *vy += (nvY * 0.3);
+                *vz += (nvZ * 0.3);
+            }
+
+            if (*fMovSide == 1) {
+                *vx += (nvXl * 0.3);
+                *vy += (nvYl * 0.3);
+                *vz += (nvZl * 0.3);
+            }
+            else if (*fMovSide == -1) {
+                *vx -= (nvXl * 0.3);
+                *vy -= (nvYl * 0.3);
+                *vz -= (nvZl * 0.3);
+            }
+
+            *x = saved_x;
+            *y = saved_y;
+            *z = saved_z;
+            *yVelo = 0;
         }
 
 		memcpy(prevCheatHandler, cheatHandler, sizeof cheatHandler);
