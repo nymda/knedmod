@@ -42,6 +42,7 @@ bool drawMenu = false;
 void hidecursor();
 void explosionPatch(int explosionMultiplier, uintptr_t moduleBase);
 void pewpewPatch(int pewMultiplier, uintptr_t moduleBase);
+void plankPatch(uintptr_t moduleBase);
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 WNDPROC oWndProc;
@@ -89,8 +90,8 @@ void onSwapBuffersInit()
 bool kpHandler[10] = { true, true, true, true, true, true, true, true, true, true };
 
 //handles if a cheat is enabled / disabled
-bool prevCheatHandler[12] = { false, false, false, false, false, false, false, false , false , false , false , false };
-bool cheatHandler[12]     = { false, false, false, false, false, false, false, false , false , false , false , false };
+bool prevCheatHandler[13] = { false, false, false, false, false, false, false, false, false, false, false, false, false };
+bool cheatHandler[13]     = { false, false, false, false, false, false, false, false, false, false, false, false, false };
 
 float saved_x = 0;
 float saved_y = 0;
@@ -114,8 +115,6 @@ int pewSize = 0;
 
 bool hwCursor(int x, int y) {
 
-    std::cout << "Cursor hook" << std::endl;
-
     if (drawMenu) {
         return false;
     }
@@ -127,16 +126,18 @@ bool hwCursor(int x, int y) {
 bool drawBoundsRef = false;
 bool drawBodiesRef = false;
 bool drawShadowVolRef = false;
+bool showPanel = true;
 
 bool hwglSwapBuffers(_In_ HDC hDc)
 {
-    std::cout << "Swap hook" << std::endl;
     HANDLE mainHandle = GetModuleHandle(L"teardown.exe");
     uintptr_t moduleBase = (uintptr_t)mainHandle;
     uintptr_t game = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x0 });
     uintptr_t player = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0xA0, 0x0 });
     uintptr_t renderer = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x38, 0x0 });
     uintptr_t scene = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x40, 0x0 });
+    uintptr_t HeldBody = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0xA0, 0x0118, 0x0 });
+    uintptr_t AllBodies = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x40, 0x168, 0x0 });
 
     //misc player values
     float* x = (float*)(player);
@@ -208,18 +209,22 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         *fMovSide = 0.0f;
 
         //*(bool*)(game + 0x0138) = true;
-        ImGui::Begin("TD-Internal");
+        ImGui::Begin("FennTD");
+        ImGui::Checkbox("Info panel", &showPanel);
         ImGui::Checkbox("Godmode", &cheatHandler[0]);
+        ImGui::Checkbox("Jetpack", &cheatHandler[2]);
+        ImGui::Checkbox("No walls", &cheatHandler[4]);
+        ImGui::Checkbox("No use cooldown", &cheatHandler[7]);
+        ImGui::Checkbox("Long planks", &cheatHandler[12]);
+        ImGui::Checkbox("Freecam [V]", &cheatHandler[8]);
         ImGui::Checkbox("Slow motion [Q]", &cheatHandler[1]);
         ImGui::SameLine();
         ImGui::PushItemWidth(200);
         ImGui::SliderInt("Game speed", &desiredGameSpeedMultiple, 1, 15);
-        ImGui::Checkbox("Jetpack", &cheatHandler[2]);
         ImGui::Checkbox("Speedhack      ", &cheatHandler[3]);
         ImGui::SameLine();
         ImGui::PushItemWidth(200);
         ImGui::SliderInt("Run speed", &desiredSpeed, 1, 15);
-        ImGui::Checkbox("No walls", &cheatHandler[4]);
         ImGui::Checkbox("Explosion boost", &cheatHandler[5]);
         ImGui::SameLine();
         ImGui::PushItemWidth(200);
@@ -228,8 +233,6 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         ImGui::SameLine();
         ImGui::PushItemWidth(200);
         ImGui::SliderInt("Gun size", &pewSize, 1, 15);
-        ImGui::Checkbox("No use cooldown", &cheatHandler[7]);
-        ImGui::Checkbox("Freecam [V]", &cheatHandler[8]);
         ImGui::Checkbox("Show boundaries", &drawBoundsRef);
         ImGui::Checkbox("Show bodies", &drawBodiesRef);
         ImGui::Checkbox("Depth map", &drawShadowVolRef);
@@ -255,11 +258,31 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         bess << "Base: 0x" << std::hex << moduleBase;
         std::string strbe = bess.str();
 
+        std::stringstream boss;
+        boss << "Held body: 0x" << std::hex << HeldBody;
+        std::string stobe = boss.str();
+
+        std::stringstream bass;
+        bass << "Held body: 0x" << std::hex << AllBodies;
+        std::string stabe = bass.str();
+
+        COORD tl = { 0,0 };
+        SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), tl);
+        std::cout << strgm.c_str() << std::endl;
+        std::cout << strpl.c_str() << std::endl;
+        std::cout << strsc.c_str() << std::endl;
+        std::cout << strre.c_str() << std::endl;
+        std::cout << strbe.c_str() << std::endl;
+        std::cout << stobe.c_str() << std::endl;
+        std::cout << stabe.c_str() << std::endl;
+
         ImGui::Text(strgm.c_str());
         ImGui::Text(strpl.c_str());
         ImGui::Text(strsc.c_str());
         ImGui::Text(strre.c_str());
         ImGui::Text(strbe.c_str());
+        ImGui::Text(stobe.c_str());
+        ImGui::Text(stabe.c_str());
         ImGui::EndGroup();
         ImGui::End();
     }
@@ -269,6 +292,62 @@ bool hwglSwapBuffers(_In_ HDC hDc)
             mem::Patch((byte*)(moduleBase + 0xA9780), (byte*)"\xF3\x0F\x11\xBF\xD8\x00\x00\x00", 8);
             needToPatchMovement = false;
         }
+    }
+
+    if (showPanel) {
+        ImGuiWindowFlags window_flags = 0;
+        window_flags |= ImGuiWindowFlags_NoMove;
+        window_flags |= ImGuiWindowFlags_NoResize;
+        window_flags |= ImGuiWindowFlags_NoCollapse;
+        window_flags |= ImGuiWindowFlags_NoTitleBar;
+        window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
+        ImGui::SetNextWindowPos(ImVec2(5, 5));
+        //ImGui::SetNextWindowSize(ImVec2(180, 100));
+        ImGui::Begin("Info", (bool*)false, window_flags);
+
+        ImGui::Text("---active---");
+
+        if (cheatHandler[0]) {
+            ImGui::Text("Godmode");
+        }
+        if (cheatHandler[2]) {
+            ImGui::Text("Jetpack");
+        }
+        if (cheatHandler[4]) {
+            ImGui::Text("No walls");
+        }
+        if (cheatHandler[7]) {
+            ImGui::Text("No cooldown");
+        }
+        if (cheatHandler[12]) {
+            ImGui::Text("Long planks");
+        }
+        if (cheatHandler[8]) {
+            ImGui::Text("Freecam");
+        }
+        if (cheatHandler[1]) {
+            ImGui::Text("Slow motion");
+        }
+        if (cheatHandler[3]) {
+            ImGui::Text("Speedhack");
+        }
+        if (cheatHandler[5]) {
+            ImGui::Text("Explosion boost");
+        }
+        if (cheatHandler[6]) {
+            ImGui::Text("Gun boost");
+        }
+        if (drawBoundsRef) {
+            ImGui::Text("Bounds view");
+        }
+        if (drawBodiesRef) {
+            ImGui::Text("Bodies view");
+        }
+        if (drawShadowVolRef) {
+            ImGui::Text("Depth view");
+        }
+
+        ImGui::End();
     }
 
     if (drawBoundsRef) {
@@ -470,6 +549,17 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         *yVelo = 0;
     }
 
+    if (cheatHandler[12] != prevCheatHandler[12]) {
+        if (cheatHandler[12]) {
+            //enable bigger plonks
+            plankPatch(moduleBase);
+        }
+        else {
+            //disable bigger guns
+            mem::Patch((byte*)(moduleBase + 0xABDF9), (byte*)"\xF3\x0F\x5C\x35\xFB\x1D\x25\x00\xF3\x0F\x59\x35\x27\x9F\x25\x00\xF3\x41\x0F\x5F\xF5\xF3\x41\x0F\x5D\xF0", 26); //unpatch plonks
+        }
+    }
+
     memcpy(prevCheatHandler, cheatHandler, sizeof cheatHandler);
 
     ImGui::EndFrame();
@@ -516,26 +606,32 @@ void pewpewPatch(int pewMultiplier, uintptr_t moduleBase) {
     mem::Patch((byte*)(moduleBase + 0xC3C88), (byte*)bytecode_gun, 23);
 }
 
+void plankPatch(uintptr_t moduleBase) {
+    float stren = 100.0f;
+    unsigned char const* p = reinterpret_cast<unsigned char const*>(&stren);
+    byte bytecode_planks[26] = { 0xBA, p[0], p[1], p[2], p[3], 0x66, 0x0F, 0x6E, 0xF2, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 }; // (mov edx,[finStrength]) , (movd xmm6,edx)
+    mem::Patch((byte*)(moduleBase + 0xABDF9), (byte*)bytecode_planks, 26);
+}
+
 DWORD WINAPI main(HMODULE hModule)
 {
     //number of cheats for menu
     int CHEAT_COUNT = 8;
 
     //make console window and enable stdout
-    //int selectedIndex = 0;
-    //AllocConsole();
-    //std::wstring strW = L"Internal diddler";
-    //SetConsoleTitle(strW.c_str());
-    //HWND console = GetConsoleWindow();
-    //DeleteMenu(GetSystemMenu(console, false), SC_CLOSE, MF_BYCOMMAND);
-    //SetWindowLong(console, GWL_STYLE, GetWindowLong(console, GWL_STYLE) & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX);
-    //FILE* f;
-    //freopen_s(&f, "CONOUT$", "w", stdout);
-    //HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-    //hidecursor();
-    //std::cout.precision(2);
-    //SMALL_RECT tmp = { 0, 0, 120, 15 };
-    //SetConsoleWindowInfo(GetStdHandle(STD_OUTPUT_HANDLE), true, &tmp);
+    AllocConsole();
+    std::wstring strW = L"Internal diddler";
+    SetConsoleTitle(strW.c_str());
+    HWND console = GetConsoleWindow();
+    DeleteMenu(GetSystemMenu(console, false), SC_CLOSE, MF_BYCOMMAND);
+    SetWindowLong(console, GWL_STYLE, GetWindowLong(console, GWL_STYLE) & ~WS_MAXIMIZEBOX & ~WS_SIZEBOX);
+    FILE* f;
+    freopen_s(&f, "CONOUT$", "w", stdout);
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    hidecursor();
+    std::cout.precision(2);
+    SMALL_RECT tmp = { 0, 0, 120, 15 };
+    SetConsoleWindowInfo(GetStdHandle(STD_OUTPUT_HANDLE), true, &tmp);
 
     MessageBox(0, L"Injection complete.\nInsert or F1 for menu", L"Notice", MB_ICONINFORMATION);
 
