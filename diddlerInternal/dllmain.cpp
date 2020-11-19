@@ -47,6 +47,8 @@ void plankPatch(uintptr_t moduleBase);
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 WNDPROC oWndProc;
 
+typedef void (*tPaint) (uintptr_t* Scene, Vector3* Position, float size, int darken, float dispersion);
+typedef void (*tFire) (uintptr_t* Scene, Vector3* Position);
 
 bool needToNopMovement = true;
 bool needToPatchMovement = true;
@@ -93,15 +95,19 @@ bool kpHandler[10] = { true, true, true, true, true, true, true, true, true, tru
 bool prevCheatHandler[13] = { false, false, false, false, false, false, false, false, false, false, false, false, false };
 bool cheatHandler[13]     = { false, false, false, false, false, false, false, false, false, false, false, false, false };
 
-float saved_x = 0;
-float saved_y = 0;
-float saved_z = 0;
+float fly_x = 0;
+float fly_y = 0;
+float fly_z = 0;
 
 float setVelo = 0;
 
 float savedX = 0.00;
 float savedY = 0.00;
 float savedZ = 0.00;
+float savedqx = 0.00;
+float savedqy = 0.00;
+float savedqz = 0.00;
+float savedqw = 0.00;
 
 int desiredSpeed = 1;
 int desiredGameSpeedMultiple = 9;
@@ -112,6 +118,9 @@ int xplSize = 0;
 
 int prevPewSize = 0;
 int pewSize = 0;
+
+tPaint oPaint;
+tFire oFire;
 
 bool hwCursor(int x, int y) {
 
@@ -128,8 +137,14 @@ bool drawBodiesRef = false;
 bool drawShadowVolRef = false;
 bool showPanel = true;
 
+//flightspeed
+float speed = 0.5f;
+
 bool hwglSwapBuffers(_In_ HDC hDc)
 {
+    //UUUUUUUUUUGH HARDCODED POINTERS UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUGH
+    //THIS IS SO FUCKING BAD 
+
     HANDLE mainHandle = GetModuleHandle(L"teardown.exe");
     uintptr_t moduleBase = (uintptr_t)mainHandle;
     uintptr_t game = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x0 });
@@ -137,13 +152,15 @@ bool hwglSwapBuffers(_In_ HDC hDc)
     uintptr_t renderer = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x38, 0x0 });
     uintptr_t scene = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x40, 0x0 });
     uintptr_t HeldBody = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0xA0, 0x0118, 0x0 });
-    uintptr_t AllBodies = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x40, 0x168, 0x0 });
+    //uintptr_t AllBodies = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x40, 0x168, 0x0 });
 
     //misc player values
     float* x = (float*)(player);
     float* y = (float*)(player + 4);
     float* z = (float*)(player + 8);
+    float* xVelo = (float*)(player + 0x38);
     float* yVelo = (float*)(player + 0x38 + 4);
+    float* zVelo = (float*)(player + 0x38 + 8);
     float* pHealth = (float*)(player + 0x015C);
     float* pSpeed = (float*)(player + 0x0160);
     bool* isPaused = (bool*)(game + 0x0138);
@@ -165,8 +182,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
     //game vars and stuff
     float* gamespeed = (float*)(game + 0x144);
 
-    byte campos[84] = {};
-    byte camang[84] = {};
+    byte camdat[84] = {};
 
     std::call_once(swapBuffersInit, onSwapBuffersInit);
 
@@ -210,13 +226,14 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 
         //*(bool*)(game + 0x0138) = true;
         ImGui::Begin("FennTD");
+        ImGui::Text("[I] Save position, [K] Teleport there");
         ImGui::Checkbox("Info panel", &showPanel);
         ImGui::Checkbox("Godmode", &cheatHandler[0]);
         ImGui::Checkbox("Jetpack", &cheatHandler[2]);
         ImGui::Checkbox("No walls", &cheatHandler[4]);
         ImGui::Checkbox("No use cooldown", &cheatHandler[7]);
         ImGui::Checkbox("Long planks", &cheatHandler[12]);
-        ImGui::Checkbox("Freecam [V]", &cheatHandler[8]);
+        ImGui::Checkbox("Noclip [V]", &cheatHandler[8]);
         ImGui::Checkbox("Slow motion [Q]", &cheatHandler[1]);
         ImGui::SameLine();
         ImGui::PushItemWidth(200);
@@ -236,6 +253,13 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         ImGui::Checkbox("Show boundaries", &drawBoundsRef);
         ImGui::Checkbox("Show bodies", &drawBodiesRef);
         ImGui::Checkbox("Depth map", &drawShadowVolRef);
+        if (ImGui::Button("Yellow the world")) {
+            Vector3 v3 = Vector3();
+            v3.x = *x;
+            v3.y = *y;
+            v3.z = *z;
+            oPaint((uintptr_t*)scene, &v3, 500.0f, 0.0f, 25.0f);
+        }
         ImGui::BeginGroup();
 
         std::stringstream gmss;
@@ -262,9 +286,9 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         boss << "Held body: 0x" << std::hex << HeldBody;
         std::string stobe = boss.str();
 
-        std::stringstream bass;
-        bass << "Held body: 0x" << std::hex << AllBodies;
-        std::string stabe = bass.str();
+        //std::stringstream bass;
+        //bass << "Held body: 0x" << std::hex << AllBodies;
+        //std::string stabe = bass.str();
 
         COORD tl = { 0,0 };
         SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), tl);
@@ -274,7 +298,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         std::cout << strre.c_str() << std::endl;
         std::cout << strbe.c_str() << std::endl;
         std::cout << stobe.c_str() << std::endl;
-        std::cout << stabe.c_str() << std::endl;
+        //std::cout << stabe.c_str() << std::endl;
 
         ImGui::Text(strgm.c_str());
         ImGui::Text(strpl.c_str());
@@ -282,7 +306,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         ImGui::Text(strre.c_str());
         ImGui::Text(strbe.c_str());
         ImGui::Text(stobe.c_str());
-        ImGui::Text(stabe.c_str());
+        //ImGui::Text(stabe.c_str());
         ImGui::EndGroup();
         ImGui::End();
     }
@@ -302,10 +326,9 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         window_flags |= ImGuiWindowFlags_NoTitleBar;
         window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
         ImGui::SetNextWindowPos(ImVec2(5, 5));
-        //ImGui::SetNextWindowSize(ImVec2(180, 100));
         ImGui::Begin("Info", (bool*)false, window_flags);
 
-        ImGui::Text("---active---");
+        ImGui::Text("-----active-----");
 
         if (cheatHandler[0]) {
             ImGui::Text("Godmode");
@@ -323,7 +346,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
             ImGui::Text("Long planks");
         }
         if (cheatHandler[8]) {
-            ImGui::Text("Freecam");
+            ImGui::Text("Noclip");
         }
         if (cheatHandler[1]) {
             ImGui::Text("Slow motion");
@@ -400,7 +423,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         *gamespeed = BASE_GAME_SPEED;
     }
 
-    //if speedhack is enabled then set speed to 5, if not then set speed to the health value
+    //if speedhack is enabled then set speed to desired, if not then set speed to the health value
     if (cheatHandler[3]) {
         *pSpeed = (desiredSpeed);
     }
@@ -493,10 +516,6 @@ bool hwglSwapBuffers(_In_ HDC hDc)
             mem::Nop((byte*)(moduleBase + 0xA6621), 5);
             mem::Nop((byte*)(moduleBase + 0xA6626), 8);
             mem::Nop((byte*)(moduleBase + 0xA665F), 8);
-
-            saved_x = *x;
-            saved_y = *y + 20;
-            saved_x = *z;
         }
         else {
             //disable fly
@@ -507,6 +526,26 @@ bool hwglSwapBuffers(_In_ HDC hDc)
             *x = *vx;
             *y = *vy - 1.7f;
             *z = *vz;
+
+            float nvX = 2 * (*qx * *qz + *qw * *qy);
+            float nvY = 2 * (*qy * *qz - *qw * *qx);
+            float nvZ = 1 - 2 * (*qx * *qx + *qy * *qy);
+
+            if (*fMov == 1) {
+                *xVelo = -(nvX * (speed * 50));
+                *yVelo = -(nvY * (speed * 50));
+                *zVelo = -(nvZ * (speed * 50));
+            }
+            else if (*fMov == -1) {
+                *xVelo = (nvX * (speed * 50));
+                *yVelo = (nvY * (speed * 50));
+                *zVelo = (nvZ * (speed * 50));
+            }
+            else {
+                *xVelo = 0.0f;
+                *yVelo = 0.0f;
+                *zVelo = 0.0f;
+            }
         }
     }
 
@@ -521,31 +560,48 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         float nvYl = 2 * (*qx * *qy + *qw * *qz);
         float nvZl = 2 * (*qx * *qz - *qw * *qy);
 
+        if (((GetAsyncKeyState(VK_SHIFT) >> 15) & 0x0001) == 0x0001) {
+            speed = 1.0f; //sprint
+        }
+        else if (((GetAsyncKeyState(VK_CONTROL) >> 15) & 0x0001) == 0x0001) {
+            speed = 0.1f; //slow
+        }
+        else {
+            speed = 0.5f; //normal
+        }
+
         if (*fMov == 1) {
-            *vx -= (nvX * 0.3);
-            *vy -= (nvY * 0.3);
-            *vz -= (nvZ * 0.3);
+            *vx -= (nvX * speed);
+            *vy -= (nvY * speed);
+            *vz -= (nvZ * speed);
         }
         else if (*fMov == -1) {
-            *vx += (nvX * 0.3);
-            *vy += (nvY * 0.3);
-            *vz += (nvZ * 0.3);
+            *vx += (nvX * speed);
+            *vy += (nvY * speed);
+            *vz += (nvZ * speed);
         }
 
         if (*fMovSide == 1) {
-            *vx += (nvXl * 0.3);
-            *vy += (nvYl * 0.3);
-            *vz += (nvZl * 0.3);
+            *vx += (nvXl * speed);
+            *vy += (nvYl * speed);
+            *vz += (nvZl * speed);
         }
         else if (*fMovSide == -1) {
-            *vx -= (nvXl * 0.3);
-            *vy -= (nvYl * 0.3);
-            *vz -= (nvZl * 0.3);
+            *vx -= (nvXl * speed);
+            *vy -= (nvYl * speed);
+            *vz -= (nvZl * speed);
         }
 
-        *x = saved_x;
-        *y = saved_y;
-        *z = saved_z;
+        if (((GetAsyncKeyState(VK_SPACE) >> 15) & 0x0001) == 0x0001) {
+            *vy += speed;
+        }
+
+        //Teleport the player to 500 units above 0,0,0
+        *x = 0;
+        *y = 500;
+        *z = 0;
+        
+        //constantly set velocity to zero (NOPing this fucks up gravity)
         *yVelo = 0;
     }
 
@@ -558,6 +614,44 @@ bool hwglSwapBuffers(_In_ HDC hDc)
             //disable bigger guns
             mem::Patch((byte*)(moduleBase + 0xABDF9), (byte*)"\xF3\x0F\x5C\x35\xFB\x1D\x25\x00\xF3\x0F\x59\x35\x27\x9F\x25\x00\xF3\x41\x0F\x5F\xF5\xF3\x41\x0F\x5D\xF0", 26); //unpatch plonks
         }
+    }
+
+    //I
+    if (((GetAsyncKeyState(0x49) & 0x0001) != 0)) {
+        if (kpHandler[4]) {
+            savedX = *x;
+            savedY = *y;
+            savedZ = *z;
+
+            savedqx = *qx;
+            savedqy = *qy;
+            savedqz = *qz;
+            savedqw = *qw;
+
+            kpHandler[4] = false;
+        }
+    }
+    else {
+        kpHandler[4] = true;
+    }
+
+    //K
+    if (((GetAsyncKeyState(0x4B) & 0x0001) != 0)) {
+        if (kpHandler[5]) {
+            *x = savedX;
+            *y = savedY;
+            *z = savedZ;
+
+            *qx = savedqx;
+            *qy = savedqy;
+            *qz = savedqz;
+            *qw = savedqw;
+
+            kpHandler[5] = false;
+        }
+    }
+    else {
+        kpHandler[5] = true;
     }
 
     memcpy(prevCheatHandler, cheatHandler, sizeof cheatHandler);
@@ -607,7 +701,7 @@ void pewpewPatch(int pewMultiplier, uintptr_t moduleBase) {
 }
 
 void plankPatch(uintptr_t moduleBase) {
-    float stren = 100.0f;
+    float stren = 5000.0f;
     unsigned char const* p = reinterpret_cast<unsigned char const*>(&stren);
     byte bytecode_planks[26] = { 0xBA, p[0], p[1], p[2], p[3], 0x66, 0x0F, 0x6E, 0xF2, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 }; // (mov edx,[finStrength]) , (movd xmm6,edx)
     mem::Patch((byte*)(moduleBase + 0xABDF9), (byte*)bytecode_planks, 26);
@@ -615,6 +709,7 @@ void plankPatch(uintptr_t moduleBase) {
 
 DWORD WINAPI main(HMODULE hModule)
 {
+    oPaint = (tPaint)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x55\x41\x56\x48\x8D\x68\xD8\x48\x81\xEC\x00\x00\x00\x00\x48\xC7\x45\x00\x00\x00\x00\x00", "xxxxxxxxxxxxxxx????xxx?????", GetModuleHandle(NULL));
     //number of cheats for menu
     int CHEAT_COUNT = 8;
 
@@ -635,12 +730,16 @@ DWORD WINAPI main(HMODULE hModule)
 
     MessageBox(0, L"Injection complete.\nInsert or F1 for menu", L"Notice", MB_ICONINFORMATION);
 
+    std::cout << std::hex << mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x55\x41\x56\x48\x8D\x68\xD8\x48\x81\xEC\x00\x00\x00\x00\x48\xC7\x45\x00\x00\x00\x00\x00", "xxxxxxxxxxxxxxx????xxx?????", GetModuleHandle(NULL)) << std::endl;
+
     HANDLE mainHandle = GetModuleHandle(L"teardown.exe");
     uintptr_t moduleBase = (uintptr_t)mainHandle;
     uintptr_t game = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x0 });
     uintptr_t player = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0xA0, 0x0 });
     uintptr_t renderer = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x38, 0x0 });
     uintptr_t scene = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x40, 0x0 });
+
+    oFire = (tFire)(moduleBase + 0x1F2F80);
 
     //opengl stuff by nyhu
     gWnd = FindWindow(0, L"Teardown");
