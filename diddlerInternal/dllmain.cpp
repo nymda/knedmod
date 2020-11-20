@@ -92,8 +92,8 @@ void onSwapBuffersInit()
 bool kpHandler[10] = { true, true, true, true, true, true, true, true, true, true };
 
 //handles if a cheat is enabled / disabled
-bool prevCheatHandler[13] = { false, false, false, false, false, false, false, false, false, false, false, false, false };
-bool cheatHandler[13]     = { false, false, false, false, false, false, false, false, false, false, false, false, false };
+bool prevCheatHandler[14] = { false, false, false, false, false, false, false, false, false, false, false, false, false, false };
+bool cheatHandler[14]     = { false, false, false, false, false, false, false, false, false, false, false, false, false, false };
 
 float fly_x = 0;
 float fly_y = 0;
@@ -140,6 +140,8 @@ bool showPanel = true;
 //flightspeed
 float speed = 0.5f;
 
+bool firstprint = true;
+
 bool hwglSwapBuffers(_In_ HDC hDc)
 {
     //UUUUUUUUUUGH HARDCODED POINTERS UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUGH
@@ -154,7 +156,42 @@ bool hwglSwapBuffers(_In_ HDC hDc)
     uintptr_t HeldBody = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0xA0, 0x0118, 0x0 });
     //uintptr_t AllBodies = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x40, 0x168, 0x0 });
 
-    //misc player values
+    if (firstprint) {
+        std::stringstream gmss;
+        gmss << "Game: 0x" << std::hex << game;
+        std::string strgm = gmss.str();
+
+        std::stringstream plss;
+        plss << "Player: 0x" << std::hex << player;
+        std::string strpl = plss.str();
+
+        std::stringstream scss;
+        scss << "Scene: 0x" << std::hex << scene;
+        std::string strsc = scss.str();
+
+        std::stringstream ress;
+        ress << "Renderer: 0x" << std::hex << renderer;
+        std::string strre = ress.str();
+
+        std::stringstream bess;
+        bess << "Base: 0x" << std::hex << moduleBase;
+        std::string strbe = bess.str();
+
+        std::stringstream boss;
+        boss << "Held body: 0x" << std::hex << HeldBody;
+        std::string stobe = boss.str();
+
+        std::cout << strgm.c_str() << std::endl;
+        std::cout << strpl.c_str() << std::endl;
+        std::cout << strsc.c_str() << std::endl;
+        std::cout << strre.c_str() << std::endl;
+        std::cout << strbe.c_str() << std::endl;
+        std::cout << stobe.c_str() << std::endl;
+
+        firstprint = false;
+    }
+
+    //misc player valuessu
     float* x = (float*)(player);
     float* y = (float*)(player + 4);
     float* z = (float*)(player + 8);
@@ -233,6 +270,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         ImGui::Checkbox("No walls", &cheatHandler[4]);
         ImGui::Checkbox("No use cooldown", &cheatHandler[7]);
         ImGui::Checkbox("Long planks", &cheatHandler[12]);
+        ImGui::Checkbox("Hulk yeet", &cheatHandler[13]);
         ImGui::Checkbox("Noclip [V]", &cheatHandler[8]);
         ImGui::Checkbox("Slow motion [Q]", &cheatHandler[1]);
         ImGui::SameLine();
@@ -290,16 +328,6 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         //bass << "Held body: 0x" << std::hex << AllBodies;
         //std::string stabe = bass.str();
 
-        COORD tl = { 0,0 };
-        SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), tl);
-        std::cout << strgm.c_str() << std::endl;
-        std::cout << strpl.c_str() << std::endl;
-        std::cout << strsc.c_str() << std::endl;
-        std::cout << strre.c_str() << std::endl;
-        std::cout << strbe.c_str() << std::endl;
-        std::cout << stobe.c_str() << std::endl;
-        //std::cout << stabe.c_str() << std::endl;
-
         ImGui::Text(strgm.c_str());
         ImGui::Text(strpl.c_str());
         ImGui::Text(strsc.c_str());
@@ -344,6 +372,9 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         }
         if (cheatHandler[12]) {
             ImGui::Text("Long planks");
+        }
+        if (cheatHandler[13]) {
+            ImGui::Text("Hulk yeet");
         }
         if (cheatHandler[8]) {
             ImGui::Text("Noclip");
@@ -552,13 +583,13 @@ bool hwglSwapBuffers(_In_ HDC hDc)
     if (cheatHandler[8]) {
 
         //forward vector
-        float nvX = 2 * (*qx * *qz + *qw * *qy);
-        float nvY = 2 * (*qy * *qz - *qw * *qx);
-        float nvZ = 1 - 2 * (*qx * *qx + *qy * *qy);
+        float  nvX =     2 * (*qx * *qz + *qw * *qy);
+        float  nvY =     2 * (*qy * *qz - *qw * *qx);
+        float  nvZ = 1 - 2 * (*qx * *qx + *qy * *qy);
 
         float nvXl = 1 - 2 * (*qy * *qy + *qz * *qz);
-        float nvYl = 2 * (*qx * *qy + *qw * *qz);
-        float nvZl = 2 * (*qx * *qz - *qw * *qy);
+        float nvYl =     2 * (*qx * *qy + *qw * *qz);
+        float nvZl =     2 * (*qx * *qz - *qw * *qy);
 
         if (((GetAsyncKeyState(VK_SHIFT) >> 15) & 0x0001) == 0x0001) {
             speed = 1.0f; //sprint
@@ -613,6 +644,23 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         else {
             //disable bigger guns
             mem::Patch((byte*)(moduleBase + 0xABDF9), (byte*)"\xF3\x0F\x5C\x35\xFB\x1D\x25\x00\xF3\x0F\x59\x35\x27\x9F\x25\x00\xF3\x41\x0F\x5F\xF5\xF3\x41\x0F\x5D\xF0", 26); //unpatch plonks
+        }
+    }
+
+    if (cheatHandler[13] != prevCheatHandler[13]) {
+        if (cheatHandler[13]) {
+            //enable bigger yeets
+            std::cout << "Enabled yeets" << std::endl;
+            mem::Nop((byte*)(moduleBase + 0x0ACCCF), 8);
+            mem::Nop((byte*)(moduleBase + 0x0A997A), 8);
+            *(float*)(player + 0x14c) = 500.0f;
+        }
+        else {
+            //disable bigger yeets
+            std::cout << "Disabled yeets" << std::endl;
+            mem::Patch((byte*)(moduleBase + 0x0ACCCF), (byte*)"\xF3\x0F\x11\x87\x4C\x01\x00\x00", 8); //unpatch plonks
+            mem::Patch((byte*)(moduleBase + 0x0A997A), (byte*)"\xF3\x0F\x11\x87\x4C\x01\x00\x00", 8); //unpatch plonks
+            *(float*)(player + 0x14c) = 0.5;
         }
     }
 
@@ -728,9 +776,11 @@ DWORD WINAPI main(HMODULE hModule)
     SMALL_RECT tmp = { 0, 0, 120, 15 };
     SetConsoleWindowInfo(GetStdHandle(STD_OUTPUT_HANDLE), true, &tmp);
 
-    MessageBox(0, L"Injection complete.\nInsert or F1 for menu", L"Notice", MB_ICONINFORMATION);
+    //MessageBox(0, L"Injection complete.\nInsert or F1 for menu", L"Notice", MB_ICONINFORMATION);
 
-    std::cout << std::hex << mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x55\x41\x56\x48\x8D\x68\xD8\x48\x81\xEC\x00\x00\x00\x00\x48\xC7\x45\x00\x00\x00\x00\x00", "xxxxxxxxxxxxxxx????xxx?????", GetModuleHandle(NULL)) << std::endl;
+    Sleep(2000);
+
+    //std::cout << std::hex << mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x55\x41\x56\x48\x8D\x68\xD8\x48\x81\xEC\x00\x00\x00\x00\x48\xC7\x45\x00\x00\x00\x00\x00", "xxxxxxxxxxxxxxx????xxx?????", GetModuleHandle(NULL)) << std::endl;
 
     HANDLE mainHandle = GetModuleHandle(L"teardown.exe");
     uintptr_t moduleBase = (uintptr_t)mainHandle;
