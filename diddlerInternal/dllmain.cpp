@@ -13,6 +13,7 @@
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_win32.h>
 #include <mutex>
+#include "types.h"
 
 #define CHAR_NOT_SELECTED " "
 #define CHAR_SELECTED ">"
@@ -43,12 +44,14 @@ void hidecursor();
 void explosionPatch(int explosionMultiplier, uintptr_t moduleBase);
 void pewpewPatch(int pewMultiplier, uintptr_t moduleBase);
 void plankPatch(uintptr_t moduleBase);
+void spawnEntity(uintptr_t game);
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 WNDPROC oWndProc;
 
 typedef void (*tPaint) (uintptr_t* Scene, Vector3* Position, float size, int darken, float dispersion);
 typedef void (*tFire) (uintptr_t* Scene, Vector3* Position);
+typedef uintptr_t* (*tSpawnVox) (uintptr_t* ptr, Teardown::small_string* unkn, Teardown::small_string* fpath);
 
 bool needToNopMovement = true;
 bool needToPatchMovement = true;
@@ -141,6 +144,15 @@ bool showPanel = true;
 float speed = 0.5f;
 
 bool firstprint = true;
+
+intptr_t lastHeldBody = 0x0;
+
+void spawnEntity(uintptr_t game) {
+    tSpawnVox oSpawnVox = (tSpawnVox)mem::FindPattern((PBYTE)"\x4C\x8B\xDC\x57\x48\x81\xEC\x00\x00\x00\x00\x48\xC7\x44\x24\x00\x00\x00\x00\x00\x49\x89\x5B\x08\x33\xFF\x89\x7C\x24\x30\x48\x8D\x44\x24\x00\x48\x89\x44\x24\x00\xC7\x44\x24\x00\x00\x00\x00\x00\x89\x7C\x24\x70\x49\x8D\x43\x88\x49\x89\x43\x80\xC7\x44\x24\x00\x00\x00\x00\x00\xF3\x0F\x11\x4C\x24\x00\x45\x33\xC9\x4C\x8D\x44\x24\x00\x48\x8D\x54\x24\x00\xE8\x00\x00\x00\x00\x48\x8B\x4C\x24\x00\x84\xC0\x74\x0B\x39\x7C\x24\x30\x74\x05\x48\x8B\x19\xEB\x03\x48\x8B\xDF\x89\x7C\x24\x70\x48\x8D\x94\x24\x00\x00\x00\x00\x48\x8B\x44\x24\x00\x48\x3B\xC2\x74\x0D\x48\x8B\xC8\xE8\x00\x00\x00\x00\x48\x8B\x4C\x24\x00\x89\x7C\x24\x30\x48\x8D\x44\x24\x00\x48\x3B\xC8\x74\x06\xE8\x00\x00\x00\x00\x90\x48\x8B\xC3\x48\x8B\x9C\x24\x00\x00\x00\x00\x48\x81\xC4\x00\x00\x00\x00\x5F\xC3", "xxxxxxx????xxxx?????xxxxxxxxxxxxxx?xxxx?xxx?????xxxxxxxxxxxxxxx?????xxxxx?xxxxxxx?xxxx?x????xxxx?xxxxxxxxxxxxxxxxxxxxxxxxxx????xxxx?xxxxxxxxx????xxxx?xxxxxxxx?xxxxxx????xxxxxxxx????xxx????xx", GetModuleHandle(NULL));
+    Teardown::small_string unk0("");
+    Teardown::small_string file_path("vox/basic.vox");
+    oSpawnVox((uintptr_t*)(game + 0xA8), &unk0, &file_path);
+}
 
 bool hwglSwapBuffers(_In_ HDC hDc)
 {
@@ -297,6 +309,9 @@ bool hwglSwapBuffers(_In_ HDC hDc)
             v3.y = *y;
             v3.z = *z;
             oPaint((uintptr_t*)scene, &v3, 500.0f, 0.0f, 25.0f);
+        }
+        if (ImGui::Button("Spawn test")) {
+            spawnEntity(game);
         }
         ImGui::BeginGroup();
 
@@ -541,12 +556,10 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 
     if (cheatHandler[8] != prevCheatHandler[8]) {
         if (cheatHandler[8]) {
-            //enable fly
-
             //nop instructions for camera movement
-            mem::Nop((byte*)(moduleBase + 0xA6621), 5);
-            mem::Nop((byte*)(moduleBase + 0xA6626), 8);
-            mem::Nop((byte*)(moduleBase + 0xA665F), 8);
+            mem::Nop((byte*)(moduleBase + 0xA6621), 5); //teardown.exe+A6621 - F3 0F11 43 7C | movss [rbx+7C],xmm0
+            mem::Nop((byte*)(moduleBase + 0xA6626), 8); //teardown.exe+A6626 - F3 0F11 8B 84000000 | movss [rbx+00000084],xmm1
+            mem::Nop((byte*)(moduleBase + 0xA665F), 8); //teardown.exe+A665F - F3 0F11 93 80000000 | movss [rbx+00000080],xmm2
         }
         else {
             //disable fly
@@ -702,6 +715,30 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         kpHandler[5] = true;
     }
 
+    if (HeldBody != 0x0) {
+        lastHeldBody = HeldBody;
+        float veloX = *(float*)(HeldBody + 0x78);
+        float veloY = *(float*)(HeldBody + 0x78 + 4);
+        float veloZ = *(float*)(HeldBody + 0x78 + 8);
+
+        float rotX = *(float*)(HeldBody + 0x50);
+        float rotY = *(float*)(HeldBody + 0x50 + 4);
+        float rotZ = *(float*)(HeldBody + 0x50 + 8);
+        float rotW = *(float*)(HeldBody + 0x50 + 8);
+
+        std::cout << std::hex << lastHeldBody << " | " << veloX << " : " << veloY << " : " << veloZ << " || " << rotX << " : " << rotY << " : " << rotZ << " : " << rotW << std::endl;
+    }
+
+    if (((GetAsyncKeyState(VK_F2) & 0x0001) != 0)) {
+        float  nvX = 2 * (*qx * *qz + *qw * *qy);
+        float  nvY = 2 * (*qy * *qz - *qw * *qx);
+        float  nvZ = 1 - 2 * (*qx * *qx + *qy * *qy);
+
+        *(float*)(lastHeldBody + 0x78 + 4) = -(nvX * 100);
+        *(float*)(lastHeldBody + 0x78 + 8) = -(nvY * 100);
+        *(float*)(lastHeldBody + 0x78 + 12) = -(nvZ * 100);
+    }
+
     memcpy(prevCheatHandler, cheatHandler, sizeof cheatHandler);
 
     ImGui::EndFrame();
@@ -831,7 +868,4 @@ BOOL APIENTRY DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpRese
     }
     return TRUE;
 }
-
-
-
 
