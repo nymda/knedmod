@@ -51,7 +51,17 @@ WNDPROC oWndProc;
 
 typedef void (*tPaint) (uintptr_t* Scene, Vector3* Position, float size, int darken, float dispersion);
 typedef void (*tFire) (uintptr_t* Scene, Vector3* Position);
-typedef uintptr_t* (*tSpawnVox) (uintptr_t* ptr, Teardown::small_string* unkn, Teardown::small_string* fpath);
+
+typedef uintptr_t (__fastcall* tSpawnVox) (Teardown::small_string& fpath, float scale);
+typedef void (__fastcall* CreateTexture) (uintptr_t ptr);
+typedef void (__fastcall* CreatePhysics) (uintptr_t ptr);
+typedef void (__fastcall* UpdateShapes) (uintptr_t ptr);
+typedef void (__fastcall* B_Constructor) (uintptr_t ptr, uintptr_t parent);
+typedef void (__fastcall* S_Constructor) (uintptr_t ptr, uintptr_t parent);
+typedef void (__fastcall* SetDynamic) (uintptr_t ptr, bool dynamic);
+typedef uintptr_t (__fastcall* TMalloc)(size_t);
+typedef void (__fastcall* TFree)(void* mem);
+typedef void(__fastcall* updateShapes)(uintptr_t mem);
 
 bool needToNopMovement = true;
 bool needToPatchMovement = true;
@@ -148,10 +158,41 @@ bool firstprint = true;
 intptr_t lastHeldBody = 0x0;
 
 void spawnEntity(uintptr_t game) {
-    tSpawnVox oSpawnVox = (tSpawnVox)mem::FindPattern((PBYTE)"\x4C\x8B\xDC\x57\x48\x81\xEC\x00\x00\x00\x00\x48\xC7\x44\x24\x00\x00\x00\x00\x00\x49\x89\x5B\x08\x33\xFF\x89\x7C\x24\x30\x48\x8D\x44\x24\x00\x48\x89\x44\x24\x00\xC7\x44\x24\x00\x00\x00\x00\x00\x89\x7C\x24\x70\x49\x8D\x43\x88\x49\x89\x43\x80\xC7\x44\x24\x00\x00\x00\x00\x00\xF3\x0F\x11\x4C\x24\x00\x45\x33\xC9\x4C\x8D\x44\x24\x00\x48\x8D\x54\x24\x00\xE8\x00\x00\x00\x00\x48\x8B\x4C\x24\x00\x84\xC0\x74\x0B\x39\x7C\x24\x30\x74\x05\x48\x8B\x19\xEB\x03\x48\x8B\xDF\x89\x7C\x24\x70\x48\x8D\x94\x24\x00\x00\x00\x00\x48\x8B\x44\x24\x00\x48\x3B\xC2\x74\x0D\x48\x8B\xC8\xE8\x00\x00\x00\x00\x48\x8B\x4C\x24\x00\x89\x7C\x24\x30\x48\x8D\x44\x24\x00\x48\x3B\xC8\x74\x06\xE8\x00\x00\x00\x00\x90\x48\x8B\xC3\x48\x8B\x9C\x24\x00\x00\x00\x00\x48\x81\xC4\x00\x00\x00\x00\x5F\xC3", "xxxxxxx????xxxx?????xxxxxxxxxxxxxx?xxxx?xxx?????xxxxxxxxxxxxxxx?????xxxxx?xxxxxxx?xxxx?x????xxxx?xxxxxxxxxxxxxxxxxxxxxxxxxx????xxxx?xxxxxxxxx????xxxx?xxxxxxxx?xxxxxx????xxxxxxxx????xxx????xx", GetModuleHandle(NULL));
-    Teardown::small_string unk0("");
-    Teardown::small_string file_path("vox/basic.vox");
-    oSpawnVox((uintptr_t*)(game + 0xA8), &unk0, &file_path);
+    tSpawnVox oSpawnVox = (tSpawnVox)mem::FindPattern((PBYTE)"\x4C\x8B\xDC\x57\x48\x81\xEC\x2A\x2A\x2A\x2A\x48\xC7\x44\x24\x2A\x2A\x2A\x2A\x2A\x49\x89\x5B\x08\x33\xFF\x89\x7C\x24\x30\x48\x8D\x44\x24\x2A\x48\x89\x44\x24\x2A\xC7\x44\x24\x2A\x2A\x2A\x2A\x2A\x89\x7C\x24\x70\x49\x8D\x43\x88\x49\x89\x43\x80\xC7\x44\x24\x2A\x2A\x2A\x2A\x2A\xF3\x0F\x11\x4C\x24\x2A\x45\x33\xC9\x4C\x8D\x44\x24\x2A\x48\x8D\x54\x24\x2A\xE8\x2A\x2A\x2A\x2A\x48\x8B\x4C\x24\x2A\x84\xC0\x74\x0B\x39\x7C\x24\x30\x74\x05\x48\x8B\x19\xEB\x03\x48\x8B\xDF\x89\x7C\x24\x70\x48\x8D\x94\x24", "xxxxxxx????xxxx?????xxxxxxxxxxxxxx?xxxx?xxx?????xxxxxxxxxxxxxxx?????xxxxx?xxxxxxx?xxxx?x????xxxx?xxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    CreateTexture oCreateTexture = (CreateTexture)mem::FindPattern((PBYTE)"\x48\x89\x4C\x24\x08\x57\x41\x54\x41\x55\x41\x57", "xxxxxxxxxxxx", GetModuleHandle(NULL));
+    CreatePhysics oCreatePhysics = (CreatePhysics)mem::FindPattern((PBYTE)"\x40\x53\x56\x57\x41\x55", "xxxxxx", GetModuleHandle(NULL));
+    UpdateShapes oUpdateShapes = (CreatePhysics)mem::FindPattern((PBYTE)"\x48\x89\x4C\x24\x2A\x55\x56\x57\x41\x54\x41\x55\x41\x56\x41\x57\x48\x8D\xAC\x24\x2A\x2A\x2A\x2A\xB8\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\x48\x2B\xE0\x48\xC7\x85\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x48\x89\x9C\x24\x2A\x2A\x2A\x2A\x0F\x29\xB4\x24\x2A\x2A\x2A\x2A\x0F\x29\xBC\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\x84\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\x8C\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\x94\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\x9C\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\xA4\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\xAC\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\xB4\x24", "xxxx?xxxxxxxxxxxxxxx????x????x????xxxxxx????????xxxx????xxxx????xxxx????xxxxx????xxxxx????xxxxx????xxxxx????xxxxx????xxxxx????xxxxx", GetModuleHandle(NULL));
+    B_Constructor oB_Constructor = (B_Constructor)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x4C\x8B\xC2\x48\x8B\xD9\xBA\x01\x00\x00\x00", "xxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    S_Constructor oS_Constructor = (S_Constructor)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x4C\x8B\xC2\x48\x8B\xD9\xBA\x02\x00\x00\x00", "xxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    SetDynamic oSetDynamic = (SetDynamic)mem::FindPattern((PBYTE)"\x88\x91\x2A\x2A\x2A\x2A\x4C\x8B\xC1\x84\xD2\x74\x29\x0F\xB6\x81\x2A\x2A\x2A\x2A\xC6\x81\x2A\x2A\x2A\x2A\x2A\x84\xC0\x75\x17\x48\x8B\x05\x2A\x2A\x2A\x2A\x49\x8B\xD0\x48\x8B\x48\x40\x48\x8B\x49\x08\xE9\x2A\x2A\x2A\x2A\xC3", "xx????xxxxxxxxxx????xx?????xxxxxxx????xxxxxxxxxxxx????x", GetModuleHandle(NULL));
+    TMalloc oTMalloc = (TMalloc)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x48\x8B\xD9\x48\x83\xF9\xE0\x77\x3C\x48\x85\xC9\xB8\x2A\x2A\x2A\x2A\x48\x0F\x44\xD8\xEB\x15\xE8\x2A\x2A\x2A\x2A\x85\xC0\x74\x25\x48\x8B\xCB\xE8\x2A\x2A\x2A\x2A\x85\xC0\x74\x19\x48\x8B\x0D\x2A\x2A\x2A\x2A\x4C\x8B\xC3\x33\xD2\xFF\x15\x2A\x2A\x2A\x2A\x48\x85\xC0\x74\xD4\xEB\x0D\xE8\x2A\x2A\x2A\x2A\xC7\x00\x2A\x2A\x2A\x2A\x33\xC0\x48\x83\xC4\x20\x5B\xC3", "xxxxxxxxxxxxxxxxxxx????xxxxxxx????xxxxxxxx????xxxxxxx????xxxxxxx????xxxxxxxx????xx????xxxxxxxx", GetModuleHandle(NULL));
+
+    Teardown::small_string file_path("vox/knedcube.vox");
+    uintptr_t vox = oSpawnVox(file_path, 1.0f);
+    oCreateTexture(vox);
+    oCreatePhysics(vox);
+
+    uintptr_t BODY = oTMalloc(0x100u);
+    oB_Constructor(BODY, (uintptr_t)nullptr);
+    oSetDynamic(BODY, true);
+
+    *(float*)(BODY + 0x28u) = 0.0f;
+    *(float*)(BODY + 0x28u + 4) = 10.0f;
+    *(float*)(BODY + 0x28u + 8) = 0.0f;
+    *(float*)(BODY + 0x28u + 12) = 0.0f;
+    *(float*)(BODY + 0x28u + 16) = 0.0f;
+    *(float*)(BODY + 0x28u + 20) = 0.0f;
+    *(float*)(BODY + 0x28u + 24) = 1.0f;
+
+    uintptr_t SHAPE = oTMalloc(0xB0u);
+    oS_Constructor(SHAPE, BODY);
+
+    std::cout << SHAPE << std::endl;
+    std::cout << vox << std::endl;
+
+    *(uintptr_t*)(SHAPE + 0x90) = vox;
+
+    oUpdateShapes(SHAPE);
 }
 
 bool hwglSwapBuffers(_In_ HDC hDc)
@@ -166,7 +207,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
     uintptr_t renderer = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x38, 0x0 });
     uintptr_t scene = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x40, 0x0 });
     uintptr_t HeldBody = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0xA0, 0x0118, 0x0 });
-    //uintptr_t AllBodies = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x40, 0x168, 0x0 });
+    uintptr_t TargetBody = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0xA0, 0x4A0, 0x0 });
 
     if (firstprint) {
         std::stringstream gmss;
@@ -715,21 +756,22 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         kpHandler[5] = true;
     }
 
-    if (HeldBody != 0x0) {
-        lastHeldBody = HeldBody;
-        float veloX = *(float*)(HeldBody + 0x78);
-        float veloY = *(float*)(HeldBody + 0x78 + 4);
-        float veloZ = *(float*)(HeldBody + 0x78 + 8);
+    if (TargetBody != 0x0) {
+        uintptr_t TargetObject = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0xA0, 0x4A0, 0x10, 0x0 });
+        lastHeldBody = TargetObject;
+        float veloX = *(float*)(TargetObject + 0x78);
+        float veloY = *(float*)(TargetObject + 0x78 + 4);
+        float veloZ = *(float*)(TargetObject + 0x78 + 8);
 
-        float rotX = *(float*)(HeldBody + 0x50);
-        float rotY = *(float*)(HeldBody + 0x50 + 4);
-        float rotZ = *(float*)(HeldBody + 0x50 + 8);
-        float rotW = *(float*)(HeldBody + 0x50 + 8);
+        float rotX = *(float*)(TargetObject + 0x50);
+        float rotY = *(float*)(TargetObject + 0x50 + 4);
+        float rotZ = *(float*)(TargetObject + 0x50 + 8);
+        float rotW = *(float*)(TargetObject + 0x50 + 8);
 
-        std::cout << std::hex << lastHeldBody << " | " << veloX << " : " << veloY << " : " << veloZ << " || " << rotX << " : " << rotY << " : " << rotZ << " : " << rotW << std::endl;
+        std::cout << std::hex << HeldBody << ":" << TargetBody << ":" << *(uintptr_t*)(TargetBody + 0x10) << ":" << TargetObject << std::endl;
     }
 
-    if (((GetAsyncKeyState(VK_F2) & 0x0001) != 0)) {
+    if (((GetAsyncKeyState(VK_F2) >> 15) & 0x0001) == 0x0001) {
         float  nvX = 2 * (*qx * *qz + *qw * *qy);
         float  nvY = 2 * (*qy * *qz - *qw * *qx);
         float  nvZ = 1 - 2 * (*qx * *qx + *qy * *qy);

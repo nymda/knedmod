@@ -169,4 +169,6 @@ namespace Teardown {
 
 	static_assert(sizeof(small_string) == 16, "small_string size is incorrect!");
 	static_assert(sizeof(small_vector<void>) == 16, "small_vector size is incorrect!");
+
+
 };
