@@ -1,5 +1,6 @@
 #define _WIN32_WINNT 0x0500
 #define GLEW_STATIC
+#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 
 #include "mem.h"
 #include "glew.h"
@@ -14,6 +15,9 @@
 #include <imgui_impl_win32.h>
 #include <mutex>
 #include "types.h"
+#include <fstream>
+#include <iostream>
+#include <filesystem>
 
 #define CHAR_NOT_SELECTED " "
 #define CHAR_SELECTED ">"
@@ -44,7 +48,7 @@ void hidecursor();
 void explosionPatch(int explosionMultiplier, uintptr_t moduleBase);
 void pewpewPatch(int pewMultiplier, uintptr_t moduleBase);
 void plankPatch(uintptr_t moduleBase);
-void spawnEntity(uintptr_t game);
+void spawnEntity(uintptr_t game, uintptr_t player, std::string filepath);
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 WNDPROC oWndProc;
@@ -60,7 +64,7 @@ typedef void (__fastcall* B_Constructor) (uintptr_t ptr, uintptr_t parent);
 typedef void (__fastcall* S_Constructor) (uintptr_t ptr, uintptr_t parent);
 typedef void (__fastcall* SetDynamic) (uintptr_t ptr, bool dynamic);
 typedef uintptr_t (__fastcall* TMalloc)(size_t);
-typedef void (__fastcall* TFree)(void* mem);
+typedef void (__fastcall* TFree)(uintptr_t mem);
 typedef void(__fastcall* updateShapes)(uintptr_t mem);
 
 bool needToNopMovement = true;
@@ -102,7 +106,7 @@ void onSwapBuffersInit()
 }
 
 //handles only ctivating a function on keyDown [uparrow, downarrow, rightarrow, q, i, k, space, leftarrow, v]
-bool kpHandler[10] = { true, true, true, true, true, true, true, true, true, true };
+bool kpHandler[11] = { true, true, true, true, true, true, true, true, true, true, true };
 
 //handles if a cheat is enabled / disabled
 bool prevCheatHandler[14] = { false, false, false, false, false, false, false, false, false, false, false, false, false, false };
@@ -157,28 +161,66 @@ bool firstprint = true;
 
 intptr_t lastHeldBody = 0x0;
 
-void spawnEntity(uintptr_t game) {
-    tSpawnVox oSpawnVox = (tSpawnVox)mem::FindPattern((PBYTE)"\x4C\x8B\xDC\x57\x48\x81\xEC\x2A\x2A\x2A\x2A\x48\xC7\x44\x24\x2A\x2A\x2A\x2A\x2A\x49\x89\x5B\x08\x33\xFF\x89\x7C\x24\x30\x48\x8D\x44\x24\x2A\x48\x89\x44\x24\x2A\xC7\x44\x24\x2A\x2A\x2A\x2A\x2A\x89\x7C\x24\x70\x49\x8D\x43\x88\x49\x89\x43\x80\xC7\x44\x24\x2A\x2A\x2A\x2A\x2A\xF3\x0F\x11\x4C\x24\x2A\x45\x33\xC9\x4C\x8D\x44\x24\x2A\x48\x8D\x54\x24\x2A\xE8\x2A\x2A\x2A\x2A\x48\x8B\x4C\x24\x2A\x84\xC0\x74\x0B\x39\x7C\x24\x30\x74\x05\x48\x8B\x19\xEB\x03\x48\x8B\xDF\x89\x7C\x24\x70\x48\x8D\x94\x24", "xxxxxxx????xxxx?????xxxxxxxxxxxxxx?xxxx?xxx?????xxxxxxxxxxxxxxx?????xxxxx?xxxxxxx?xxxx?x????xxxx?xxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
-    CreateTexture oCreateTexture = (CreateTexture)mem::FindPattern((PBYTE)"\x48\x89\x4C\x24\x08\x57\x41\x54\x41\x55\x41\x57", "xxxxxxxxxxxx", GetModuleHandle(NULL));
-    CreatePhysics oCreatePhysics = (CreatePhysics)mem::FindPattern((PBYTE)"\x40\x53\x56\x57\x41\x55", "xxxxxx", GetModuleHandle(NULL));
-    UpdateShapes oUpdateShapes = (CreatePhysics)mem::FindPattern((PBYTE)"\x48\x89\x4C\x24\x2A\x55\x56\x57\x41\x54\x41\x55\x41\x56\x41\x57\x48\x8D\xAC\x24\x2A\x2A\x2A\x2A\xB8\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\x48\x2B\xE0\x48\xC7\x85\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x48\x89\x9C\x24\x2A\x2A\x2A\x2A\x0F\x29\xB4\x24\x2A\x2A\x2A\x2A\x0F\x29\xBC\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\x84\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\x8C\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\x94\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\x9C\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\xA4\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\xAC\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\xB4\x24", "xxxx?xxxxxxxxxxxxxxx????x????x????xxxxxx????????xxxx????xxxx????xxxx????xxxxx????xxxxx????xxxxx????xxxxx????xxxxx????xxxxx????xxxxx", GetModuleHandle(NULL));
-    B_Constructor oB_Constructor = (B_Constructor)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x4C\x8B\xC2\x48\x8B\xD9\xBA\x01\x00\x00\x00", "xxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
-    S_Constructor oS_Constructor = (S_Constructor)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x4C\x8B\xC2\x48\x8B\xD9\xBA\x02\x00\x00\x00", "xxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
-    SetDynamic oSetDynamic = (SetDynamic)mem::FindPattern((PBYTE)"\x88\x91\x2A\x2A\x2A\x2A\x4C\x8B\xC1\x84\xD2\x74\x29\x0F\xB6\x81\x2A\x2A\x2A\x2A\xC6\x81\x2A\x2A\x2A\x2A\x2A\x84\xC0\x75\x17\x48\x8B\x05\x2A\x2A\x2A\x2A\x49\x8B\xD0\x48\x8B\x48\x40\x48\x8B\x49\x08\xE9\x2A\x2A\x2A\x2A\xC3", "xx????xxxxxxxxxx????xx?????xxxxxxx????xxxxxxxxxxxx????x", GetModuleHandle(NULL));
-    TMalloc oTMalloc = (TMalloc)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x48\x8B\xD9\x48\x83\xF9\xE0\x77\x3C\x48\x85\xC9\xB8\x2A\x2A\x2A\x2A\x48\x0F\x44\xD8\xEB\x15\xE8\x2A\x2A\x2A\x2A\x85\xC0\x74\x25\x48\x8B\xCB\xE8\x2A\x2A\x2A\x2A\x85\xC0\x74\x19\x48\x8B\x0D\x2A\x2A\x2A\x2A\x4C\x8B\xC3\x33\xD2\xFF\x15\x2A\x2A\x2A\x2A\x48\x85\xC0\x74\xD4\xEB\x0D\xE8\x2A\x2A\x2A\x2A\xC7\x00\x2A\x2A\x2A\x2A\x33\xC0\x48\x83\xC4\x20\x5B\xC3", "xxxxxxxxxxxxxxxxxxx????xxxxxxx????xxxxxxxx????xxxxxxx????xxxxxxx????xxxxxxxx????xx????xxxxxxxx", GetModuleHandle(NULL));
+tSpawnVox oSpawnVox;
+CreateTexture oCreateTexture;
+CreatePhysics oCreatePhysics;
+UpdateShapes oUpdateShapes;
+B_Constructor oB_Constructor;
+S_Constructor oS_Constructor;
+SetDynamic oSetDynamic;
+TMalloc oTMalloc;
+bool first = true;
 
-    Teardown::small_string file_path("vox/knedcube.vox");
+inline bool exists(const std::string& name) {
+    struct stat buffer;
+    return (stat(name.c_str(), &buffer) == 0);
+}
+
+void spawnEntity(uintptr_t game, uintptr_t player, std::string filepath) {
+
+    if (first) {
+        oSpawnVox = (tSpawnVox)mem::FindPattern((PBYTE)"\x4C\x8B\xDC\x57\x48\x81\xEC\x2A\x2A\x2A\x2A\x48\xC7\x44\x24\x2A\x2A\x2A\x2A\x2A\x49\x89\x5B\x08\x33\xFF\x89\x7C\x24\x30\x48\x8D\x44\x24\x2A\x48\x89\x44\x24\x2A\xC7\x44\x24\x2A\x2A\x2A\x2A\x2A\x89\x7C\x24\x70\x49\x8D\x43\x88\x49\x89\x43\x80\xC7\x44\x24\x2A\x2A\x2A\x2A\x2A\xF3\x0F\x11\x4C\x24\x2A\x45\x33\xC9\x4C\x8D\x44\x24\x2A\x48\x8D\x54\x24\x2A\xE8\x2A\x2A\x2A\x2A\x48\x8B\x4C\x24\x2A\x84\xC0\x74\x0B\x39\x7C\x24\x30\x74\x05\x48\x8B\x19\xEB\x03\x48\x8B\xDF\x89\x7C\x24\x70\x48\x8D\x94\x24", "xxxxxxx????xxxx?????xxxxxxxxxxxxxx?xxxx?xxx?????xxxxxxxxxxxxxxx?????xxxxx?xxxxxxx?xxxx?x????xxxx?xxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+        oCreateTexture = (CreateTexture)mem::FindPattern((PBYTE)"\x48\x89\x4C\x24\x08\x57\x41\x54\x41\x55\x41\x57", "xxxxxxxxxxxx", GetModuleHandle(NULL));
+        oCreatePhysics = (CreatePhysics)mem::FindPattern((PBYTE)"\x40\x53\x56\x57\x41\x55", "xxxxxx", GetModuleHandle(NULL));
+        oUpdateShapes = (CreatePhysics)mem::FindPattern((PBYTE)"\x48\x89\x4C\x24\x2A\x55\x56\x57\x41\x54\x41\x55\x41\x56\x41\x57\x48\x8D\xAC\x24\x2A\x2A\x2A\x2A\xB8\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\x48\x2B\xE0\x48\xC7\x85\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x48\x89\x9C\x24\x2A\x2A\x2A\x2A\x0F\x29\xB4\x24\x2A\x2A\x2A\x2A\x0F\x29\xBC\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\x84\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\x8C\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\x94\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\x9C\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\xA4\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\xAC\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\xB4\x24", "xxxx?xxxxxxxxxxxxxxx????x????x????xxxxxx????????xxxx????xxxx????xxxx????xxxxx????xxxxx????xxxxx????xxxxx????xxxxx????xxxxx????xxxxx", GetModuleHandle(NULL));
+        oB_Constructor = (B_Constructor)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x4C\x8B\xC2\x48\x8B\xD9\xBA\x01\x00\x00\x00", "xxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+        oS_Constructor = (S_Constructor)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x4C\x8B\xC2\x48\x8B\xD9\xBA\x02\x00\x00\x00", "xxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+        oSetDynamic = (SetDynamic)mem::FindPattern((PBYTE)"\x88\x91\x2A\x2A\x2A\x2A\x4C\x8B\xC1\x84\xD2\x74\x29\x0F\xB6\x81\x2A\x2A\x2A\x2A\xC6\x81\x2A\x2A\x2A\x2A\x2A\x84\xC0\x75\x17\x48\x8B\x05\x2A\x2A\x2A\x2A\x49\x8B\xD0\x48\x8B\x48\x40\x48\x8B\x49\x08\xE9\x2A\x2A\x2A\x2A\xC3", "xx????xxxxxxxxxx????xx?????xxxxxxx????xxxxxxxxxxxx????x", GetModuleHandle(NULL));
+        oTMalloc = (TMalloc)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x48\x8B\xD9\x48\x83\xF9\xE0\x77\x3C\x48\x85\xC9\xB8\x2A\x2A\x2A\x2A\x48\x0F\x44\xD8\xEB\x15\xE8\x2A\x2A\x2A\x2A\x85\xC0\x74\x25\x48\x8B\xCB\xE8\x2A\x2A\x2A\x2A\x85\xC0\x74\x19\x48\x8B\x0D\x2A\x2A\x2A\x2A\x4C\x8B\xC3\x33\xD2\xFF\x15\x2A\x2A\x2A\x2A\x48\x85\xC0\x74\xD4\xEB\x0D\xE8\x2A\x2A\x2A\x2A\xC7\x00\x2A\x2A\x2A\x2A\x33\xC0\x48\x83\xC4\x20\x5B\xC3", "xxxxxxxxxxxxxxxxxxx????xxxxxxx????xxxxxxxx????xxxxxxx????xxxxxxx????xxxxxxxx????xx????xxxxxxxx", GetModuleHandle(NULL));
+        first = false;
+    }
+
+    if (!exists("vox/" + filepath)) {
+        return;
+    }
+
+    Teardown::small_string file_path((char*)("vox/" + filepath).c_str());
     uintptr_t vox = oSpawnVox(file_path, 1.0f);
+
     oCreateTexture(vox);
     oCreatePhysics(vox);
 
     uintptr_t BODY = oTMalloc(0x100u);
+
     oB_Constructor(BODY, (uintptr_t)nullptr);
     oSetDynamic(BODY, true);
 
-    *(float*)(BODY + 0x28u) = 0.0f;
-    *(float*)(BODY + 0x28u + 4) = 10.0f;
-    *(float*)(BODY + 0x28u + 8) = 0.0f;
+    float* qx = (float*)(player + 0x0088);
+    float* qy = (float*)(player + 0x0088 + 4);
+    float* qz = (float*)(player + 0x0088 + 8);
+    float* qw = (float*)(player + 0x0088 + 12);
+
+    float* vx = (float*)(player + 0x007C);
+    float* vy = (float*)(player + 0x007C + 4);
+    float* vz = (float*)(player + 0x007C + 8);
+
+    float  nvX = 2 * (*qx * *qz + *qw * *qy);
+    float  nvY = 2 * (*qy * *qz - *qw * *qx);
+    float  nvZ = 1 - 2 * (*qx * *qx + *qy * *qy);
+
+    *(float*)(BODY + 0x28u) = ((*vx - (nvX * 3.0f)) - 0.6);
+    *(float*)(BODY + 0x28u + 4) = ((*vy - (nvY * 3.0f) - 0.6));
+    *(float*)(BODY + 0x28u + 8) = ((*vz - (nvZ * 3.0f)) - 0.6);
     *(float*)(BODY + 0x28u + 12) = 0.0f;
     *(float*)(BODY + 0x28u + 16) = 0.0f;
     *(float*)(BODY + 0x28u + 20) = 0.0f;
@@ -187,14 +229,16 @@ void spawnEntity(uintptr_t game) {
     uintptr_t SHAPE = oTMalloc(0xB0u);
     oS_Constructor(SHAPE, BODY);
 
-    std::cout << SHAPE << std::endl;
-    std::cout << vox << std::endl;
-
     *(uintptr_t*)(SHAPE + 0x90) = vox;
 
-    oUpdateShapes(SHAPE);
+    oUpdateShapes(BODY);
 }
 
+int currentvox = 0;
+static char str0[128] = "knedcube";
+int selectedSpawnIndex = 0;
+
+namespace fs = std::filesystem;
 bool hwglSwapBuffers(_In_ HDC hDc)
 {
     //UUUUUUUUUUGH HARDCODED POINTERS UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUGH
@@ -277,7 +321,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
     std::call_once(swapBuffersInit, onSwapBuffersInit);
 
     //Q
-    if (((GetAsyncKeyState(0x51) >> 15) & 0x0001) == 0x0001) {
+    if ((((GetAsyncKeyState(0x51) >> 15) & 0x0001) == 0x0001) && !drawMenu){
 	    if (kpHandler[3]) {
 		    cheatHandler[1] = !cheatHandler[1];
 		    kpHandler[3] = false;
@@ -288,7 +332,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
     }
 
     //V
-    if (((GetAsyncKeyState(0x56) >> 15) & 0x0001) == 0x0001) {
+    if ((((GetAsyncKeyState(0x56) >> 15) & 0x0001) == 0x0001) && !drawMenu){
         if (kpHandler[9]) {
             cheatHandler[8] = !cheatHandler[8];
              kpHandler[9] = false;
@@ -344,6 +388,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         ImGui::Checkbox("Show boundaries", &drawBoundsRef);
         ImGui::Checkbox("Show bodies", &drawBodiesRef);
         ImGui::Checkbox("Depth map", &drawShadowVolRef);
+        ImGui::InputText(".vox", str0, IM_ARRAYSIZE(str0));
         if (ImGui::Button("Yellow the world")) {
             Vector3 v3 = Vector3();
             v3.x = *x;
@@ -352,7 +397,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
             oPaint((uintptr_t*)scene, &v3, 500.0f, 0.0f, 25.0f);
         }
         if (ImGui::Button("Spawn test")) {
-            spawnEntity(game);
+            spawnEntity(game, player, (char*)str0);
         }
         ImGui::BeginGroup();
 
@@ -400,6 +445,45 @@ bool hwglSwapBuffers(_In_ HDC hDc)
             mem::Patch((byte*)(moduleBase + 0xA9780), (byte*)"\xF3\x0F\x11\xBF\xD8\x00\x00\x00", 8);
             needToPatchMovement = false;
         }
+    }
+
+    if (drawMenu) {
+        ImGuiWindowFlags spawnFlags = 0;
+        spawnFlags |= ImGuiWindowFlags_NoResize;
+        spawnFlags |= ImGuiWindowFlags_NoCollapse;
+        spawnFlags |= ImGuiWindowFlags_AlwaysAutoResize;
+        ImGui::Begin("Spawner", (bool*)false, spawnFlags);
+        std::string proc = "";
+
+        int i = 0;
+        std::vector<std::string> items;
+        for (const auto& file : fs::directory_iterator("vox"))
+        {
+            if (file.path().extension() == ".vox")
+            {
+                items.push_back(file.path().filename().string());
+            }
+        }
+        if (ImGui::BeginCombo("Spawn items", items[selectedSpawnIndex].c_str(), 0)) {
+            for (int n = 0; n < items.size(); n++) {
+                bool selected = false;
+                if (selectedSpawnIndex == n) {
+                    selected = true;
+                }
+                if (ImGui::Selectable(items[n].c_str(), selected)) {
+                    selectedSpawnIndex = n;
+                }
+                if (selected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
+        if (ImGui::Button("Spawn")) {
+            spawnEntity(game, player, items[selectedSpawnIndex]);
+        }
+
+        ImGui::End();
     }
 
     if (showPanel) {
@@ -518,7 +602,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         *pSpeed = *pHealth;
     }
 
-    if (((GetAsyncKeyState(VK_SPACE) >> 15) & 0x0001) == 0x0001) {
+    if ((((GetAsyncKeyState(VK_SPACE) >> 15) & 0x0001) == 0x0001) && !drawMenu) {
 	    if (cheatHandler[2]) {
 		    if (kpHandler[6]) {
 			    setVelo = *yVelo;
@@ -719,7 +803,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
     }
 
     //I
-    if (((GetAsyncKeyState(0x49) & 0x0001) != 0)) {
+    if ((((GetAsyncKeyState(0x49) & 0x0001) != 0)) && !drawMenu){
         if (kpHandler[4]) {
             savedX = *x;
             savedY = *y;
@@ -738,7 +822,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
     }
 
     //K
-    if (((GetAsyncKeyState(0x4B) & 0x0001) != 0)) {
+    if ((((GetAsyncKeyState(0x4B) & 0x0001) != 0)) && !drawMenu){
         if (kpHandler[5]) {
             *x = savedX;
             *y = savedY;
@@ -768,10 +852,10 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         float rotZ = *(float*)(TargetObject + 0x50 + 8);
         float rotW = *(float*)(TargetObject + 0x50 + 8);
 
-        std::cout << std::hex << HeldBody << ":" << TargetBody << ":" << *(uintptr_t*)(TargetBody + 0x10) << ":" << TargetObject << std::endl;
+        //std::cout << std::hex << HeldBody << ":" << TargetBody << ":" << *(uintptr_t*)(TargetBody + 0x10) << ":" << TargetObject << std::endl;
     }
 
-    if (((GetAsyncKeyState(VK_F2) >> 15) & 0x0001) == 0x0001) {
+    if ((((GetAsyncKeyState(VK_F2) >> 15) & 0x0001) == 0x0001) && !drawMenu){
         float  nvX = 2 * (*qx * *qz + *qw * *qy);
         float  nvY = 2 * (*qy * *qz - *qw * *qx);
         float  nvZ = 1 - 2 * (*qx * *qx + *qy * *qy);
@@ -779,6 +863,16 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         *(float*)(lastHeldBody + 0x78 + 4) = -(nvX * 100);
         *(float*)(lastHeldBody + 0x78 + 8) = -(nvY * 100);
         *(float*)(lastHeldBody + 0x78 + 12) = -(nvZ * 100);
+    }
+
+    if ((((GetAsyncKeyState(VK_F3) >> 15) & 0x0001) == 0x0001) && !drawMenu){
+        if (kpHandler[10]) {
+            spawnEntity(game, player, (char*)str0);
+            kpHandler[10] = false;
+        }
+    }
+    else {
+        kpHandler[10] = true;
     }
 
     memcpy(prevCheatHandler, cheatHandler, sizeof cheatHandler);
