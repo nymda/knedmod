@@ -66,6 +66,7 @@ typedef void (__fastcall* SetDynamic) (uintptr_t ptr, bool dynamic);
 typedef uintptr_t (__fastcall* TMalloc)(size_t);
 typedef void (__fastcall* TFree)(uintptr_t mem);
 typedef void(__fastcall* updateShapes)(uintptr_t mem);
+typedef void(__fastcall* frameDrawLine)(uintptr_t renderer, const float &pos1_X, const float &pos1_Y, const float &pos1_Z, const float &pos2_X, const float &pos2_Y, const float &pos2_Z, const float &col1_R, const float &col1_G, const float &col1_B, const  float &col1_A, const  float &col2_R, const float &col2_G, const float &col2_B, const float &col2_A, bool use_depth);
 
 bool needToNopMovement = true;
 bool needToPatchMovement = true;
@@ -111,6 +112,9 @@ bool kpHandler[11] = { true, true, true, true, true, true, true, true, true, tru
 //handles if a cheat is enabled / disabled
 bool prevCheatHandler[14] = { false, false, false, false, false, false, false, false, false, false, false, false, false, false };
 bool cheatHandler[14]     = { false, false, false, false, false, false, false, false, false, false, false, false, false, false };
+
+byte campos[84];
+byte camang[84];
 
 float fly_x = 0;
 float fly_y = 0;
@@ -169,6 +173,7 @@ B_Constructor oB_Constructor;
 S_Constructor oS_Constructor;
 SetDynamic oSetDynamic;
 TMalloc oTMalloc;
+frameDrawLine oFDL;
 bool first = true;
 
 inline bool exists(const std::string& name) {
@@ -221,15 +226,19 @@ void spawnEntity(uintptr_t game, uintptr_t player, std::string filepath) {
     *(float*)(BODY + 0x28u) = ((*vx - (nvX * 3.0f)) - 0.6);
     *(float*)(BODY + 0x28u + 4) = ((*vy - (nvY * 3.0f) - 0.6));
     *(float*)(BODY + 0x28u + 8) = ((*vz - (nvZ * 3.0f)) - 0.6);
-    *(float*)(BODY + 0x28u + 12) = 0.0f;
-    *(float*)(BODY + 0x28u + 16) = 0.0f;
-    *(float*)(BODY + 0x28u + 20) = 0.0f;
-    *(float*)(BODY + 0x28u + 24) = 1.0f;
+    *(float*)(BODY + 0x28u + 12) = 0.f;
+    *(float*)(BODY + 0x28u + 16) = 0.f;
+    *(float*)(BODY + 0x28u + 20) = 0.f;
+    *(float*)(BODY + 0x28u + 24) = 1.f;
 
     uintptr_t SHAPE = oTMalloc(0xB0u);
     oS_Constructor(SHAPE, BODY);
 
     *(uintptr_t*)(SHAPE + 0x90) = vox;
+    std::cout << "======================================" << std::endl;
+    std::cout << "Shape address: 0x" << std::hex << SHAPE << std::endl;
+    std::cout << "Body address:  0x" << std::hex << BODY << std::endl;
+    std::cout << "Vox address:   0x" << std::hex << vox << std::endl;
 
     oUpdateShapes(BODY);
 }
@@ -237,6 +246,7 @@ void spawnEntity(uintptr_t game, uintptr_t player, std::string filepath) {
 int currentvox = 0;
 static char str0[128] = "knedcube";
 int selectedSpawnIndex = 0;
+bool linetime = false;
 
 namespace fs = std::filesystem;
 bool hwglSwapBuffers(_In_ HDC hDc)
@@ -288,7 +298,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         firstprint = false;
     }
 
-    //misc player valuessu
+    //misc player values
     float* x = (float*)(player);
     float* y = (float*)(player + 4);
     float* z = (float*)(player + 8);
@@ -388,6 +398,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         ImGui::Checkbox("Show boundaries", &drawBoundsRef);
         ImGui::Checkbox("Show bodies", &drawBodiesRef);
         ImGui::Checkbox("Depth map", &drawShadowVolRef);
+        ImGui::Checkbox("Line time", &linetime);
         ImGui::InputText(".vox", str0, IM_ARRAYSIZE(str0));
         if (ImGui::Button("Yellow the world")) {
             Vector3 v3 = Vector3();
@@ -447,6 +458,11 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         }
     }
 
+    if (linetime) {
+        std::cout << "lines" << std::endl;
+        oFDL(renderer, *x, *y, *z, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 1.f, 1.f, 0.f, 1.f, 1.f, false);
+    }
+
     if (drawMenu) {
         ImGuiWindowFlags spawnFlags = 0;
         spawnFlags |= ImGuiWindowFlags_NoResize;
@@ -464,25 +480,32 @@ bool hwglSwapBuffers(_In_ HDC hDc)
                 items.push_back(file.path().filename().string());
             }
         }
-        if (ImGui::BeginCombo("Spawn items", items[selectedSpawnIndex].c_str(), 0)) {
-            for (int n = 0; n < items.size(); n++) {
-                bool selected = false;
-                if (selectedSpawnIndex == n) {
-                    selected = true;
-                }
-                if (ImGui::Selectable(items[n].c_str(), selected)) {
-                    selectedSpawnIndex = n;
-                }
-                if (selected) {
-                    ImGui::SetItemDefaultFocus();
-                }
-            }
-            ImGui::EndCombo();
-        }
-        if (ImGui::Button("Spawn")) {
-            spawnEntity(game, player, items[selectedSpawnIndex]);
-        }
+        //if (ImGui::BeginCombo("Spawn items", items[selectedSpawnIndex].c_str(), 0)) {
+        //    for (int n = 0; n < items.size(); n++) {
+        //        bool selected = false;
+        //        if (selectedSpawnIndex == n) {
+        //            selected = true;
+        //        }
+        //        if (ImGui::Selectable(items[n].c_str(), selected)) {
+        //            selectedSpawnIndex = n;
+        //        }
+        //        if (selected) {
+        //            ImGui::SetItemDefaultFocus();
+        //        }
+        //    }
+        //    ImGui::EndCombo();
+        //}
+        //if (ImGui::Button("Spawn")) {
+        //    spawnEntity(game, player, items[selectedSpawnIndex]);
+        //}
 
+        for (int n = 0; n < items.size(); n++) {
+            std::stringstream ss;
+            ss << "Spawn " << items[n] << std::endl;
+            if (ImGui::Button(ss.str().c_str())) {
+                spawnEntity(game, player, items[n]);
+            }
+        }
         ImGui::End();
     }
 
@@ -809,10 +832,8 @@ bool hwglSwapBuffers(_In_ HDC hDc)
             savedY = *y;
             savedZ = *z;
 
-            savedqx = *qx;
-            savedqy = *qy;
-            savedqz = *qz;
-            savedqw = *qw;
+            mem::Patch((byte*)&campos, (byte*)(player + 0x0060), 84);
+            mem::Patch((byte*)&camang, (byte*)(player + 0x00C4), 84);
 
             kpHandler[4] = false;
         }
@@ -828,10 +849,8 @@ bool hwglSwapBuffers(_In_ HDC hDc)
             *y = savedY;
             *z = savedZ;
 
-            *qx = savedqx;
-            *qy = savedqy;
-            *qz = savedqz;
-            *qw = savedqw;
+            mem::Patch((byte*)(player + 0x0060), (byte*)&campos, 84);
+            mem::Patch((byte*)(player + 0x00C4), (byte*)&camang, 84);
 
             kpHandler[5] = false;
         }
@@ -931,6 +950,7 @@ void plankPatch(uintptr_t moduleBase) {
 DWORD WINAPI main(HMODULE hModule)
 {
     oPaint = (tPaint)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x55\x41\x56\x48\x8D\x68\xD8\x48\x81\xEC\x00\x00\x00\x00\x48\xC7\x45\x00\x00\x00\x00\x00", "xxxxxxxxxxxxxxx????xxx?????", GetModuleHandle(NULL));
+    oFDL = (frameDrawLine)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x2A\x48\x89\x6C\x24\x2A\x48\x89\x74\x24\x2A\x57\x41\x56\x41\x57\x48\x83\xEC\x20\x80\x7C\x24\x2A\x2A", "xxxx?xxxx?xxxx?xxxxxxxxxxxx??", GetModuleHandle(NULL));
     //number of cheats for menu
     int CHEAT_COUNT = 8;
 
