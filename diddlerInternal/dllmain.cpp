@@ -34,6 +34,13 @@ public:
     float z;
 };
 
+struct Position {
+    float values[3];
+};
+struct Color {
+    float values[4];
+};
+
 typedef BOOL(__stdcall* twglSwapBuffers)(_In_ HDC hDc);
 twglSwapBuffers owglSwapBuffers;
 
@@ -66,7 +73,8 @@ typedef void (__fastcall* SetDynamic) (uintptr_t ptr, bool dynamic);
 typedef uintptr_t (__fastcall* TMalloc)(size_t);
 typedef void (__fastcall* TFree)(uintptr_t mem);
 typedef void(__fastcall* updateShapes)(uintptr_t mem);
-typedef void(__fastcall* frameDrawLine)(uintptr_t renderer, const float &pos1_X, const float &pos1_Y, const float &pos1_Z, const float &pos2_X, const float &pos2_Y, const float &pos2_Z, const float &col1_R, const float &col1_G, const float &col1_B, const  float &col1_A, const  float &col2_R, const float &col2_G, const float &col2_B, const float &col2_A, bool use_depth);
+typedef void(__fastcall* frameDrawLine)(uintptr_t renderer, const Position& p1, const Position& p2, const Color& c1, const Color& c2, bool use_depth);
+typedef void(__fastcall* rayCast)(uintptr_t scene, float posX, float posY, float posZ, float vecX, float vecY, float vecZ, float dist, uintptr_t filter, float* outDist, float* outX, float* outY, float* outZ, uintptr_t* out_shape, uintptr_t* out_palette);
 
 bool needToNopMovement = true;
 bool needToPatchMovement = true;
@@ -223,14 +231,6 @@ void spawnEntity(uintptr_t game, uintptr_t player, std::string filepath) {
     float  nvY = 2 * (*qy * *qz - *qw * *qx);
     float  nvZ = 1 - 2 * (*qx * *qx + *qy * *qy);
 
-    *(float*)(BODY + 0x28u) = ((*vx - (nvX * 3.0f)) - 0.6);
-    *(float*)(BODY + 0x28u + 4) = ((*vy - (nvY * 3.0f) - 0.6));
-    *(float*)(BODY + 0x28u + 8) = ((*vz - (nvZ * 3.0f)) - 0.6);
-    *(float*)(BODY + 0x28u + 12) = 0.f;
-    *(float*)(BODY + 0x28u + 16) = 0.f;
-    *(float*)(BODY + 0x28u + 20) = 0.f;
-    *(float*)(BODY + 0x28u + 24) = 1.f;
-
     uintptr_t SHAPE = oTMalloc(0xB0u);
     oS_Constructor(SHAPE, BODY);
 
@@ -241,12 +241,33 @@ void spawnEntity(uintptr_t game, uintptr_t player, std::string filepath) {
     std::cout << "Vox address:   0x" << std::hex << vox << std::endl;
 
     oUpdateShapes(BODY);
+
+    float voxX = *(float*)(vox + 0x0044);
+    float voxY = *(float*)(vox + 0x0044 + 4);
+    float voxZ = *(float*)(vox + 0x0044 + 8);
+
+    float bodyX = ((voxX / 10.f) / 2.f);
+    float bodyY = ((voxY / 10.f) / 2.f);
+    float bodyZ = ((voxZ / 10.f) / 2.f);
+
+    std::cout << "X: " << bodyX << " Y: " << bodyY << " Z: " << bodyZ << std::endl;
+
+    *(float*)(BODY + 0x28u) = ((*vx - (nvX * 4.0f)) - bodyX);
+    *(float*)(BODY + 0x28u + 4) = ((*vy - (nvY * 4.0f)) - bodyY);
+    *(float*)(BODY + 0x28u + 8) = ((*vz - (nvZ * 4.0f)) - bodyZ);
+    *(float*)(BODY + 0x28u + 12) = 0.f;
+    *(float*)(BODY + 0x28u + 16) = 0.f;
+    *(float*)(BODY + 0x28u + 20) = 0.f;
+    *(float*)(BODY + 0x28u + 24) = 1.f;
+
 }
 
 int currentvox = 0;
 static char str0[128] = "knedcube";
 int selectedSpawnIndex = 0;
 bool linetime = false;
+
+std::vector<std::string> items;
 
 namespace fs = std::filesystem;
 bool hwglSwapBuffers(_In_ HDC hDc)
@@ -330,8 +351,8 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 
     std::call_once(swapBuffersInit, onSwapBuffersInit);
 
-    //Q
-    if ((((GetAsyncKeyState(0x51) >> 15) & 0x0001) == 0x0001) && !drawMenu){
+    //F3
+    if ((((GetAsyncKeyState(VK_F3) >> 15) & 0x0001) == 0x0001) && !drawMenu){
 	    if (kpHandler[3]) {
 		    cheatHandler[1] = !cheatHandler[1];
 		    kpHandler[3] = false;
@@ -379,7 +400,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         ImGui::Checkbox("Long planks", &cheatHandler[12]);
         ImGui::Checkbox("Hulk yeet", &cheatHandler[13]);
         ImGui::Checkbox("Noclip [V]", &cheatHandler[8]);
-        ImGui::Checkbox("Slow motion [Q]", &cheatHandler[1]);
+        ImGui::Checkbox("Slow motion [F3]", &cheatHandler[1]);
         ImGui::SameLine();
         ImGui::PushItemWidth(200);
         ImGui::SliderInt("Game speed", &desiredGameSpeedMultiple, 1, 15);
@@ -399,16 +420,12 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         ImGui::Checkbox("Show bodies", &drawBodiesRef);
         ImGui::Checkbox("Depth map", &drawShadowVolRef);
         ImGui::Checkbox("Line time", &linetime);
-        ImGui::InputText(".vox", str0, IM_ARRAYSIZE(str0));
         if (ImGui::Button("Yellow the world")) {
             Vector3 v3 = Vector3();
             v3.x = *x;
             v3.y = *y;
             v3.z = *z;
             oPaint((uintptr_t*)scene, &v3, 500.0f, 0.0f, 25.0f);
-        }
-        if (ImGui::Button("Spawn test")) {
-            spawnEntity(game, player, (char*)str0);
         }
         ImGui::BeginGroup();
 
@@ -458,9 +475,13 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         }
     }
 
-    if (linetime) {
-        std::cout << "lines" << std::endl;
-        oFDL(renderer, *x, *y, *z, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 1.f, 1.f, 0.f, 1.f, 1.f, false);
+    items.clear();
+    for (const auto& file : fs::directory_iterator("vox"))
+    {
+        if (file.path().extension() == ".vox")
+        {
+            items.push_back(file.path().filename().string());
+        }
     }
 
     if (drawMenu) {
@@ -472,32 +493,22 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         std::string proc = "";
 
         int i = 0;
-        std::vector<std::string> items;
-        for (const auto& file : fs::directory_iterator("vox"))
-        {
-            if (file.path().extension() == ".vox")
-            {
-                items.push_back(file.path().filename().string());
+
+        if (ImGui::BeginCombo("[Q] Spawn", items[selectedSpawnIndex].c_str(), 0)) {
+            for (int n = 0; n < items.size(); n++) {
+                bool selected = false;
+                if (selectedSpawnIndex == n) {
+                    selected = true;
+                }
+                if (ImGui::Selectable(items[n].c_str(), selected)) {
+                    selectedSpawnIndex = n;
+                }
+                if (selected) {
+                    ImGui::SetItemDefaultFocus();
+                }
             }
+            ImGui::EndCombo();
         }
-        //if (ImGui::BeginCombo("Spawn items", items[selectedSpawnIndex].c_str(), 0)) {
-        //    for (int n = 0; n < items.size(); n++) {
-        //        bool selected = false;
-        //        if (selectedSpawnIndex == n) {
-        //            selected = true;
-        //        }
-        //        if (ImGui::Selectable(items[n].c_str(), selected)) {
-        //            selectedSpawnIndex = n;
-        //        }
-        //        if (selected) {
-        //            ImGui::SetItemDefaultFocus();
-        //        }
-        //    }
-        //    ImGui::EndCombo();
-        //}
-        //if (ImGui::Button("Spawn")) {
-        //    spawnEntity(game, player, items[selectedSpawnIndex]);
-        //}
 
         for (int n = 0; n < items.size(); n++) {
             std::stringstream ss;
@@ -859,6 +870,38 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         kpHandler[5] = true;
     }
 
+    if ((int)(savedX + savedY + savedZ) != 0) {
+
+        static Color color{ 1.f, 1.f, 1.f, 1.f };
+        Position pos1 = { savedX - 0.5f, savedY, savedZ - 0.5f };
+        Position pos2 = { savedX - 0.5f, savedY, savedZ + 0.5f };
+        Position pos3 = { savedX + 0.5f, savedY, savedZ + 0.5f };
+        Position pos4 = { savedX + 0.5f, savedY, savedZ - 0.5f };
+
+        Position pos1_high = { savedX - 0.5f, savedY + 2.2f, savedZ - 0.5f };
+        Position pos2_high = { savedX - 0.5f, savedY + 2.2f, savedZ + 0.5f };
+        Position pos3_high = { savedX + 0.5f, savedY + 2.2f, savedZ + 0.5f };
+        Position pos4_high = { savedX + 0.5f, savedY + 2.2f, savedZ - 0.5f };
+
+        //bottom square
+        oFDL(renderer, pos1, pos2, color, color, false);
+        oFDL(renderer, pos2, pos3, color, color, false);
+        oFDL(renderer, pos3, pos4, color, color, false);
+        oFDL(renderer, pos4, pos1, color, color, false);
+
+        //top square
+        oFDL(renderer, pos1_high, pos2_high, color, color, false);
+        oFDL(renderer, pos2_high, pos3_high, color, color, false);
+        oFDL(renderer, pos3_high, pos4_high, color, color, false);
+        oFDL(renderer, pos4_high, pos1_high, color, color, false);
+
+        //walls
+        oFDL(renderer, pos1, pos1_high, color, color, false);
+        oFDL(renderer, pos2, pos2_high, color, color, false);
+        oFDL(renderer, pos3, pos3_high, color, color, false);
+        oFDL(renderer, pos4, pos4_high, color, color, false);
+    }
+
     if (TargetBody != 0x0) {
         uintptr_t TargetObject = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0xA0, 0x4A0, 0x10, 0x0 });
         lastHeldBody = TargetObject;
@@ -884,9 +927,9 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         *(float*)(lastHeldBody + 0x78 + 12) = -(nvZ * 100);
     }
 
-    if ((((GetAsyncKeyState(VK_F3) >> 15) & 0x0001) == 0x0001) && !drawMenu){
+    if ((((GetAsyncKeyState(0x51) >> 15) & 0x0001) == 0x0001) && !drawMenu){
         if (kpHandler[10]) {
-            spawnEntity(game, player, (char*)str0);
+            spawnEntity(game, player, items[selectedSpawnIndex]);
             kpHandler[10] = false;
         }
     }
