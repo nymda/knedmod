@@ -34,11 +34,27 @@ public:
     float z;
 };
 
+struct Vec3 { float X; float Y; float Z; };
+struct Vec4 { float X; float Y; float Z; float W; };
+
 struct Position {
     float values[3];
 };
+
 struct Color {
     float values[4];
+};
+
+struct RaycastFilter
+{
+    int32_t m_Mask;
+    int32_t m_Allowed;
+    int32_t m_Ignored;
+    bool m_RejectTransparent;
+    uint8_t m_Pad[3];
+    Teardown::small_vector<uintptr_t> m_IgnoredBodies;
+    uintptr_t m_IgnoredBodiesMemory[4];
+    Teardown::small_vector<uintptr_t> m_IgnoredShapes;
 };
 
 typedef BOOL(__stdcall* twglSwapBuffers)(_In_ HDC hDc);
@@ -74,7 +90,7 @@ typedef uintptr_t (__fastcall* TMalloc)(size_t);
 typedef void (__fastcall* TFree)(uintptr_t mem);
 typedef void(__fastcall* updateShapes)(uintptr_t mem);
 typedef void(__fastcall* frameDrawLine)(uintptr_t renderer, const Position& p1, const Position& p2, const Color& c1, const Color& c2, bool use_depth);
-typedef void(__fastcall* rayCast)(uintptr_t scene, float posX, float posY, float posZ, float vecX, float vecY, float vecZ, float dist, uintptr_t filter, float* outDist, float* outX, float* outY, float* outZ, uintptr_t* out_shape, uintptr_t* out_palette);
+typedef void(__fastcall* rayCast)(uintptr_t scene, Vec3* pos, Vec3* rot, float dist, RaycastFilter* filter, float* outDist, Vec3* out, uintptr_t* out_shape, uintptr_t* out_palette);
 
 bool needToNopMovement = true;
 bool needToPatchMovement = true;
@@ -182,6 +198,7 @@ S_Constructor oS_Constructor;
 SetDynamic oSetDynamic;
 TMalloc oTMalloc;
 frameDrawLine oFDL;
+rayCast oRC;
 bool first = true;
 
 inline bool exists(const std::string& name) {
@@ -189,7 +206,71 @@ inline bool exists(const std::string& name) {
     return (stat(name.c_str(), &buffer) == 0);
 }
 
-void spawnEntity(uintptr_t game, uintptr_t player, std::string filepath) {
+Vec4 castRay(uintptr_t player, uintptr_t scene) {
+
+    //camera quat
+    float* qx = (float*)(player + 0x0088);
+    float* qy = (float*)(player + 0x0088 + 4);
+    float* qz = (float*)(player + 0x0088 + 8);
+    float* qw = (float*)(player + 0x0088 + 12);
+
+    //camera position
+    float* vx = (float*)(player + 0x007C);
+    float* vy = (float*)(player + 0x007C + 4);
+    float* vz = (float*)(player + 0x007C + 8);
+
+    //camera direction vector (inverse vec because wtf td)
+    float vecX = -(2 * (*qx * *qz + *qw * *qy));
+    float vecY = -(2 * (*qy * *qz - *qw * *qx));
+    float vecZ = -(1 - 2 * (*qx * *qx + *qy * *qy));
+
+    //yeetus yotus
+    RaycastFilter filter{ 0 };
+    filter.m_Mask = -1;
+
+    //raycast func for distance
+    Vec3 vPos = { *vx, *vy, *vz };
+    Vec3 vVec = { vecX, vecY, vecZ };
+    Vec3 output;
+    float outDist = 0.f;
+    oRC(scene, &vPos, &vVec, 250.f, &filter, &outDist, &output, nullptr, nullptr);
+
+    //get the thingy
+    return { *vx + (vecX * outDist), *vy + (vecY * outDist), *vz + (vecZ * outDist), outDist };
+}
+
+void drawCube(uintptr_t renderer, Vec3 position) {
+    static Color color{ 1.f, 1.f, 1.f, 1.f };
+    Position pos1 = { position.X - 0.5f, position.Y - 0.25f, position.Z - 0.5f };
+    Position pos2 = { position.X - 0.5f, position.Y - 0.25f, position.Z + 0.5f };
+    Position pos3 = { position.X + 0.5f, position.Y - 0.25f, position.Z + 0.5f };
+    Position pos4 = { position.X + 0.5f, position.Y - 0.25f, position.Z - 0.5f };
+
+    Position pos1_high = { position.X - 0.5f, position.Y + 0.25f, position.Z - 0.5f };
+    Position pos2_high = { position.X - 0.5f, position.Y + 0.25f, position.Z + 0.5f };
+    Position pos3_high = { position.X + 0.5f, position.Y + 0.25f, position.Z + 0.5f };
+    Position pos4_high = { position.X + 0.5f, position.Y + 0.25f, position.Z - 0.5f };
+
+    //bottom square
+    oFDL(renderer, pos1, pos2, color, color, false);
+    oFDL(renderer, pos2, pos3, color, color, false);
+    oFDL(renderer, pos3, pos4, color, color, false);
+    oFDL(renderer, pos4, pos1, color, color, false);
+
+    //top square
+    oFDL(renderer, pos1_high, pos2_high, color, color, false);
+    oFDL(renderer, pos2_high, pos3_high, color, color, false);
+    oFDL(renderer, pos3_high, pos4_high, color, color, false);
+    oFDL(renderer, pos4_high, pos1_high, color, color, false);
+
+    //walls
+    oFDL(renderer, pos1, pos1_high, color, color, false);
+    oFDL(renderer, pos2, pos2_high, color, color, false);
+    oFDL(renderer, pos3, pos3_high, color, color, false);
+    oFDL(renderer, pos4, pos4_high, color, color, false);
+}
+
+void spawnEntity(uintptr_t game, uintptr_t player, uintptr_t scene, std::string filepath) {
 
     if (first) {
         oSpawnVox = (tSpawnVox)mem::FindPattern((PBYTE)"\x4C\x8B\xDC\x57\x48\x81\xEC\x2A\x2A\x2A\x2A\x48\xC7\x44\x24\x2A\x2A\x2A\x2A\x2A\x49\x89\x5B\x08\x33\xFF\x89\x7C\x24\x30\x48\x8D\x44\x24\x2A\x48\x89\x44\x24\x2A\xC7\x44\x24\x2A\x2A\x2A\x2A\x2A\x89\x7C\x24\x70\x49\x8D\x43\x88\x49\x89\x43\x80\xC7\x44\x24\x2A\x2A\x2A\x2A\x2A\xF3\x0F\x11\x4C\x24\x2A\x45\x33\xC9\x4C\x8D\x44\x24\x2A\x48\x8D\x54\x24\x2A\xE8\x2A\x2A\x2A\x2A\x48\x8B\x4C\x24\x2A\x84\xC0\x74\x0B\x39\x7C\x24\x30\x74\x05\x48\x8B\x19\xEB\x03\x48\x8B\xDF\x89\x7C\x24\x70\x48\x8D\x94\x24", "xxxxxxx????xxxx?????xxxxxxxxxxxxxx?xxxx?xxx?????xxxxxxxxxxxxxxx?????xxxxx?xxxxxxx?xxxx?x????xxxx?xxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
@@ -252,9 +333,11 @@ void spawnEntity(uintptr_t game, uintptr_t player, std::string filepath) {
 
     std::cout << "X: " << bodyX << " Y: " << bodyY << " Z: " << bodyZ << std::endl;
 
-    *(float*)(BODY + 0x28u) = ((*vx - (nvX * 4.0f)) - bodyX);
-    *(float*)(BODY + 0x28u + 4) = ((*vy - (nvY * 4.0f)) - bodyY);
-    *(float*)(BODY + 0x28u + 8) = ((*vz - (nvZ * 4.0f)) - bodyZ);
+    Vec4 ray = castRay(player, scene);
+
+    *(float*)(BODY + 0x28u) = (ray.X - bodyX);
+    *(float*)(BODY + 0x28u + 4) = (ray.Y - bodyY);
+    *(float*)(BODY + 0x28u + 8) = (ray.Z - bodyZ);
     *(float*)(BODY + 0x28u + 12) = 0.f;
     *(float*)(BODY + 0x28u + 16) = 0.f;
     *(float*)(BODY + 0x28u + 20) = 0.f;
@@ -266,6 +349,7 @@ int currentvox = 0;
 static char str0[128] = "knedcube";
 int selectedSpawnIndex = 0;
 bool linetime = false;
+bool raycastTest = false;
 
 std::vector<std::string> items;
 
@@ -315,6 +399,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         std::cout << strre.c_str() << std::endl;
         std::cout << strbe.c_str() << std::endl;
         std::cout << stobe.c_str() << std::endl;
+        std::cout << "raycast: 0x" << std::hex << oRC << std::endl;
 
         firstprint = false;
     }
@@ -404,22 +489,22 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         ImGui::SameLine();
         ImGui::PushItemWidth(200);
         ImGui::SliderInt("Game speed", &desiredGameSpeedMultiple, 1, 15);
-        ImGui::Checkbox("Speedhack      ", &cheatHandler[3]);
+        ImGui::Checkbox("Speedhack       ", &cheatHandler[3]);
         ImGui::SameLine();
         ImGui::PushItemWidth(200);
         ImGui::SliderInt("Run speed", &desiredSpeed, 1, 15);
-        ImGui::Checkbox("Explosion boost", &cheatHandler[5]);
+        ImGui::Checkbox("Explosion boost ", &cheatHandler[5]);
         ImGui::SameLine();
         ImGui::PushItemWidth(200);
         ImGui::SliderInt("Explosion size", &xplSize, 1, 15);
-        ImGui::Checkbox("Gun boost      ", &cheatHandler[6]);
+        ImGui::Checkbox("Gun boost       ", &cheatHandler[6]);
         ImGui::SameLine();
         ImGui::PushItemWidth(200);
         ImGui::SliderInt("Gun size", &pewSize, 1, 15);
         ImGui::Checkbox("Show boundaries", &drawBoundsRef);
         ImGui::Checkbox("Show bodies", &drawBodiesRef);
         ImGui::Checkbox("Depth map", &drawShadowVolRef);
-        ImGui::Checkbox("Line time", &linetime);
+        ImGui::Checkbox("Raycast test", &raycastTest);
         if (ImGui::Button("Yellow the world")) {
             Vector3 v3 = Vector3();
             v3.x = *x;
@@ -514,7 +599,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
             std::stringstream ss;
             ss << "Spawn " << items[n] << std::endl;
             if (ImGui::Button(ss.str().c_str())) {
-                spawnEntity(game, player, items[n]);
+                spawnEntity(game, player, scene, items[n]);
             }
         }
         ImGui::End();
@@ -808,6 +893,12 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         *yVelo = 0;
     }
 
+    if (raycastTest) {     
+        Vec4 ray = castRay(player, scene);
+        drawCube(renderer, { ray.X, ray.Y, ray.Z });
+        std::cout << ray.X << " : " << ray.Y << " : " << ray.Z << " : " << ray.W << std::endl;
+    }
+
     if (cheatHandler[12] != prevCheatHandler[12]) {
         if (cheatHandler[12]) {
             //enable bigger plonks
@@ -927,9 +1018,10 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         *(float*)(lastHeldBody + 0x78 + 12) = -(nvZ * 100);
     }
 
+    //Q
     if ((((GetAsyncKeyState(0x51) >> 15) & 0x0001) == 0x0001) && !drawMenu){
         if (kpHandler[10]) {
-            spawnEntity(game, player, items[selectedSpawnIndex]);
+            spawnEntity(game, player, scene, items[selectedSpawnIndex]);
             kpHandler[10] = false;
         }
     }
@@ -994,6 +1086,8 @@ DWORD WINAPI main(HMODULE hModule)
 {
     oPaint = (tPaint)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x55\x41\x56\x48\x8D\x68\xD8\x48\x81\xEC\x00\x00\x00\x00\x48\xC7\x45\x00\x00\x00\x00\x00", "xxxxxxxxxxxxxxx????xxx?????", GetModuleHandle(NULL));
     oFDL = (frameDrawLine)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x2A\x48\x89\x6C\x24\x2A\x48\x89\x74\x24\x2A\x57\x41\x56\x41\x57\x48\x83\xEC\x20\x80\x7C\x24\x2A\x2A", "xxxx?xxxx?xxxx?xxxxxxxxxxxx??", GetModuleHandle(NULL));
+    oRC = (rayCast)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x4C\x89\x40\x18\x48\x89\x50\x10\x55\x56\x57\x41\x54\x41\x55\x41\x56\x41\x57\x48\x8D\xA8\x38\xFC\xFF\xFF", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+
     //number of cheats for menu
     int CHEAT_COUNT = 8;
 
