@@ -91,6 +91,7 @@ typedef void (__fastcall* TFree)(uintptr_t mem);
 typedef void(__fastcall* updateShapes)(uintptr_t mem);
 typedef void(__fastcall* frameDrawLine)(uintptr_t renderer, const Position& p1, const Position& p2, const Color& c1, const Color& c2, bool use_depth);
 typedef void(__fastcall* rayCast)(uintptr_t scene, Vec3* pos, Vec3* rot, float dist, RaycastFilter* filter, float* outDist, Vec3* out, uintptr_t* out_shape, uintptr_t* out_palette);
+typedef void(__fastcall* boomtown)(uintptr_t scene, Vec3* pos, float radius);
 
 bool needToNopMovement = true;
 bool needToPatchMovement = true;
@@ -131,11 +132,11 @@ void onSwapBuffersInit()
 }
 
 //handles only ctivating a function on keyDown [uparrow, downarrow, rightarrow, q, i, k, space, leftarrow, v]
-bool kpHandler[11] = { true, true, true, true, true, true, true, true, true, true, true };
+bool kpHandler[14] = { true, true, true, true, true, true, true, true, true, true, true, true, true, true };
 
 //handles if a cheat is enabled / disabled
-bool prevCheatHandler[14] = { false, false, false, false, false, false, false, false, false, false, false, false, false, false };
-bool cheatHandler[14]     = { false, false, false, false, false, false, false, false, false, false, false, false, false, false };
+bool prevCheatHandler[15] = { false, false, false, false, false, false, false, false, false, false, false, false, false, false, false };
+bool cheatHandler[15]     = { false, false, false, false, false, false, false, false, false, false, false, false, false, false, false };
 
 byte campos[84];
 byte camang[84];
@@ -199,6 +200,7 @@ SetDynamic oSetDynamic;
 TMalloc oTMalloc;
 frameDrawLine oFDL;
 rayCast oRC;
+boomtown oBT;
 bool first = true;
 
 inline bool exists(const std::string& name) {
@@ -240,16 +242,16 @@ Vec4 castRay(uintptr_t player, uintptr_t scene) {
 }
 
 void drawCube(uintptr_t renderer, Vec3 position) {
-    static Color color{ 1.f, 1.f, 1.f, 1.f };
-    Position pos1 = { position.X - 0.5f, position.Y - 0.25f, position.Z - 0.5f };
-    Position pos2 = { position.X - 0.5f, position.Y - 0.25f, position.Z + 0.5f };
-    Position pos3 = { position.X + 0.5f, position.Y - 0.25f, position.Z + 0.5f };
-    Position pos4 = { position.X + 0.5f, position.Y - 0.25f, position.Z - 0.5f };
+    static Color color{ 1.f, 0.f, 0.f, 1.f };
+    Position pos1 = { position.X - 0.25f, position.Y - 0.25f, position.Z - 0.25f };
+    Position pos2 = { position.X - 0.25f, position.Y - 0.25f, position.Z + 0.25f };
+    Position pos3 = { position.X + 0.25f, position.Y - 0.25f, position.Z + 0.25f };
+    Position pos4 = { position.X + 0.25f, position.Y - 0.25f, position.Z - 0.25f };
 
-    Position pos1_high = { position.X - 0.5f, position.Y + 0.25f, position.Z - 0.5f };
-    Position pos2_high = { position.X - 0.5f, position.Y + 0.25f, position.Z + 0.5f };
-    Position pos3_high = { position.X + 0.5f, position.Y + 0.25f, position.Z + 0.5f };
-    Position pos4_high = { position.X + 0.5f, position.Y + 0.25f, position.Z - 0.5f };
+    Position pos1_high = { position.X - 0.25f, position.Y + 0.25f, position.Z - 0.25f };
+    Position pos2_high = { position.X - 0.25f, position.Y + 0.25f, position.Z + 0.25f };
+    Position pos3_high = { position.X + 0.25f, position.Y + 0.25f, position.Z + 0.25f };
+    Position pos4_high = { position.X + 0.25f, position.Y + 0.25f, position.Z - 0.25f };
 
     //bottom square
     oFDL(renderer, pos1, pos2, color, color, false);
@@ -352,6 +354,7 @@ bool linetime = false;
 bool raycastTest = false;
 
 std::vector<std::string> items;
+std::vector<Vec3> placedExplosived;
 
 namespace fs = std::filesystem;
 bool hwglSwapBuffers(_In_ HDC hDc)
@@ -414,6 +417,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
     float* pHealth = (float*)(player + 0x015C);
     float* pSpeed = (float*)(player + 0x0160);
     bool* isPaused = (bool*)(game + 0x0138);
+    byte* usePressed = (byte*)(player + 0xE9);
     Vector3 cpos = Vector3();
 
     //handling flight
@@ -504,6 +508,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         ImGui::Checkbox("Show boundaries", &drawBoundsRef);
         ImGui::Checkbox("Show bodies", &drawBodiesRef);
         ImGui::Checkbox("Depth map", &drawShadowVolRef);
+        ImGui::Checkbox("Click explosions", &cheatHandler[14]);
         ImGui::Checkbox("Raycast test", &raycastTest);
         if (ImGui::Button("Yellow the world")) {
             Vector3 v3 = Vector3();
@@ -927,6 +932,13 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         }
     }
 
+    std::cout << std::hex << usePressed;
+    if (cheatHandler[14] && (*usePressed == (byte)0x01)) {
+        Vec4 pos = castRay(player, scene);
+        Vec3 splodePos = { pos.X, pos.Y, pos.Z };
+        oBT(scene, &splodePos, 1);
+    }
+
     //I
     if ((((GetAsyncKeyState(0x49) & 0x0001) != 0)) && !drawMenu){
         if (kpHandler[4]) {
@@ -959,6 +971,47 @@ bool hwglSwapBuffers(_In_ HDC hDc)
     }
     else {
         kpHandler[5] = true;
+    }
+
+    //E
+    if ((((GetAsyncKeyState(0x45) & 0x0001) != 0))) {
+        if (kpHandler[11]) {
+            Vec4 pos = castRay(player, scene);
+            if (pos.W > 0) {
+                placedExplosived.push_back({ pos.X, pos.Y, pos.Z });
+            }
+
+            kpHandler[11] = false;
+        }
+    }
+    else {
+        kpHandler[11] = true;
+    }
+
+    if (placedExplosived.size() > 0) {
+        for (Vec3 cvec : placedExplosived)
+        {
+            Vec3 tmp = cvec;
+            drawCube(renderer, tmp);
+        }
+    }
+
+    //Return
+    if ((((GetAsyncKeyState(VK_RETURN) & 0x0001) != 0))) {
+        if (kpHandler[12]) {
+            for (Vec3 cvec : placedExplosived)
+            {
+                Vec3 tmp = cvec;
+                oBT(scene, &tmp, 1);
+            }
+
+            placedExplosived.clear();
+
+            kpHandler[12] = false;
+        }
+    }
+    else {
+        kpHandler[12] = true;
     }
 
     if ((int)(savedX + savedY + savedZ) != 0) {
@@ -1087,6 +1140,7 @@ DWORD WINAPI main(HMODULE hModule)
     oPaint = (tPaint)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x55\x41\x56\x48\x8D\x68\xD8\x48\x81\xEC\x00\x00\x00\x00\x48\xC7\x45\x00\x00\x00\x00\x00", "xxxxxxxxxxxxxxx????xxx?????", GetModuleHandle(NULL));
     oFDL = (frameDrawLine)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x2A\x48\x89\x6C\x24\x2A\x48\x89\x74\x24\x2A\x57\x41\x56\x41\x57\x48\x83\xEC\x20\x80\x7C\x24\x2A\x2A", "xxxx?xxxx?xxxx?xxxxxxxxxxxx??", GetModuleHandle(NULL));
     oRC = (rayCast)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x4C\x89\x40\x18\x48\x89\x50\x10\x55\x56\x57\x41\x54\x41\x55\x41\x56\x41\x57\x48\x8D\xA8\x38\xFC\xFF\xFF", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    oBT = (boomtown)mem::FindPattern((PBYTE)"\x48\x8B\xC4\xF3\x0F\x11\x50\x18\x55", "xxxxxxxxx", GetModuleHandle(NULL));
 
     //number of cheats for menu
     int CHEAT_COUNT = 8;
