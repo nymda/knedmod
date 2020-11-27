@@ -35,6 +35,7 @@ public:
 };
 
 struct Vec3 { float X; float Y; float Z; };
+struct explosiveItem { Vec3* position; Vec3* minpos; Vec3* maxpos; float explosionPower; };
 struct Vec4 { float X; float Y; float Z; float W; };
 
 struct Position {
@@ -71,7 +72,7 @@ void hidecursor();
 void explosionPatch(int explosionMultiplier, uintptr_t moduleBase);
 void pewpewPatch(int pewMultiplier, uintptr_t moduleBase);
 void plankPatch(uintptr_t moduleBase);
-void spawnEntity(uintptr_t game, uintptr_t player, std::string filepath);
+void spawnEntity(uintptr_t game, uintptr_t player, std::string filepath, bool isBomb);
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 WNDPROC oWndProc;
@@ -95,6 +96,7 @@ typedef void(__fastcall* boomtown)(uintptr_t scene, Vec3* pos, float radius);
 
 bool needToNopMovement = true;
 bool needToPatchMovement = true;
+bool generalSpawnBombs = false;
 
 LRESULT APIENTRY hWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -272,7 +274,11 @@ void drawCube(uintptr_t renderer, Vec3 position) {
     oFDL(renderer, pos4, pos4_high, color, color, false);
 }
 
-void spawnEntity(uintptr_t game, uintptr_t player, uintptr_t scene, std::string filepath) {
+std::vector<std::string> items;
+std::vector<Vec3> placedExplosives;
+std::vector<explosiveItem> movableExplosives;
+
+void spawnEntity(uintptr_t game, uintptr_t player, uintptr_t scene, std::string filepath, bool isBomb) {
 
     if (first) {
         oSpawnVox = (tSpawnVox)mem::FindPattern((PBYTE)"\x4C\x8B\xDC\x57\x48\x81\xEC\x2A\x2A\x2A\x2A\x48\xC7\x44\x24\x2A\x2A\x2A\x2A\x2A\x49\x89\x5B\x08\x33\xFF\x89\x7C\x24\x30\x48\x8D\x44\x24\x2A\x48\x89\x44\x24\x2A\xC7\x44\x24\x2A\x2A\x2A\x2A\x2A\x89\x7C\x24\x70\x49\x8D\x43\x88\x49\x89\x43\x80\xC7\x44\x24\x2A\x2A\x2A\x2A\x2A\xF3\x0F\x11\x4C\x24\x2A\x45\x33\xC9\x4C\x8D\x44\x24\x2A\x48\x8D\x54\x24\x2A\xE8\x2A\x2A\x2A\x2A\x48\x8B\x4C\x24\x2A\x84\xC0\x74\x0B\x39\x7C\x24\x30\x74\x05\x48\x8B\x19\xEB\x03\x48\x8B\xDF\x89\x7C\x24\x70\x48\x8D\x94\x24", "xxxxxxx????xxxx?????xxxxxxxxxxxxxx?xxxx?xxx?????xxxxxxxxxxxxxxx?????xxxxx?xxxxxxx?xxxx?x????xxxx?xxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
@@ -338,13 +344,23 @@ void spawnEntity(uintptr_t game, uintptr_t player, uintptr_t scene, std::string 
     Vec4 ray = castRay(player, scene);
 
     *(float*)(BODY + 0x28u) = (ray.X - bodyX);
-    *(float*)(BODY + 0x28u + 4) = (ray.Y - bodyY);
+    *(float*)(BODY + 0x28u + 4) = (ray.Y);
     *(float*)(BODY + 0x28u + 8) = (ray.Z - bodyZ);
     *(float*)(BODY + 0x28u + 12) = 0.f;
     *(float*)(BODY + 0x28u + 16) = 0.f;
     *(float*)(BODY + 0x28u + 20) = 0.f;
     *(float*)(BODY + 0x28u + 24) = 1.f;
 
+    //TODO
+    //-GET MINPOS / MAXPOS POINTERS OF CREATED BODY
+    //-ADD TO EXPLOSIVEITEM STRUCT
+    //-USE TO FIND WORLD BASED CENTERPOINT OF OBJECT FOR EXPLOSION
+    //-https://github.com/SK83RJOSH/Teardown/blob/master/entities/body.h
+
+    if (isBomb) {
+        explosiveItem tmpEX = { (Vec3*)(BODY + 0x28u) };
+        movableExplosives.push_back(tmpEX);
+    }
 }
 
 int currentvox = 0;
@@ -352,9 +368,6 @@ static char str0[128] = "knedcube";
 int selectedSpawnIndex = 0;
 bool linetime = false;
 bool raycastTest = false;
-
-std::vector<std::string> items;
-std::vector<Vec3> placedExplosived;
 
 namespace fs = std::filesystem;
 bool hwglSwapBuffers(_In_ HDC hDc)
@@ -584,6 +597,8 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 
         int i = 0;
 
+        ImGui::Checkbox("Items explode [return]", &generalSpawnBombs);
+
         if (ImGui::BeginCombo("[Q] Spawn", items[selectedSpawnIndex].c_str(), 0)) {
             for (int n = 0; n < items.size(); n++) {
                 bool selected = false;
@@ -604,7 +619,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
             std::stringstream ss;
             ss << "Spawn " << items[n] << std::endl;
             if (ImGui::Button(ss.str().c_str())) {
-                spawnEntity(game, player, scene, items[n]);
+                spawnEntity(game, player, scene, items[n], generalSpawnBombs);
             }
         }
         ImGui::End();
@@ -918,25 +933,22 @@ bool hwglSwapBuffers(_In_ HDC hDc)
     if (cheatHandler[13] != prevCheatHandler[13]) {
         if (cheatHandler[13]) {
             //enable bigger yeets
-            std::cout << "Enabled yeets" << std::endl;
             mem::Nop((byte*)(moduleBase + 0x0ACCCF), 8);
             mem::Nop((byte*)(moduleBase + 0x0A997A), 8);
             *(float*)(player + 0x14c) = 500.0f;
         }
         else {
             //disable bigger yeets
-            std::cout << "Disabled yeets" << std::endl;
             mem::Patch((byte*)(moduleBase + 0x0ACCCF), (byte*)"\xF3\x0F\x11\x87\x4C\x01\x00\x00", 8); //unpatch plonks
             mem::Patch((byte*)(moduleBase + 0x0A997A), (byte*)"\xF3\x0F\x11\x87\x4C\x01\x00\x00", 8); //unpatch plonks
             *(float*)(player + 0x14c) = 0.5;
         }
     }
 
-    std::cout << std::hex << usePressed;
     if (cheatHandler[14] && (*usePressed == (byte)0x01)) {
         Vec4 pos = castRay(player, scene);
         Vec3 splodePos = { pos.X, pos.Y, pos.Z };
-        oBT(scene, &splodePos, 1);
+        oBT(scene, &splodePos, 1.f);
     }
 
     //I
@@ -973,13 +985,15 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         kpHandler[5] = true;
     }
 
-    //E
-    if ((((GetAsyncKeyState(0x45) & 0x0001) != 0))) {
+    //C
+    if ((((GetAsyncKeyState(0x43) & 0x0001) != 0))) {
         if (kpHandler[11]) {
-            Vec4 pos = castRay(player, scene);
-            if (pos.W > 0) {
-                placedExplosived.push_back({ pos.X, pos.Y, pos.Z });
-            }
+            //Vec4 pos = castRay(player, scene);
+            //if (pos.W > 0) {
+            //    placedExplosives.push_back({ pos.X, pos.Y, pos.Z });
+            //}
+
+            spawnEntity(game, player, scene, "remoteBombTwo.vox", true);
 
             kpHandler[11] = false;
         }
@@ -987,9 +1001,9 @@ bool hwglSwapBuffers(_In_ HDC hDc)
     else {
         kpHandler[11] = true;
     }
-
-    if (placedExplosived.size() > 0) {
-        for (Vec3 cvec : placedExplosived)
+    
+    if (placedExplosives.size() > 0) {
+        for (Vec3 cvec : placedExplosives)
         {
             Vec3 tmp = cvec;
             drawCube(renderer, tmp);
@@ -999,13 +1013,19 @@ bool hwglSwapBuffers(_In_ HDC hDc)
     //Return
     if ((((GetAsyncKeyState(VK_RETURN) & 0x0001) != 0))) {
         if (kpHandler[12]) {
-            for (Vec3 cvec : placedExplosived)
+            for (Vec3 cvec : placedExplosives)
             {
                 Vec3 tmp = cvec;
-                oBT(scene, &tmp, 1);
+                oBT(scene, &tmp, 1.f);
+            }
+            for (explosiveItem cvec : movableExplosives)
+            {
+                oBT(scene, cvec.position, cvec.explosionPower);
             }
 
-            placedExplosived.clear();
+
+            placedExplosives.clear();
+            movableExplosives.clear();
 
             kpHandler[12] = false;
         }
@@ -1074,7 +1094,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
     //Q
     if ((((GetAsyncKeyState(0x51) >> 15) & 0x0001) == 0x0001) && !drawMenu){
         if (kpHandler[10]) {
-            spawnEntity(game, player, scene, items[selectedSpawnIndex]);
+            spawnEntity(game, player, scene, items[selectedSpawnIndex], generalSpawnBombs);
             kpHandler[10] = false;
         }
     }
