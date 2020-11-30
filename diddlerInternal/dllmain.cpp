@@ -93,10 +93,13 @@ typedef void(__fastcall* updateShapes)(uintptr_t mem);
 typedef void(__fastcall* frameDrawLine)(uintptr_t renderer, const Position& p1, const Position& p2, const Color& c1, const Color& c2, bool use_depth);
 typedef void(__fastcall* rayCast)(uintptr_t scene, Vec3* pos, Vec3* rot, float dist, RaycastFilter* filter, float* outDist, Vec3* out, uintptr_t* out_shape, uintptr_t* out_palette);
 typedef void(__fastcall* boomtown)(uintptr_t scene, Vec3* pos, float radius);
+typedef void(__fastcall* damageStuff)(uintptr_t scene, Vec3* pos); //broken 
+typedef void(__fastcall* spawnFire)(uintptr_t scene, Vec3* pos); //broken 
 
 bool needToNopMovement = true;
 bool needToPatchMovement = true;
 bool generalSpawnBombs = false;
+float explosivePower = 1.5f;
 
 LRESULT APIENTRY hWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -203,6 +206,8 @@ TMalloc oTMalloc;
 frameDrawLine oFDL;
 rayCast oRC;
 boomtown oBT;
+damageStuff oDamageStuff;
+spawnFire oSpawnFire;
 bool first = true;
 
 inline bool exists(const std::string& name) {
@@ -281,15 +286,7 @@ std::vector<explosiveItem> movableExplosives;
 void spawnEntity(uintptr_t game, uintptr_t player, uintptr_t scene, std::string filepath, bool isBomb) {
 
     if (first) {
-        oSpawnVox = (tSpawnVox)mem::FindPattern((PBYTE)"\x4C\x8B\xDC\x57\x48\x81\xEC\x2A\x2A\x2A\x2A\x48\xC7\x44\x24\x2A\x2A\x2A\x2A\x2A\x49\x89\x5B\x08\x33\xFF\x89\x7C\x24\x30\x48\x8D\x44\x24\x2A\x48\x89\x44\x24\x2A\xC7\x44\x24\x2A\x2A\x2A\x2A\x2A\x89\x7C\x24\x70\x49\x8D\x43\x88\x49\x89\x43\x80\xC7\x44\x24\x2A\x2A\x2A\x2A\x2A\xF3\x0F\x11\x4C\x24\x2A\x45\x33\xC9\x4C\x8D\x44\x24\x2A\x48\x8D\x54\x24\x2A\xE8\x2A\x2A\x2A\x2A\x48\x8B\x4C\x24\x2A\x84\xC0\x74\x0B\x39\x7C\x24\x30\x74\x05\x48\x8B\x19\xEB\x03\x48\x8B\xDF\x89\x7C\x24\x70\x48\x8D\x94\x24", "xxxxxxx????xxxx?????xxxxxxxxxxxxxx?xxxx?xxx?????xxxxxxxxxxxxxxx?????xxxxx?xxxxxxx?xxxx?x????xxxx?xxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
-        oCreateTexture = (CreateTexture)mem::FindPattern((PBYTE)"\x48\x89\x4C\x24\x08\x57\x41\x54\x41\x55\x41\x57", "xxxxxxxxxxxx", GetModuleHandle(NULL));
-        oCreatePhysics = (CreatePhysics)mem::FindPattern((PBYTE)"\x40\x53\x56\x57\x41\x55", "xxxxxx", GetModuleHandle(NULL));
-        oUpdateShapes = (CreatePhysics)mem::FindPattern((PBYTE)"\x48\x89\x4C\x24\x2A\x55\x56\x57\x41\x54\x41\x55\x41\x56\x41\x57\x48\x8D\xAC\x24\x2A\x2A\x2A\x2A\xB8\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\x48\x2B\xE0\x48\xC7\x85\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x48\x89\x9C\x24\x2A\x2A\x2A\x2A\x0F\x29\xB4\x24\x2A\x2A\x2A\x2A\x0F\x29\xBC\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\x84\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\x8C\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\x94\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\x9C\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\xA4\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\xAC\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\xB4\x24", "xxxx?xxxxxxxxxxxxxxx????x????x????xxxxxx????????xxxx????xxxx????xxxx????xxxxx????xxxxx????xxxxx????xxxxx????xxxxx????xxxxx????xxxxx", GetModuleHandle(NULL));
-        oB_Constructor = (B_Constructor)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x4C\x8B\xC2\x48\x8B\xD9\xBA\x01\x00\x00\x00", "xxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
-        oS_Constructor = (S_Constructor)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x4C\x8B\xC2\x48\x8B\xD9\xBA\x02\x00\x00\x00", "xxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
-        oSetDynamic = (SetDynamic)mem::FindPattern((PBYTE)"\x88\x91\x2A\x2A\x2A\x2A\x4C\x8B\xC1\x84\xD2\x74\x29\x0F\xB6\x81\x2A\x2A\x2A\x2A\xC6\x81\x2A\x2A\x2A\x2A\x2A\x84\xC0\x75\x17\x48\x8B\x05\x2A\x2A\x2A\x2A\x49\x8B\xD0\x48\x8B\x48\x40\x48\x8B\x49\x08\xE9\x2A\x2A\x2A\x2A\xC3", "xx????xxxxxxxxxx????xx?????xxxxxxx????xxxxxxxxxxxx????x", GetModuleHandle(NULL));
-        oTMalloc = (TMalloc)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x48\x8B\xD9\x48\x83\xF9\xE0\x77\x3C\x48\x85\xC9\xB8\x2A\x2A\x2A\x2A\x48\x0F\x44\xD8\xEB\x15\xE8\x2A\x2A\x2A\x2A\x85\xC0\x74\x25\x48\x8B\xCB\xE8\x2A\x2A\x2A\x2A\x85\xC0\x74\x19\x48\x8B\x0D\x2A\x2A\x2A\x2A\x4C\x8B\xC3\x33\xD2\xFF\x15\x2A\x2A\x2A\x2A\x48\x85\xC0\x74\xD4\xEB\x0D\xE8\x2A\x2A\x2A\x2A\xC7\x00\x2A\x2A\x2A\x2A\x33\xC0\x48\x83\xC4\x20\x5B\xC3", "xxxxxxxxxxxxxxxxxxx????xxxxxxx????xxxxxxxx????xxxxxxx????xxxxxxx????xxxxxxxx????xx????xxxxxxxx", GetModuleHandle(NULL));
-        first = false;
+first = false;
     }
 
     if (!exists("vox/" + filepath)) {
@@ -343,13 +340,13 @@ void spawnEntity(uintptr_t game, uintptr_t player, uintptr_t scene, std::string 
 
     Vec4 ray = castRay(player, scene);
 
-    *(float*)(BODY + 0x28u) = (ray.X - bodyX);
-    *(float*)(BODY + 0x28u + 4) = (ray.Y);
-    *(float*)(BODY + 0x28u + 8) = (ray.Z - bodyZ);
-    *(float*)(BODY + 0x28u + 12) = 0.f;
-    *(float*)(BODY + 0x28u + 16) = 0.f;
-    *(float*)(BODY + 0x28u + 20) = 0.f;
-    *(float*)(BODY + 0x28u + 24) = 1.f;
+    *(float*)(BODY + 0x28) = (ray.X - bodyX);
+    *(float*)(BODY + 0x28 + 4) = (ray.Y);
+    *(float*)(BODY + 0x28 + 8) = (ray.Z - bodyZ);
+    *(float*)(BODY + 0x28 + 12) = 0.f;
+    *(float*)(BODY + 0x28 + 16) = 0.f;
+    *(float*)(BODY + 0x28 + 20) = 0.f;
+    *(float*)(BODY + 0x28 + 24) = 1.f;
 
     //TODO
     //-GET MINPOS / MAXPOS POINTERS OF CREATED BODY
@@ -358,7 +355,7 @@ void spawnEntity(uintptr_t game, uintptr_t player, uintptr_t scene, std::string 
     //-https://github.com/SK83RJOSH/Teardown/blob/master/entities/body.h
 
     if (isBomb) {
-        explosiveItem tmpEX = { (Vec3*)(BODY + 0x28u) };
+        explosiveItem tmpEX = { (Vec3*)(BODY + 0x28), (Vec3*)(BODY + 0xDC), (Vec3*)(BODY + 0xE8), explosivePower };
         movableExplosives.push_back(tmpEX);
     }
 }
@@ -409,12 +406,17 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         boss << "Held body: 0x" << std::hex << HeldBody;
         std::string stobe = boss.str();
 
+        std::stringstream toss;
+        toss << "Held body: 0x" << std::hex << TargetBody;
+        std::string stebe = toss.str();
+
         std::cout << strgm.c_str() << std::endl;
         std::cout << strpl.c_str() << std::endl;
         std::cout << strsc.c_str() << std::endl;
         std::cout << strre.c_str() << std::endl;
         std::cout << strbe.c_str() << std::endl;
         std::cout << stobe.c_str() << std::endl;
+        std::cout << stebe.c_str() << std::endl;
         std::cout << "raycast: 0x" << std::hex << oRC << std::endl;
 
         firstprint = false;
@@ -523,6 +525,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         ImGui::Checkbox("Depth map", &drawShadowVolRef);
         ImGui::Checkbox("Click explosions", &cheatHandler[14]);
         ImGui::Checkbox("Raycast test", &raycastTest);
+
         if (ImGui::Button("Yellow the world")) {
             Vector3 v3 = Vector3();
             v3.x = *x;
@@ -556,9 +559,9 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         boss << "Held body: 0x" << std::hex << HeldBody;
         std::string stobe = boss.str();
 
-        //std::stringstream bass;
-        //bass << "Held body: 0x" << std::hex << AllBodies;
-        //std::string stabe = bass.str();
+        std::stringstream toss;
+        toss << "Target body: 0x" << std::hex << TargetBody;
+        std::string stebe = toss.str();
 
         ImGui::Text(strgm.c_str());
         ImGui::Text(strpl.c_str());
@@ -566,7 +569,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         ImGui::Text(strre.c_str());
         ImGui::Text(strbe.c_str());
         ImGui::Text(stobe.c_str());
-        //ImGui::Text(stabe.c_str());
+        ImGui::Text(stebe.c_str());
         ImGui::EndGroup();
         ImGui::End();
     }
@@ -587,6 +590,8 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         }
     }
 
+    int rowLoopCounter = -1;
+
     if (drawMenu) {
         ImGuiWindowFlags spawnFlags = 0;
         spawnFlags |= ImGuiWindowFlags_NoResize;
@@ -598,7 +603,10 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         int i = 0;
 
         ImGui::Checkbox("Items explode [return]", &generalSpawnBombs);
-
+        if (generalSpawnBombs) {
+            ImGui::SameLine();
+            ImGui::SliderFloat("Bomb power", &explosivePower, 0.5f, 10.0f, "%.1f");
+        }
         if (ImGui::BeginCombo("[Q] Spawn", items[selectedSpawnIndex].c_str(), 0)) {
             for (int n = 0; n < items.size(); n++) {
                 bool selected = false;
@@ -615,12 +623,22 @@ bool hwglSwapBuffers(_In_ HDC hDc)
             ImGui::EndCombo();
         }
 
+        ImVec2 btnSize = { 200, 20 };
+
         for (int n = 0; n < items.size(); n++) {
+
+            if (rowLoopCounter >= 0) {
+                ImGui::SameLine();
+            }
             std::stringstream ss;
-            ss << "Spawn " << items[n] << std::endl;
-            if (ImGui::Button(ss.str().c_str())) {
+            ss << items[n] << std::endl;
+            if (ImGui::Button(ss.str().c_str(), btnSize)) {
                 spawnEntity(game, player, scene, items[n], generalSpawnBombs);
             }
+            if (rowLoopCounter == -1) {
+                rowLoopCounter = 3;
+            }
+            rowLoopCounter--;
         }
         ImGui::End();
     }
@@ -915,7 +933,9 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 
     if (raycastTest) {     
         Vec4 ray = castRay(player, scene);
+        Vec3 firepos = { ray.X, ray.Y, ray.Z };
         drawCube(renderer, { ray.X, ray.Y, ray.Z });
+        oSpawnFire(TargetBody, &firepos);
         std::cout << ray.X << " : " << ray.Y << " : " << ray.Z << " : " << ray.W << std::endl;
     }
 
@@ -948,7 +968,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
     if (cheatHandler[14] && (*usePressed == (byte)0x01)) {
         Vec4 pos = castRay(player, scene);
         Vec3 splodePos = { pos.X, pos.Y, pos.Z };
-        oBT(scene, &splodePos, 1.f);
+        oBT(scene, &splodePos, 1.5f);
     }
 
     //I
@@ -1016,11 +1036,20 @@ bool hwglSwapBuffers(_In_ HDC hDc)
             for (Vec3 cvec : placedExplosives)
             {
                 Vec3 tmp = cvec;
-                oBT(scene, &tmp, 1.f);
+                oBT(scene, &tmp, 1.5f);
             }
             for (explosiveItem cvec : movableExplosives)
             {
-                oBT(scene, cvec.position, cvec.explosionPower);
+                Vec3 minpos = *cvec.minpos;
+                Vec3 maxpos = *cvec.maxpos;
+                Vec3 objSize = { maxpos.X - minpos.X, maxpos.Y - minpos.Y, maxpos.Z - minpos.Z };
+                Vec3 explPos = { minpos.X + (objSize.X / 2), minpos.Y + (objSize.Y / 2) , minpos.Z + (objSize.Z / 2) };
+
+                std::cout << "MINPOS: [" << "X:" << minpos.X << " Y:" << minpos.Y << " Z:" << minpos.Z << "]" << std::endl;
+                std::cout << "MAXPOS: [" << "X:" << maxpos.X << " Y:" << maxpos.Y << " Z:" << maxpos.Z << "]" << std::endl;
+                std::cout << "OBJSIZ: [" << "X:" << objSize.X << " Y:" << objSize.Y << " Z:" << objSize.Z << "]" << std::endl;
+                std::cout << "XPLPOS: [" << "X:" << explPos.X << " Y:" << explPos.Y << " Z:" << explPos.Z << "]" << std::endl;
+                oBT(scene, &explPos, cvec.explosionPower);
             }
 
 
@@ -1091,6 +1120,12 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         *(float*)(lastHeldBody + 0x78 + 12) = -(nvZ * 100);
     }
 
+    if ((((GetAsyncKeyState(VK_F4) >> 15) & 0x0001) == 0x0001) && !drawMenu) {
+        *(float*)(lastHeldBody + 0x78 + 4) = 0;
+        *(float*)(lastHeldBody + 0x78 + 8) = 0;
+        *(float*)(lastHeldBody + 0x78 + 12) = 0;
+    }
+
     //Q
     if ((((GetAsyncKeyState(0x51) >> 15) & 0x0001) == 0x0001) && !drawMenu){
         if (kpHandler[10]) {
@@ -1157,11 +1192,21 @@ void plankPatch(uintptr_t moduleBase) {
 
 DWORD WINAPI main(HMODULE hModule)
 {
+    //sigscanning for game functions
     oPaint = (tPaint)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x55\x41\x56\x48\x8D\x68\xD8\x48\x81\xEC\x00\x00\x00\x00\x48\xC7\x45\x00\x00\x00\x00\x00", "xxxxxxxxxxxxxxx????xxx?????", GetModuleHandle(NULL));
     oFDL = (frameDrawLine)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x2A\x48\x89\x6C\x24\x2A\x48\x89\x74\x24\x2A\x57\x41\x56\x41\x57\x48\x83\xEC\x20\x80\x7C\x24\x2A\x2A", "xxxx?xxxx?xxxx?xxxxxxxxxxxx??", GetModuleHandle(NULL));
     oRC = (rayCast)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x4C\x89\x40\x18\x48\x89\x50\x10\x55\x56\x57\x41\x54\x41\x55\x41\x56\x41\x57\x48\x8D\xA8\x38\xFC\xFF\xFF", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     oBT = (boomtown)mem::FindPattern((PBYTE)"\x48\x8B\xC4\xF3\x0F\x11\x50\x18\x55", "xxxxxxxxx", GetModuleHandle(NULL));
-
+    oSpawnVox = (tSpawnVox)mem::FindPattern((PBYTE)"\x4C\x8B\xDC\x57\x48\x81\xEC\x2A\x2A\x2A\x2A\x48\xC7\x44\x24\x2A\x2A\x2A\x2A\x2A\x49\x89\x5B\x08\x33\xFF\x89\x7C\x24\x30\x48\x8D\x44\x24\x2A\x48\x89\x44\x24\x2A\xC7\x44\x24\x2A\x2A\x2A\x2A\x2A\x89\x7C\x24\x70\x49\x8D\x43\x88\x49\x89\x43\x80\xC7\x44\x24\x2A\x2A\x2A\x2A\x2A\xF3\x0F\x11\x4C\x24\x2A\x45\x33\xC9\x4C\x8D\x44\x24\x2A\x48\x8D\x54\x24\x2A\xE8\x2A\x2A\x2A\x2A\x48\x8B\x4C\x24\x2A\x84\xC0\x74\x0B\x39\x7C\x24\x30\x74\x05\x48\x8B\x19\xEB\x03\x48\x8B\xDF\x89\x7C\x24\x70\x48\x8D\x94\x24", "xxxxxxx????xxxx?????xxxxxxxxxxxxxx?xxxx?xxx?????xxxxxxxxxxxxxxx?????xxxxx?xxxxxxx?xxxx?x????xxxx?xxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    oCreateTexture = (CreateTexture)mem::FindPattern((PBYTE)"\x48\x89\x4C\x24\x08\x57\x41\x54\x41\x55\x41\x57", "xxxxxxxxxxxx", GetModuleHandle(NULL));
+    oCreatePhysics = (CreatePhysics)mem::FindPattern((PBYTE)"\x40\x53\x56\x57\x41\x55", "xxxxxx", GetModuleHandle(NULL));
+    oUpdateShapes = (CreatePhysics)mem::FindPattern((PBYTE)"\x48\x89\x4C\x24\x2A\x55\x56\x57\x41\x54\x41\x55\x41\x56\x41\x57\x48\x8D\xAC\x24\x2A\x2A\x2A\x2A\xB8\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\x48\x2B\xE0\x48\xC7\x85\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x48\x89\x9C\x24\x2A\x2A\x2A\x2A\x0F\x29\xB4\x24\x2A\x2A\x2A\x2A\x0F\x29\xBC\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\x84\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\x8C\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\x94\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\x9C\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\xA4\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\xAC\x24\x2A\x2A\x2A\x2A\x44\x0F\x29\xB4\x24", "xxxx?xxxxxxxxxxxxxxx????x????x????xxxxxx????????xxxx????xxxx????xxxx????xxxxx????xxxxx????xxxxx????xxxxx????xxxxx????xxxxx????xxxxx", GetModuleHandle(NULL));
+    oB_Constructor = (B_Constructor)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x4C\x8B\xC2\x48\x8B\xD9\xBA\x01\x00\x00\x00", "xxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    oS_Constructor = (S_Constructor)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x4C\x8B\xC2\x48\x8B\xD9\xBA\x02\x00\x00\x00", "xxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    oSetDynamic = (SetDynamic)mem::FindPattern((PBYTE)"\x88\x91\x2A\x2A\x2A\x2A\x4C\x8B\xC1\x84\xD2\x74\x29\x0F\xB6\x81\x2A\x2A\x2A\x2A\xC6\x81\x2A\x2A\x2A\x2A\x2A\x84\xC0\x75\x17\x48\x8B\x05\x2A\x2A\x2A\x2A\x49\x8B\xD0\x48\x8B\x48\x40\x48\x8B\x49\x08\xE9\x2A\x2A\x2A\x2A\xC3", "xx????xxxxxxxxxx????xx?????xxxxxxx????xxxxxxxxxxxx????x", GetModuleHandle(NULL));
+    oTMalloc = (TMalloc)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x48\x8B\xD9\x48\x83\xF9\xE0\x77\x3C\x48\x85\xC9\xB8\x2A\x2A\x2A\x2A\x48\x0F\x44\xD8\xEB\x15\xE8\x2A\x2A\x2A\x2A\x85\xC0\x74\x25\x48\x8B\xCB\xE8\x2A\x2A\x2A\x2A\x85\xC0\x74\x19\x48\x8B\x0D\x2A\x2A\x2A\x2A\x4C\x8B\xC3\x33\xD2\xFF\x15\x2A\x2A\x2A\x2A\x48\x85\xC0\x74\xD4\xEB\x0D\xE8\x2A\x2A\x2A\x2A\xC7\x00\x2A\x2A\x2A\x2A\x33\xC0\x48\x83\xC4\x20\x5B\xC3", "xxxxxxxxxxxxxxxxxxx????xxxxxxx????xxxxxxxx????xxxxxxx????xxxxxxx????xxxxxxxx????xx????xxxxxxxx", GetModuleHandle(NULL));
+    oDamageStuff = (damageStuff)mem::FindPattern((PBYTE)"\x4c\x89\x44\x24\x18\x48\x89\x4c\x24\x08\x55\x56\x57\x41\x54", "xxxxxxxxxxxxxxx", GetModuleHandle(NULL)); //td.exe+EFE60
+    oSpawnFire = (spawnFire)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x48\x8D\x68\xC8\x48\x81\xEC\x30\x01\x00\x00", "xxxxxxxxxxxxxxx", GetModuleHandle(NULL)); //td.exe+B94C0
     //number of cheats for menu
     int CHEAT_COUNT = 8;
 
@@ -1183,17 +1228,32 @@ DWORD WINAPI main(HMODULE hModule)
     //MessageBox(0, L"Injection complete.\nInsert or F1 for menu", L"Notice", MB_ICONINFORMATION);
 
     Sleep(2000);
-
-    //std::cout << std::hex << mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x55\x41\x56\x48\x8D\x68\xD8\x48\x81\xEC\x00\x00\x00\x00\x48\xC7\x45\x00\x00\x00\x00\x00", "xxxxxxxxxxxxxxx????xxx?????", GetModuleHandle(NULL)) << std::endl;
+    
+    std::cout << "Function locations: " << std::endl;
+    std::cout << "Paint:              " << std::hex << oPaint << std::endl;
+    std::cout << "Draw line:          " << std::hex << oFDL << std::endl;
+    std::cout << "Ray cast:           " << std::hex << oRC << std::endl;
+    std::cout << "Spawn vox:          " << std::hex << oSpawnVox << std::endl;
+    std::cout << "Create texture:     " << std::hex << oCreateTexture << std::endl;
+    std::cout << "Update ents:        " << std::hex << oUpdateShapes << std::endl;
+    std::cout << "Body constructor:   " << std::hex << oB_Constructor << std::endl;
+    std::cout << "Shape constructor:  " << std::hex << oS_Constructor << std::endl;
+    std::cout << "Set dynamic:        " << std::hex << oSetDynamic << std::endl;
+    std::cout << "Malloc:             " << std::hex << oTMalloc << std::endl;
+    std::cout << "create explosion:   " << std::hex << oBT << std::endl;
+    std::cout << "create fire:        " << std::hex << oSpawnFire << std::endl;
+    std::cout << "do damage:          " << std::hex << oDamageStuff << std::endl;
 
     HANDLE mainHandle = GetModuleHandle(L"teardown.exe");
     uintptr_t moduleBase = (uintptr_t)mainHandle;
+
+    oFire = (tFire)(moduleBase + 0x1F2F80);
+    std::cout << "Other fire:         " << std::hex << oFire << std::endl;
+
     uintptr_t game = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x0 });
     uintptr_t player = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0xA0, 0x0 });
     uintptr_t renderer = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x38, 0x0 });
     uintptr_t scene = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x40, 0x0 });
-
-    oFire = (tFire)(moduleBase + 0x1F2F80);
 
     //opengl stuff by nyhu
     gWnd = FindWindow(0, L"Teardown");
