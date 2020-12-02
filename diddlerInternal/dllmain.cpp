@@ -18,6 +18,7 @@
 #include <fstream>
 #include <iostream>
 #include <filesystem>
+#include <random>
 
 #define CHAR_NOT_SELECTED " "
 #define CHAR_SELECTED ">"
@@ -248,17 +249,17 @@ Vec4 castRay(uintptr_t player, uintptr_t scene) {
     return { *vx + (vecX * outDist), *vy + (vecY * outDist), *vz + (vecZ * outDist), outDist };
 }
 
-void drawCube(uintptr_t renderer, Vec3 position) {
-    static Color color{ 1.f, 0.f, 0.f, 1.f };
-    Position pos1 = { position.X - 0.25f, position.Y - 0.25f, position.Z - 0.25f };
-    Position pos2 = { position.X - 0.25f, position.Y - 0.25f, position.Z + 0.25f };
-    Position pos3 = { position.X + 0.25f, position.Y - 0.25f, position.Z + 0.25f };
-    Position pos4 = { position.X + 0.25f, position.Y - 0.25f, position.Z - 0.25f };
+void drawCube(uintptr_t renderer, Vec3 position, float size, Color color) {
+    //0.25
+    Position pos1 = { position.X - size, position.Y - size, position.Z - size };
+    Position pos2 = { position.X - size, position.Y - size, position.Z + size };
+    Position pos3 = { position.X + size, position.Y - size, position.Z + size };
+    Position pos4 = { position.X + size, position.Y - size, position.Z - size };
 
-    Position pos1_high = { position.X - 0.25f, position.Y + 0.25f, position.Z - 0.25f };
-    Position pos2_high = { position.X - 0.25f, position.Y + 0.25f, position.Z + 0.25f };
-    Position pos3_high = { position.X + 0.25f, position.Y + 0.25f, position.Z + 0.25f };
-    Position pos4_high = { position.X + 0.25f, position.Y + 0.25f, position.Z - 0.25f };
+    Position pos1_high = { position.X - size, position.Y + size, position.Z - size };
+    Position pos2_high = { position.X - size, position.Y + size, position.Z + size };
+    Position pos3_high = { position.X + size, position.Y + size, position.Z + size };
+    Position pos4_high = { position.X + size, position.Y + size, position.Z - size };
 
     //bottom square
     oFDL(renderer, pos1, pos2, color, color, false);
@@ -365,6 +366,7 @@ static char str0[128] = "knedcube";
 int selectedSpawnIndex = 0;
 bool linetime = false;
 bool raycastTest = false;
+bool flamethrower = false;
 
 namespace fs = std::filesystem;
 bool hwglSwapBuffers(_In_ HDC hDc)
@@ -380,6 +382,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
     uintptr_t scene = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x40, 0x0 });
     uintptr_t HeldBody = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0xA0, 0x0118, 0x0 });
     uintptr_t TargetBody = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0xA0, 0x4A0, 0x0 });
+    uintptr_t sceneNextInst = mem::FindDMAAddy(scene, { 0x8, 0x0 });
 
     if (firstprint) {
         std::stringstream gmss;
@@ -418,6 +421,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         std::cout << stobe.c_str() << std::endl;
         std::cout << stebe.c_str() << std::endl;
         std::cout << "raycast: 0x" << std::hex << oRC << std::endl;
+        std::cout << "Scene weird: 0x" << std::hex << sceneNextInst << std::endl;
 
         firstprint = false;
     }
@@ -434,7 +438,6 @@ bool hwglSwapBuffers(_In_ HDC hDc)
     bool* isPaused = (bool*)(game + 0x0138);
     byte* usePressed = (byte*)(player + 0xE9);
     Vector3 cpos = Vector3();
-
     //handling flight
     float* vx = (float*)(player + 0x007C);
     float* vy = (float*)(player + 0x007C + 4);
@@ -524,6 +527,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         ImGui::Checkbox("Show bodies", &drawBodiesRef);
         ImGui::Checkbox("Depth map", &drawShadowVolRef);
         ImGui::Checkbox("Click explosions", &cheatHandler[14]);
+        ImGui::Checkbox("Flamethrower", &flamethrower);
         ImGui::Checkbox("Raycast test", &raycastTest);
 
         if (ImGui::Button("Yellow the world")) {
@@ -532,6 +536,27 @@ bool hwglSwapBuffers(_In_ HDC hDc)
             v3.y = *y;
             v3.z = *z;
             oPaint((uintptr_t*)scene, &v3, 500.0f, 0.0f, 25.0f);
+        }
+
+        if (ImGui::Button("FIRE!")) {
+
+            std::vector<Vec3> positions;
+
+            std::random_device rd;
+            std::default_random_engine eng(rd());
+            std::uniform_real_distribution<> distr_X(*x - 5.f, *x + 5.f);
+            std::uniform_real_distribution<> distr_Y(*y - 5.f, *y + 5.f);
+            std::uniform_real_distribution<> distr_Z(*z - 5.f, *z + 5.f);
+
+            Vec3 firepos = { 0.f, 0.f, 0.f };
+
+            for (int i = 0; i < 100; i++) {
+                positions.push_back({ (float)distr_X(eng), (float)distr_Y(eng) , (float)distr_Z(eng) });
+            }
+
+            for (auto& nextpos : positions) {
+                oSpawnFire(*(uintptr_t*)(scene + 0xA8), &nextpos);
+            }
         }
         ImGui::BeginGroup();
 
@@ -603,10 +628,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         int i = 0;
 
         ImGui::Checkbox("Items explode [return]", &generalSpawnBombs);
-        if (generalSpawnBombs) {
-            ImGui::SameLine();
-            ImGui::SliderFloat("Bomb power", &explosivePower, 0.5f, 10.0f, "%.1f");
-        }
+        ImGui::SliderFloat("Bomb power", &explosivePower, 0.5f, 10.0f, "%.1f");
         if (ImGui::BeginCombo("[Q] Spawn", items[selectedSpawnIndex].c_str(), 0)) {
             for (int n = 0; n < items.size(); n++) {
                 bool selected = false;
@@ -696,6 +718,12 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         }
         if (drawShadowVolRef) {
             ImGui::Text("Depth view");
+        }
+        if (cheatHandler[14]) {
+            ImGui::Text("Click explosions");
+        }
+        if (flamethrower) {
+            ImGui::Text("Flamethrower");
         }
 
         ImGui::End();
@@ -934,8 +962,23 @@ bool hwglSwapBuffers(_In_ HDC hDc)
     if (raycastTest) {     
         Vec4 ray = castRay(player, scene);
         Vec3 firepos = { ray.X, ray.Y, ray.Z };
-        drawCube(renderer, { ray.X, ray.Y, ray.Z });
-        oSpawnFire(TargetBody, &firepos);
+        static Color red{ 1.f, 0.f, 0.f, 1.f };
+        drawCube(renderer, { ray.X, ray.Y, ray.Z }, 0.5f, red);
+        //oSpawnFire(*(uintptr_t*)(scene + 0xA8), &firepos);
+
+        firepos = { 0.f, 0.f, 0.f };
+
+        for (float ty = (ray.Y - 2.f); ty < (ray.Y + 2.f); ty += 0.1f) {
+            for (float tx = (ray.X - 2.f); tx < (ray.X + 2.f); tx += 0.1f) {
+                for (float tz = (ray.Z - 2.f); tz < (ray.Z + 2.f); tz += 0.1f) {
+                    if ((rand() % 100) == 0) {
+                        firepos = { tx, ty, tz };
+                        oSpawnFire(*(uintptr_t*)(scene + 0xA8), &firepos);
+                    }
+                }
+            }
+        }
+
         std::cout << ray.X << " : " << ray.Y << " : " << ray.Z << " : " << ray.W << std::endl;
     }
 
@@ -965,10 +1008,47 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         }
     }
 
-    if (cheatHandler[14] && (*usePressed == (byte)0x01)) {
-        Vec4 pos = castRay(player, scene);
-        Vec3 splodePos = { pos.X, pos.Y, pos.Z };
-        oBT(scene, &splodePos, 1.5f);
+    if (cheatHandler[14]) { 
+        Vec4 ray = castRay(player, scene);
+        if (ray.W > 0) {
+            static Color red{ 1.f, 0.f, 0.f, 1.f };
+            drawCube(renderer, { ray.X, ray.Y, ray.Z }, 0.25f, red);
+            if ((*usePressed == (byte)0x01)) {
+                Vec3 splodePos = { ray.X, ray.Y, ray.Z };
+                oBT(scene, &splodePos, explosivePower);
+            }
+        }
+    }
+
+    if (flamethrower) {
+        float flRadius = 1.5f;
+
+        if (*usePressed == (byte)0x01) {
+            Vec4 ray = castRay(player, scene);
+            if (ray.W > 0) {
+                Vec3 firepos = { ray.X, ray.Y, ray.Z };
+                static Color red{ 1.f, 0.f, 0.f, 1.f };
+                drawCube(renderer, { ray.X, ray.Y, ray.Z }, flRadius, red);
+
+                for (float ty = (ray.Y - flRadius); ty < (ray.Y + flRadius); ty += 0.1f) {
+                    for (float tx = (ray.X - flRadius); tx < (ray.X + flRadius); tx += 0.1f) {
+                        for (float tz = (ray.Z - flRadius); tz < (ray.Z + flRadius); tz += 0.1f) {
+                            if ((rand() % 100) == 0) {
+                                firepos = { tx, ty, tz };
+                                oSpawnFire(*(uintptr_t*)(scene + 0xA8), &firepos);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            Vec4 ray = castRay(player, scene);
+            if (ray.W > 0) {
+                static Color green{ 0.f, 1.f, 0.f, 1.f };
+                drawCube(renderer, { ray.X, ray.Y, ray.Z }, flRadius, green);
+            }
+        }
     }
 
     //I
@@ -1026,7 +1106,8 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         for (Vec3 cvec : placedExplosives)
         {
             Vec3 tmp = cvec;
-            drawCube(renderer, tmp);
+            static Color red{ 1.f, 0.f, 0.f, 1.f };
+            drawCube(renderer, tmp, 0.25f, red);
         }
     }
 
