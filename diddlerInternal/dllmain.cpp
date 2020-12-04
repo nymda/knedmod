@@ -95,7 +95,8 @@ typedef void(__fastcall* frameDrawLine)(uintptr_t renderer, const Position& p1, 
 typedef void(__fastcall* rayCast)(uintptr_t scene, Vec3* pos, Vec3* rot, float dist, RaycastFilter* filter, float* outDist, Vec3* out, uintptr_t* out_shape, uintptr_t* out_palette);
 typedef void(__fastcall* boomtown)(uintptr_t scene, Vec3* pos, float radius);
 typedef void(__fastcall* damageStuff)(uintptr_t scene, Vec3* pos); //broken 
-typedef void(__fastcall* spawnFire)(uintptr_t scene, Vec3* pos); //broken 
+typedef void(__fastcall* spawnFire)(uintptr_t scene, Vec3* pos); 
+typedef void(__fastcall* pewpew)(uintptr_t scene, Vec3* pos, Vec3* dir, INT32 type);
 
 bool needToNopMovement = true;
 bool needToPatchMovement = true;
@@ -161,15 +162,15 @@ float savedqy = 0.00;
 float savedqz = 0.00;
 float savedqw = 0.00;
 
-int desiredSpeed = 1;
-int desiredGameSpeedMultiple = 9;
+float desiredSpeed = 1;
+float desiredGameSpeedMultiple = 9.f;
 float desitedGameSpeed = BASE_GAME_SPEED;
 
-int prevExplSize = 0;
-int xplSize = 0;
+float prevExplSize = 0.f;
+float xplSize = 0.f;
 
-int prevPewSize = 0;
-int pewSize = 0;
+float prevPewSize = 0.f;
+float pewSize = 0.f;
 
 tPaint oPaint;
 tFire oFire;
@@ -188,6 +189,7 @@ bool drawBoundsRef = false;
 bool drawBodiesRef = false;
 bool drawShadowVolRef = false;
 bool showPanel = true;
+bool showTerm = true;
 
 //flightspeed
 float speed = 0.5f;
@@ -209,6 +211,8 @@ rayCast oRC;
 boomtown oBT;
 damageStuff oDamageStuff;
 spawnFire oSpawnFire;
+pewpew oPewpew;
+
 bool first = true;
 
 inline bool exists(const std::string& name) {
@@ -349,11 +353,6 @@ first = false;
     *(float*)(BODY + 0x28 + 20) = 0.f;
     *(float*)(BODY + 0x28 + 24) = 1.f;
 
-    //TODO
-    //-GET MINPOS / MAXPOS POINTERS OF CREATED BODY
-    //-ADD TO EXPLOSIVEITEM STRUCT
-    //-USE TO FIND WORLD BASED CENTERPOINT OF OBJECT FOR EXPLOSION
-    //-https://github.com/SK83RJOSH/Teardown/blob/master/entities/body.h
 
     if (isBomb) {
         explosiveItem tmpEX = { (Vec3*)(BODY + 0x28), (Vec3*)(BODY + 0xDC), (Vec3*)(BODY + 0xE8), explosivePower };
@@ -367,6 +366,9 @@ int selectedSpawnIndex = 0;
 bool linetime = false;
 bool raycastTest = false;
 bool flamethrower = false;
+bool minigun = false;
+int bulletsPerFrame = 1;
+float spreadVal = 1.0f;
 
 namespace fs = std::filesystem;
 bool hwglSwapBuffers(_In_ HDC hDc)
@@ -499,103 +501,142 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         //*(bool*)(game + 0x0138) = true;
         ImGui::Begin("FennTD");
         ImGui::Text("[I] Save position, [K] Teleport there");
-        ImGui::Checkbox("Info panel", &showPanel);
-        ImGui::Checkbox("Godmode", &cheatHandler[0]);
-        ImGui::Checkbox("Jetpack", &cheatHandler[2]);
-        ImGui::Checkbox("No walls", &cheatHandler[4]);
-        ImGui::Checkbox("No use cooldown", &cheatHandler[7]);
-        ImGui::Checkbox("Long planks", &cheatHandler[12]);
-        ImGui::Checkbox("Hulk yeet", &cheatHandler[13]);
-        ImGui::Checkbox("Noclip [V]", &cheatHandler[8]);
-        ImGui::Checkbox("Slow motion [F3]", &cheatHandler[1]);
-        ImGui::SameLine();
-        ImGui::PushItemWidth(200);
-        ImGui::SliderInt("Game speed", &desiredGameSpeedMultiple, 1, 15);
-        ImGui::Checkbox("Speedhack       ", &cheatHandler[3]);
-        ImGui::SameLine();
-        ImGui::PushItemWidth(200);
-        ImGui::SliderInt("Run speed", &desiredSpeed, 1, 15);
-        ImGui::Checkbox("Explosion boost ", &cheatHandler[5]);
-        ImGui::SameLine();
-        ImGui::PushItemWidth(200);
-        ImGui::SliderInt("Explosion size", &xplSize, 1, 15);
-        ImGui::Checkbox("Gun boost       ", &cheatHandler[6]);
-        ImGui::SameLine();
-        ImGui::PushItemWidth(200);
-        ImGui::SliderInt("Gun size", &pewSize, 1, 15);
-        ImGui::Checkbox("Show boundaries", &drawBoundsRef);
-        ImGui::Checkbox("Show bodies", &drawBodiesRef);
-        ImGui::Checkbox("Depth map", &drawShadowVolRef);
-        ImGui::Checkbox("Click explosions", &cheatHandler[14]);
-        ImGui::Checkbox("Flamethrower", &flamethrower);
-        ImGui::Checkbox("Raycast test", &raycastTest);
 
-        if (ImGui::Button("Yellow the world")) {
-            Vector3 v3 = Vector3();
-            v3.x = *x;
-            v3.y = *y;
-            v3.z = *z;
-            oPaint((uintptr_t*)scene, &v3, 500.0f, 0.0f, 25.0f);
+        ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+        if (ImGui::BeginTabBar("TabBar", tab_bar_flags))
+        {
+            if (ImGui::BeginTabItem("Misc"))
+            {
+                ImGui::Checkbox("Info panel", &showPanel);
+                ImGui::Checkbox("Console", &showTerm);
+                ImGui::Checkbox("Godmode", &cheatHandler[0]);
+                ImGui::Checkbox("No walls", &cheatHandler[4]);
+                ImGui::Checkbox("Long planks", &cheatHandler[12]);
+                ImGui::Checkbox("Hulk yeet", &cheatHandler[13]);
+                ImGui::Checkbox("Slow motion [F3]", &cheatHandler[1]);
+                ImGui::SameLine();
+                ImGui::PushItemWidth(200);
+                ImGui::SliderFloat("Game speed", &desiredGameSpeedMultiple, -5.0f, 15.0f, "%.1f");
+                ImGui::Checkbox("Raycast test", &raycastTest);
+
+                ImVec2 btnSize = { 200, 20 };
+
+                if (ImGui::Button("Yellow the world", btnSize)) {
+                    Vector3 v3 = Vector3();
+                    v3.x = *x;
+                    v3.y = *y;
+                    v3.z = *z;
+                    oPaint((uintptr_t*)scene, &v3, 500.0f, 0.0f, 25.0f);
+                }
+
+                if (ImGui::Button("FIRE!", btnSize)) {
+
+                    std::vector<Vec3> positions;
+
+                    std::random_device rd;
+                    std::default_random_engine eng(rd());
+                    std::uniform_real_distribution<> distr_X(*x - 5.f, *x + 5.f);
+                    std::uniform_real_distribution<> distr_Y(*y - 5.f, *y + 5.f);
+                    std::uniform_real_distribution<> distr_Z(*z - 5.f, *z + 5.f);
+
+                    Vec3 firepos = { 0.f, 0.f, 0.f };
+
+                    for (int i = 0; i < 100; i++) {
+                        positions.push_back({ (float)distr_X(eng), (float)distr_Y(eng) , (float)distr_Z(eng) });
+                    }
+
+                    for (auto& nextpos : positions) {
+                        oSpawnFire(*(uintptr_t*)(scene + 0xA8), &nextpos);
+                    }
+                }
+
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Movement")) {
+                ImGui::Checkbox("Jetpack", &cheatHandler[2]);
+                ImGui::Checkbox("Noclip [V]", &cheatHandler[8]);
+                ImGui::Checkbox("Speedhack       ", &cheatHandler[3]);
+                ImGui::SameLine();
+                ImGui::PushItemWidth(200);
+                ImGui::SliderFloat("Run speed", &desiredSpeed, -5.0f, 15.0f, "%.1f");
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Weapons"))
+            {
+                ImGui::Checkbox("No use cooldown", &cheatHandler[7]);
+                ImGui::Checkbox("Click explosions", &cheatHandler[14]);
+                ImGui::Checkbox("Flamethrower", &flamethrower);
+                ImGui::Checkbox("Explosion boost ", &cheatHandler[5]);
+                ImGui::SameLine();
+                ImGui::PushItemWidth(200);
+                ImGui::SliderFloat("Explosion size", &xplSize, -5.0f, 15.0f, "%.1f");
+                ImGui::Checkbox("Gun boost       ", &cheatHandler[6]);
+                ImGui::SameLine();
+                ImGui::PushItemWidth(200);
+                ImGui::SliderFloat("Gun size", &pewSize, -5.0f, 15.0f, "%.1f");
+
+                ImGui::Checkbox("Minigun", &minigun);
+                if (minigun) {
+                    if (ImGui::TreeNode("Minigun options")) {
+                        ImGui::PushItemWidth(200);
+                        ImGui::SliderInt("Bullets / frame", &bulletsPerFrame, 1, 25);
+                        ImGui::PushItemWidth(200);
+                        ImGui::SliderFloat("Spread ammount", &spreadVal, 0.0f, 0.5f, "%.2f");
+                        ImGui::Separator();
+                        ImGui::TreePop();
+                    }
+                } 
+
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Visual"))
+            {
+                ImGui::Checkbox("Show boundaries", &drawBoundsRef);
+                ImGui::Checkbox("Show bodies", &drawBodiesRef);
+                ImGui::Checkbox("Depth map", &drawShadowVolRef);
+                ImGui::EndTabItem();
+            }
+            ImGui::EndTabBar();
         }
 
-        if (ImGui::Button("FIRE!")) {
+        //ImGui::BeginGroup();
 
-            std::vector<Vec3> positions;
+        //std::stringstream gmss;
+        //gmss << "Game: 0x" << std::hex << game;
+        //std::string strgm = gmss.str();
 
-            std::random_device rd;
-            std::default_random_engine eng(rd());
-            std::uniform_real_distribution<> distr_X(*x - 5.f, *x + 5.f);
-            std::uniform_real_distribution<> distr_Y(*y - 5.f, *y + 5.f);
-            std::uniform_real_distribution<> distr_Z(*z - 5.f, *z + 5.f);
+        //std::stringstream plss;
+        //plss << "Player: 0x" << std::hex << player;
+        //std::string strpl = plss.str();
 
-            Vec3 firepos = { 0.f, 0.f, 0.f };
+        //std::stringstream scss;
+        //scss << "Scene: 0x" << std::hex << scene;
+        //std::string strsc = scss.str();
 
-            for (int i = 0; i < 100; i++) {
-                positions.push_back({ (float)distr_X(eng), (float)distr_Y(eng) , (float)distr_Z(eng) });
-            }
+        //std::stringstream ress;
+        //ress << "Renderer: 0x" << std::hex << renderer;
+        //std::string strre = ress.str();
 
-            for (auto& nextpos : positions) {
-                oSpawnFire(*(uintptr_t*)(scene + 0xA8), &nextpos);
-            }
-        }
-        ImGui::BeginGroup();
+        //std::stringstream bess;
+        //bess << "Base: 0x" << std::hex << moduleBase;
+        //std::string strbe = bess.str();
 
-        std::stringstream gmss;
-        gmss << "Game: 0x" << std::hex << game;
-        std::string strgm = gmss.str();
+        //std::stringstream boss;
+        //boss << "Held body: 0x" << std::hex << HeldBody;
+        //std::string stobe = boss.str();
 
-        std::stringstream plss;
-        plss << "Player: 0x" << std::hex << player;
-        std::string strpl = plss.str();
+        //std::stringstream toss;
+        //toss << "Target body: 0x" << std::hex << TargetBody;
+        //std::string stebe = toss.str();
 
-        std::stringstream scss;
-        scss << "Scene: 0x" << std::hex << scene;
-        std::string strsc = scss.str();
-
-        std::stringstream ress;
-        ress << "Renderer: 0x" << std::hex << renderer;
-        std::string strre = ress.str();
-
-        std::stringstream bess;
-        bess << "Base: 0x" << std::hex << moduleBase;
-        std::string strbe = bess.str();
-
-        std::stringstream boss;
-        boss << "Held body: 0x" << std::hex << HeldBody;
-        std::string stobe = boss.str();
-
-        std::stringstream toss;
-        toss << "Target body: 0x" << std::hex << TargetBody;
-        std::string stebe = toss.str();
-
-        ImGui::Text(strgm.c_str());
-        ImGui::Text(strpl.c_str());
-        ImGui::Text(strsc.c_str());
-        ImGui::Text(strre.c_str());
-        ImGui::Text(strbe.c_str());
-        ImGui::Text(stobe.c_str());
-        ImGui::Text(stebe.c_str());
-        ImGui::EndGroup();
+        //ImGui::Text(strgm.c_str());
+        //ImGui::Text(strpl.c_str());
+        //ImGui::Text(strsc.c_str());
+        //ImGui::Text(strre.c_str());
+        //ImGui::Text(strbe.c_str());
+        //ImGui::Text(stobe.c_str());
+        //ImGui::Text(stebe.c_str());
+        //ImGui::EndGroup();
         ImGui::End();
     }
     else {
@@ -665,6 +706,10 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         ImGui::End();
     }
 
+    if (showTerm) {
+
+    }
+
     if (showPanel) {
         ImGuiWindowFlags window_flags = 0;
         window_flags |= ImGuiWindowFlags_NoMove;
@@ -724,6 +769,9 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         }
         if (flamethrower) {
             ImGui::Text("Flamethrower");
+        }
+        if (minigun) {
+            ImGui::Text("Minigun");
         }
 
         ImGui::End();
@@ -980,6 +1028,32 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         }
 
         std::cout << ray.X << " : " << ray.Y << " : " << ray.Z << " : " << ray.W << std::endl;
+    }
+
+    if (minigun && (*usePressed == (byte)0x01)) {
+        float nvX = -(2 * (*qx * *qz + *qw * *qy));
+        float nvY = -(2 * (*qy * *qz - *qw * *qx));
+        float nvZ = -(1 - 2 * (*qx * *qx + *qy * *qy));
+        Vec3 camPos = { *vx, *vy, *vz };
+
+        float noiseX = 0.f;
+        float noiseY = 0.f;
+        float noiseZ = 0.f;
+
+        for (int i = 0; i < bulletsPerFrame; i++) {
+            if (spreadVal > 0.f) {
+                std::random_device rd;
+                std::default_random_engine eng(rd());
+                std::uniform_real_distribution<> noise(-spreadVal, spreadVal);
+
+                noiseX = noise(eng);
+                noiseY = noise(eng);
+                noiseZ = noise(eng);
+            }
+
+            Vec3 camDir = { nvX + noiseX, nvY + noiseY, nvZ + noiseZ };
+            oPewpew(scene, &camPos, &camDir, 0);
+        }
     }
 
     if (cheatHandler[12] != prevCheatHandler[12]) {
@@ -1288,6 +1362,8 @@ DWORD WINAPI main(HMODULE hModule)
     oTMalloc = (TMalloc)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x48\x8B\xD9\x48\x83\xF9\xE0\x77\x3C\x48\x85\xC9\xB8\x2A\x2A\x2A\x2A\x48\x0F\x44\xD8\xEB\x15\xE8\x2A\x2A\x2A\x2A\x85\xC0\x74\x25\x48\x8B\xCB\xE8\x2A\x2A\x2A\x2A\x85\xC0\x74\x19\x48\x8B\x0D\x2A\x2A\x2A\x2A\x4C\x8B\xC3\x33\xD2\xFF\x15\x2A\x2A\x2A\x2A\x48\x85\xC0\x74\xD4\xEB\x0D\xE8\x2A\x2A\x2A\x2A\xC7\x00\x2A\x2A\x2A\x2A\x33\xC0\x48\x83\xC4\x20\x5B\xC3", "xxxxxxxxxxxxxxxxxxx????xxxxxxx????xxxxxxxx????xxxxxxx????xxxxxxx????xxxxxxxx????xx????xxxxxxxx", GetModuleHandle(NULL));
     oDamageStuff = (damageStuff)mem::FindPattern((PBYTE)"\x4c\x89\x44\x24\x18\x48\x89\x4c\x24\x08\x55\x56\x57\x41\x54", "xxxxxxxxxxxxxxx", GetModuleHandle(NULL)); //td.exe+EFE60
     oSpawnFire = (spawnFire)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x48\x8D\x68\xC8\x48\x81\xEC\x30\x01\x00\x00", "xxxxxxxxxxxxxxx", GetModuleHandle(NULL)); //td.exe+B94C0
+    oPewpew = (pewpew)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x57\x48\x81\xEC\x80\x00\x00\x00", "xxxxxxxxxxxxx", GetModuleHandle(NULL));
+
     //number of cheats for menu
     int CHEAT_COUNT = 8;
 
