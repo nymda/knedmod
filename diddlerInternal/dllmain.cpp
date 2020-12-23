@@ -39,6 +39,8 @@ struct Vec3 { float X; float Y; float Z; };
 struct explosiveItem { Vec3* position; Vec3* minpos; Vec3* maxpos; float explosionPower; };
 struct Vec4 { float X; float Y; float Z; float W; };
 
+HMODULE hMdl;
+
 struct Position {
     float values[3];
 };
@@ -117,6 +119,7 @@ LRESULT APIENTRY hWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 }
                 return true;
             }
+
     }
 
     ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
@@ -246,8 +249,15 @@ Vec4 castRay(uintptr_t player, uintptr_t scene) {
     Vec3 vPos = { *vx, *vy, *vz };
     Vec3 vVec = { vecX, vecY, vecZ };
     Vec3 output;
+    uintptr_t oShape;
     float outDist = 0.f;
-    oRC(scene, &vPos, &vVec, 250.f, &filter, &outDist, &output, nullptr, nullptr);
+    oRC(scene, &vPos, &vVec, 250.f, &filter, &outDist, &output, &oShape, nullptr);
+
+    //std::cout << std::to_string(outDist) << std::endl;
+
+    if (outDist == 0) {
+        outDist = 1000.f;
+    }
 
     //get the thingy
     return { *vx + (vecX * outDist), *vy + (vecY * outDist), *vz + (vecZ * outDist), outDist };
@@ -353,6 +363,7 @@ first = false;
     *(float*)(BODY + 0x28 + 20) = 0.f;
     *(float*)(BODY + 0x28 + 24) = 1.f;
 
+    lastHeldBody = BODY;
 
     if (isBomb) {
         explosiveItem tmpEX = { (Vec3*)(BODY + 0x28), (Vec3*)(BODY + 0xDC), (Vec3*)(BODY + 0xE8), explosivePower };
@@ -367,8 +378,15 @@ bool linetime = false;
 bool raycastTest = false;
 bool flamethrower = false;
 bool minigun = false;
-int bulletsPerFrame = 1;
-float spreadVal = 1.0f;
+int bulletsPerFrame = 25;
+float spreadVal = 0.0f;
+float throwVelocityMultiplier = 100.f;
+float throwVelocityMultiplierSpeedAddition = 1.f;
+bool f2Throw;
+
+bool physgun;
+float physgunDist = 2.f;
+bool setDist = true;
 
 namespace fs = std::filesystem;
 bool hwglSwapBuffers(_In_ HDC hDc)
@@ -380,6 +398,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
     uintptr_t moduleBase = (uintptr_t)mainHandle;
     uintptr_t game = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x0 });
     uintptr_t player = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0xA0, 0x0 });
+    //uintptr_t player = mem::FindDMAAddy(moduleBase + 0x00408598, {0x98, 0x0 });
     uintptr_t renderer = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x38, 0x0 });
     uintptr_t scene = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0x40, 0x0 });
     uintptr_t HeldBody = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0xA0, 0x0118, 0x0 });
@@ -521,6 +540,17 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 
                 ImVec2 btnSize = { 200, 20 };
 
+
+                if (ImGui::Button("Load kned config", btnSize)) {
+                    cheatHandler[0] = true;
+                    cheatHandler[2] = true;
+                    cheatHandler[4] = true;
+                    cheatHandler[7] = true;
+                    cheatHandler[12] = true;
+                    cheatHandler[3] = true;
+                    desiredSpeed = 3.f;
+                }
+
                 if (ImGui::Button("Yellow the world", btnSize)) {
                     Vector3 v3 = Vector3();
                     v3.x = *x;
@@ -574,6 +604,11 @@ bool hwglSwapBuffers(_In_ HDC hDc)
                 ImGui::SameLine();
                 ImGui::PushItemWidth(200);
                 ImGui::SliderFloat("Gun size", &pewSize, -5.0f, 15.0f, "%.1f");
+                ImGui::Checkbox("F2 Throw        ", &f2Throw);
+                ImGui::SameLine();
+                ImGui::PushItemWidth(200);
+                ImGui::SliderFloat("Throw power", &throwVelocityMultiplier, 10.f, 1000.0f, "%.1f");
+                ImGui::Checkbox("Physgun         ", &physgun);
 
                 ImGui::Checkbox("Minigun", &minigun);
                 if (minigun) {
@@ -1012,22 +1047,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         Vec3 firepos = { ray.X, ray.Y, ray.Z };
         static Color red{ 1.f, 0.f, 0.f, 1.f };
         drawCube(renderer, { ray.X, ray.Y, ray.Z }, 0.5f, red);
-        //oSpawnFire(*(uintptr_t*)(scene + 0xA8), &firepos);
-
-        firepos = { 0.f, 0.f, 0.f };
-
-        for (float ty = (ray.Y - 2.f); ty < (ray.Y + 2.f); ty += 0.1f) {
-            for (float tx = (ray.X - 2.f); tx < (ray.X + 2.f); tx += 0.1f) {
-                for (float tz = (ray.Z - 2.f); tz < (ray.Z + 2.f); tz += 0.1f) {
-                    if ((rand() % 100) == 0) {
-                        firepos = { tx, ty, tz };
-                        oSpawnFire(*(uintptr_t*)(scene + 0xA8), &firepos);
-                    }
-                }
-            }
-        }
-
-        std::cout << ray.X << " : " << ray.Y << " : " << ray.Z << " : " << ray.W << std::endl;
+        oFDL(renderer, { *vx, *vy - 0.25f, *vz }, { ray.X, ray.Y, ray.Z }, red, red, false);
     }
 
     if (minigun && (*usePressed == (byte)0x01)) {
@@ -1054,6 +1074,45 @@ bool hwglSwapBuffers(_In_ HDC hDc)
             Vec3 camDir = { nvX + noiseX, nvY + noiseY, nvZ + noiseZ };
             oPewpew(scene, &camPos, &camDir, 0);
         }
+    }
+
+    if (physgun && (*usePressed == (byte)0x01) && lastHeldBody) {
+        //camera vector
+        if (setDist) {
+            Vec4 ray = castRay(player, scene);
+            physgunDist = ray.W;
+            std::cout << std::to_string(ray.W) << std::endl;
+            setDist = false;
+        }
+
+
+        float nvX = -(2 * (*qx * *qz + *qw * *qy));
+        float nvY = -(2 * (*qy * *qz - *qw * *qx));
+        float nvZ = -(1 - 2 * (*qx * *qx + *qy * *qy));
+        Vec3 physgunVector = { nvX * physgunDist, nvY * physgunDist, nvZ * physgunDist };
+        Vec3 body_minpos = *(Vec3*)(lastHeldBody + 0xDC);
+        Vec3 body_maxpos = *(Vec3*)(lastHeldBody + 0xE8);
+
+        Vec3 bodySize = { body_maxpos.X - body_minpos.X, body_maxpos.Y - body_minpos.Y , body_maxpos.Z - body_minpos.Z };
+
+        mem::Nop((byte*)(moduleBase + 0xA2CAE), 2);
+        *(byte*)(lastHeldBody + 0xFC) = 0xFF; //set timer to full
+        *(byte*)(lastHeldBody + 0xFD) = 0x01; //set isActive to true
+
+        //set target velocity to 0
+        *(float*)(lastHeldBody + 0x78 + 4) = 0.f;
+        *(float*)(lastHeldBody + 0x78 + 8) = 0.f;
+        *(float*)(lastHeldBody + 0x78 + 12) = 0.f;
+
+        //set target position to the end of the physgun vector
+        *(float*)(lastHeldBody + 0x28) =     (*vx + physgunVector.X);
+        *(float*)(lastHeldBody + 0x28 + 4) = (*vy + physgunVector.Y);
+        *(float*)(lastHeldBody + 0x28 + 8) = (*vz + physgunVector.Z);
+    }
+    else if (!(*usePressed == (byte)0x01)  && *(byte*)(moduleBase + 0xA2CAE) != 0xFE) {
+        mem::Patch((byte*)(moduleBase + 0xA2CAE), (byte*)"\xFE\xC8", 2);
+        std::cout << "Patch" << std::endl;
+        setDist = true;
     }
 
     if (cheatHandler[12] != prevCheatHandler[12]) {
@@ -1250,7 +1309,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         oFDL(renderer, pos4, pos4_high, color, color, false);
     }
 
-    if (TargetBody != 0x0) {
+    if (TargetBody != 0x0 && (((GetAsyncKeyState(0x52) >> 15) & 0x0001) == 0x0001)) {
         uintptr_t TargetObject = mem::FindDMAAddy(moduleBase + 0x003E4520, { 0xA0, 0x4A0, 0x10, 0x0 });
         lastHeldBody = TargetObject;
         float veloX = *(float*)(TargetObject + 0x78);
@@ -1262,17 +1321,44 @@ bool hwglSwapBuffers(_In_ HDC hDc)
         float rotZ = *(float*)(TargetObject + 0x50 + 8);
         float rotW = *(float*)(TargetObject + 0x50 + 8);
 
+        std::cout << "LHB updated: " << std::hex << lastHeldBody << std::endl;
+
         //std::cout << std::hex << HeldBody << ":" << TargetBody << ":" << *(uintptr_t*)(TargetBody + 0x10) << ":" << TargetObject << std::endl;
     }
 
+    const double PI = 3.14159265358;
     if ((((GetAsyncKeyState(VK_F2) >> 15) & 0x0001) == 0x0001) && !drawMenu){
         float  nvX = 2 * (*qx * *qz + *qw * *qy);
         float  nvY = 2 * (*qy * *qz - *qw * *qx);
         float  nvZ = 1 - 2 * (*qx * *qx + *qy * *qy);
 
-        *(float*)(lastHeldBody + 0x78 + 4) = -(nvX * 100);
-        *(float*)(lastHeldBody + 0x78 + 8) = -(nvY * 100);
-        *(float*)(lastHeldBody + 0x78 + 12) = -(nvZ * 100);
+        //spawnEntity(game, player, scene, "knedcube.vox", false);
+
+        Vec4 target = castRay(player, scene);
+
+        Vec3 body_minpos = *(Vec3*)(lastHeldBody + 0xDC);
+        Vec3 body_maxpos = *(Vec3*)(lastHeldBody + 0xE8);
+        Vec3 objSize = { body_maxpos.X - body_minpos.X, body_maxpos.Y - body_minpos.Y, body_maxpos.Z - body_minpos.Z };
+        Vec3 centerpoint = { body_minpos.X + (objSize.X / 2), body_minpos.Y + (objSize.Y / 2) , body_minpos.Z + (objSize.Z / 2) };
+
+        *(byte*)(lastHeldBody + 0xFC) = 0xFF; //set timer to full
+        *(byte*)(lastHeldBody + 0xFD) = 0x01; //set isActive to true
+
+        Vec3 delta = { target.X - centerpoint.X, target.Y - centerpoint.Y, target.Z - centerpoint.Z };
+        float len = sqrt(delta.X * delta.X + delta.Y * delta.Y + delta.Z * delta.Z);
+
+        throwVelocityMultiplierSpeedAddition += 2.f;
+
+        *(float*)(lastHeldBody + 0x78 + 4) = ((delta.X / len) * (throwVelocityMultiplier + throwVelocityMultiplierSpeedAddition));
+        *(float*)(lastHeldBody + 0x78 + 8) = ((delta.Y / len) * (throwVelocityMultiplier + throwVelocityMultiplierSpeedAddition));
+        *(float*)(lastHeldBody + 0x78 + 12) = ((delta.Z / len) * (throwVelocityMultiplier + throwVelocityMultiplierSpeedAddition));
+
+        static Color red{ 1.f, 0.f, 0.f, 1.f };
+        drawCube(renderer, { target.X, target.Y, target.Z }, 0.5f, red);
+        oFDL(renderer, { *vx, *vy - 0.25f, *vz }, { target.X, target.Y, target.Z }, red, red, false);
+    }
+    else {
+        throwVelocityMultiplierSpeedAddition = 1.f;
     }
 
     if ((((GetAsyncKeyState(VK_F4) >> 15) & 0x0001) == 0x0001) && !drawMenu) {
@@ -1347,6 +1433,8 @@ void plankPatch(uintptr_t moduleBase) {
 
 DWORD WINAPI main(HMODULE hModule)
 {
+    hMdl = hModule;
+
     //sigscanning for game functions
     oPaint = (tPaint)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x55\x41\x56\x48\x8D\x68\xD8\x48\x81\xEC\x00\x00\x00\x00\x48\xC7\x45\x00\x00\x00\x00\x00", "xxxxxxxxxxxxxxx????xxx?????", GetModuleHandle(NULL));
     oFDL = (frameDrawLine)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x2A\x48\x89\x6C\x24\x2A\x48\x89\x74\x24\x2A\x57\x41\x56\x41\x57\x48\x83\xEC\x20\x80\x7C\x24\x2A\x2A", "xxxx?xxxx?xxxx?xxxxxxxxxxxx??", GetModuleHandle(NULL));
@@ -1421,6 +1509,36 @@ DWORD WINAPI main(HMODULE hModule)
     //patch basic instructions
     mem::Patch((byte*)(moduleBase + 0xA618a), (byte*)"\xF3\x0F\x10\x81\x60\x01\x00\x00", 8); //health value patch
     mem::Nop((byte*)(moduleBase + 0x242D8), 10); //stop setting gamespeed
+
+    while (true) {
+        if (((GetAsyncKeyState(VK_END) >> 15) & 0x0001) == 0x0001) {
+            if (true) {
+                //free console
+                fclose(f);
+                FreeConsole();
+
+                //undo hooks
+                SetWindowLongPtrA(gWnd, GWLP_WNDPROC, LONG_PTR(oWndProc));
+
+                DetourTransactionBegin();
+                DetourUpdateThread(GetCurrentThread());
+                DetourDetach(&(PVOID&)owglSwapBuffers, hwglSwapBuffers);
+                DetourTransactionCommit();
+
+                DetourTransactionBegin();
+                DetourUpdateThread(GetCurrentThread());
+                DetourDetach(&(PVOID&)ocursor, hwCursor);
+                DetourTransactionCommit();
+
+                //sleep
+                Sleep(250);
+
+                //exit
+                FreeLibraryAndExitThread(hModule, 0);
+            }
+        }
+        Sleep(1);
+    }
 }
 
 void hidecursor()
