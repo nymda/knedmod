@@ -5,7 +5,28 @@
 #include <cstdlib>
 #include <cstring>
 
-namespace Teardown {
+namespace td {
+
+	struct Vec3 {
+		float x;
+		float y;
+		float z;
+	};
+
+	struct Vec4 {
+		float x;
+		float y;
+		float z;
+		float w;
+	};
+
+	struct Color {
+		float a;
+		float r;
+		float g;
+		float b;
+	};
+
 	namespace {
 		template <typename T>
 		struct Vector2 {
