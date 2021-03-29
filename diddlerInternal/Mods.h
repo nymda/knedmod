@@ -5,6 +5,7 @@
 
 namespace mods {
 	extern char jetpackKey;
+	extern char noclipKey;
 
 	extern bool jetpack;
 	extern bool flamethrower;

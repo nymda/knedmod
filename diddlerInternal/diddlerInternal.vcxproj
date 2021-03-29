@@ -163,6 +163,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="c4.h" />
     <ClInclude Include="cutter.h" />
     <ClInclude Include="detours.h" />
     <ClInclude Include="detver.h" />
@@ -194,6 +195,7 @@
     <ClInclude Include="types.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="c4.cpp" />
     <ClCompile Include="cutter.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="drawCube.cpp" />

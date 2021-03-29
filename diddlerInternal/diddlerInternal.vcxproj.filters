@@ -126,6 +126,9 @@
     <ClInclude Include="noclip.h">
       <Filter>Header Files\Mods</Filter>
     </ClInclude>
+    <ClInclude Include="c4.h">
+      <Filter>Header Files\Mods</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -195,6 +198,9 @@
       <Filter>Source Files\misc</Filter>
     </ClCompile>
     <ClCompile Include="noclip.cpp">
+      <Filter>Source Files\Mods</Filter>
+    </ClCompile>
+    <ClCompile Include="c4.cpp">
       <Filter>Source Files\Mods</Filter>
     </ClCompile>
   </ItemGroup>

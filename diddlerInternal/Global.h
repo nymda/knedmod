@@ -34,7 +34,7 @@ typedef BOOL(WINAPI* hk_SetCursorPos)(int, int);
 typedef BOOL(__stdcall* twglSwapBuffers)(_In_ HDC hDc);
 typedef void (*tPaint) (uintptr_t* Scene, td::Vec3* Position, float size, int darken, float dispersion);
 typedef void (*tFire) (uintptr_t* Scene, td::Vec3* Position);
-typedef uintptr_t(__fastcall* tSpawnVox) (td::small_string& path, float a2, float scale);
+typedef uintptr_t(__fastcall* tSpawnVox) (td::small_string* path, TDScene* scene, float scale);
 typedef char(__fastcall* idfk) (__int64 a1, __int64 a2, signed int* a3, signed int* a4, signed int* a5);
 
 typedef void(__fastcall* damagePlayer) (TDPlayer* player, float damage);
@@ -42,7 +42,7 @@ typedef void(__fastcall* CreateTexture) (uintptr_t ptr);
 typedef void(__fastcall* CreatePhysics) (uintptr_t ptr);
 typedef void(__fastcall* UpdateShapes) (uintptr_t ptr);
 typedef void(__fastcall* B_Constructor) (uintptr_t ptr, uintptr_t parent);
-typedef void(__fastcall* S_Constructor) (uintptr_t ptr, uintptr_t parent);
+typedef uintptr_t(__fastcall* S_Constructor) (uintptr_t ptr, uintptr_t parent);
 typedef void(__fastcall* SetDynamic) (uintptr_t ptr, bool dynamic);
 typedef uintptr_t(__fastcall* TMalloc)(size_t);
 typedef void(__fastcall* TFree)(uintptr_t mem);

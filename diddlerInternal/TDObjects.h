@@ -18,6 +18,8 @@ public:
 	td::Vec4 rotationQuatC1;
 	td::Vec3 positionC2;
 	td::Vec4 rotationQuatC2;
+	td::Vec3 velocity;
+	td::Vec3 rotationalVelocity;
 };
 
 class TDVox {

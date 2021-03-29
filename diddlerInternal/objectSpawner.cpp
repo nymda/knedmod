@@ -12,6 +12,7 @@
 
 namespace fs = std::filesystem;
 
+spawner::objectSpawnerParams defaultParams = {};
 
 inline bool exists(const std::string& name) {
     struct stat buffer;
@@ -63,11 +64,15 @@ namespace spawner {
     td::Color white{ 1.f, 1.f, 1.f, 1.f };
     bool spawnOnce = true;
 
-    void spawnObjectProxy(std::string path) {
-        lastSpawnedObject = spawnEntity(path);
+    KMSpawnedObject spawnObjectProxy(std::string path, objectSpawnerParams params) {
+        KMSpawnedObject lsp = spawnEntity(path, params);
+        lastSpawnedObject = lsp;
+        lastSpawnedObject.params = params;
+        return lsp;
     }
 
     void processMostRecentObject() {
+
         if (lastSpawnedObject.body != 0 && lastSpawnedObject.shape != 0 && lastSpawnedObject.isInitByGame == false) {
             if (lastSpawnedObject.shape->min.x == 0 && lastSpawnedObject.shape->max.x == 0) {
                 return;
@@ -83,12 +88,26 @@ namespace spawner {
                 drawCube(lastSpawnedObject.body->positionC0, 0.10, white);
 
                 td::Vec3 objectSize = { (objectMax.x - objectMin.x), (objectMax.y - objectMin.y), (objectMax.z - objectMin.z) };
+               
+                if (lastSpawnedObject.params.spawnType == objectSpawnType::thrown) {
+                    float spawnPosx = (glb::player->cameraPosition.x - (objectSize.x / 2)) + glb::player->cameraEuler().x;
+                    float spawnPosy = (glb::player->cameraPosition.y - (objectSize.y / 2)) + glb::player->cameraEuler().y;
+                    float spawnPosz = (glb::player->cameraPosition.z - (objectSize.z / 2)) + glb::player->cameraEuler().z;
 
-                lastSpawnedObject.body->positionC0 = { target.x - (objectSize.x / 2), target.y, target.z - (objectSize.z / 2) };
+                    lastSpawnedObject.body->positionC0 = { spawnPosx,  spawnPosy, spawnPosz };
+                    lastSpawnedObject.body->velocity = lastSpawnedObject.params.startVelocity;
+                    
+                    float roVeloX = (rand() % 20) - 10;
+                    float roVeloY = (rand() % 20) - 10;
+                    float roVeloZ = (rand() % 20) - 10;
+                    lastSpawnedObject.body->rotationalVelocity = { roVeloX, roVeloY, roVeloZ };
+                }
+                else {
+                    lastSpawnedObject.body->positionC0 = { (target.x - (objectSize.x / 2)), target.y, (target.z - (objectSize.z / 2)) };
+                }
 
                 lastSpawnedObject.isInitByGame = true;
 
-                std::cout << "X: " << std::to_string(lastSpawnedObject.body->rotationQuatC0.x) << " Y: " << std::to_string(lastSpawnedObject.body->rotationQuatC0.y) << " Z: " << std::to_string(lastSpawnedObject.body->rotationQuatC0.z) << " W: " << std::to_string(lastSpawnedObject.body->rotationQuatC0.w) << std::endl;
             }
         }
     }
@@ -138,7 +157,7 @@ namespace spawner {
             if (glb::player->isAttacking == true) {
                 if (spawnOnce) {
                     spawnOnce = false;
-                    lastSpawnedObject = spawnEntity(currentSpawngunObject);
+                    lastSpawnedObject = spawnEntity(currentSpawngunObject, defaultParams);
                 }
             }
             else {
@@ -147,34 +166,38 @@ namespace spawner {
         }
     }
 
-    KMSpawnedObject spawnEntity(std::string filepath) {
+    KMSpawnedObject spawnEntity(std::string filepath, objectSpawnerParams osp) {
         if (!exists(filepath)) {
             std::cout << "no file" << std::endl;
-            return {false, 0, 0};
+            return { defaultParams, false, 0, 0 };
         }
 
         td::small_string file_path((char*)(filepath).c_str());
 
-        std::cout << "make spawnVox work, o magic man" << std::endl; //this std::cout is literally required for the next function to run. i have no fucking idea why. 
-
-        uintptr_t vox = glb::oSpawnVox(file_path, 80000008000000, 1.0f); //what is 80000008000000? why is it here? what is its purpose? why do we exist? why would a loving god create so much agony?
-
-        if (vox == 0x00) {
-            std::cout << "Created vox was null" << std::endl;
-            return { false, 0, 0 };
-        }
-
-        glb::oCreateTexture(vox);
-
-        glb::oCreatePhysics(vox);
-
-        uintptr_t BODY = glb::oTMalloc(0x100u);
-
+        uintptr_t BODY = glb::oTMalloc(0x232u);
         glb::oB_Constructor((uintptr_t)BODY, (uintptr_t)nullptr);
         glb::oSetDynamic((uintptr_t)BODY, true);
 
-        uintptr_t SHAPE = glb::oTMalloc(0xB0u);
+        uintptr_t SHAPE = glb::oTMalloc(0x176u);
         glb::oS_Constructor((uintptr_t)SHAPE, (uintptr_t)BODY);
+
+        std::cout << "make spawnVox work, o magic man" << std::endl;
+
+        char unk[8] = { 0, 1, 0, 1, 0, 1, 0, 0 };
+
+        uintptr_t unknownBuffer = glb::oTMalloc(0x64u);
+
+        memcpy(unk, &glb::scene, 8);
+
+        uintptr_t vox = glb::oSpawnVox(&file_path, glb::scene, 1.f);
+
+        if (vox == 0x00) {
+            std::cout << "Created vox was null" << std::endl;
+            return { defaultParams, false, 0, 0 };
+        }
+
+        glb::oCreateTexture(vox);
+        glb::oCreatePhysics(vox);
 
         *(uintptr_t*)(SHAPE + 0x90) = vox;
 
@@ -196,26 +219,27 @@ namespace spawner {
 
         td::Vec4 newRot = { -0.5, -0.5, -0.5, 0.5 };
 
+        //td::Vec3 cameraEuler = glb::player->cameraEuler();
+        //td::Vec4 newRot = degreeToQuaternion(cameraEuler.x, cameraEuler.y, cameraEuler.z);
+        //td::Vec4 newRot = glb::player->cameraQuat;
+
         std::cout << "======================================" << std::endl;
         std::cout << "Shape address: 0x" << std::hex << SHAPE << std::endl;
-        std::cout << "Shape min:       " << "X: " << ((TDShape*)SHAPE)->min.x << " Y: " << ((TDShape*)SHAPE)->min.y << " Z: " << ((TDShape*)SHAPE)->min.z << std::endl;
-        std::cout << "Shape max:       " << "X: " << ((TDShape*)SHAPE)->max.x << " Y: " << ((TDShape*)SHAPE)->max.y << " Z: " << ((TDShape*)SHAPE)->max.z << std::endl;
         std::cout << "Body address:  0x" << std::hex << BODY << std::endl;
         std::cout << "Vox address:   0x" << std::hex << vox << std::endl;
+
 
         *(float*)(BODY + 0x28) = 0;
         *(float*)(BODY + 0x28 + 4) = 0;
         *(float*)(BODY + 0x28 + 8) = 0;
+
         *(float*)(BODY + 0x28 + 12) = newRot.x;
         *(float*)(BODY + 0x28 + 16) = newRot.y;
         *(float*)(BODY + 0x28 + 20) = newRot.z;
         *(float*)(BODY + 0x28 + 24) = newRot.w;
-
-        return { false, (TDShape*)SHAPE, (TDBody*)BODY };
+        
+        return { osp, false, (TDShape*)SHAPE, (TDBody*)BODY };
     }
 
-    void spawnTestEntity() {
-        spawnEntity("knedcube.vox");
-    }
 }
 

@@ -20,11 +20,11 @@ LRESULT APIENTRY hWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_KEYDOWN:
         if (wParam == VK_F1 || wParam == VK_INSERT)
         {
-            //glb::displayMenu = !glb::displayMenu;
-            //return true;
+            glb::displayMenu = !glb::displayMenu;
+            return true;
         }
 
-        if (wParam == 0x56) {
+        if (wParam == mods::noclipKey) {
             noclip::ToggleNoclip();
         }
     }
@@ -85,17 +85,18 @@ char position[64];
 char velocity[64];
 char cPosition[64];
 char health[64];
+static ImGuiTextFilter filter;
 
 bool hwglSwapBuffers(_In_ HDC hDc)
 {
     std::call_once(swapBuffersInit, onSwapBuffersInit);
 
-    if (((((GetAsyncKeyState(VK_F1) >> 15) & 0x0001) == 0x0001))) {
-        glb::displayMenu = true;
-    }
-    else {
-        glb::displayMenu = false;
-    }
+    //if (((((GetAsyncKeyState(VK_F1) >> 15) & 0x0001) == 0x0001))) {
+    //    glb::displayMenu = true;
+    //}
+    //else {
+    //    glb::displayMenu = false;
+    //}
 
     if (needToLoadObjects) {
         needToLoadObjects = false;
@@ -127,40 +128,46 @@ bool hwglSwapBuffers(_In_ HDC hDc)
                 ImGui::EndMenuBar();
             }
 
+            ImGui::Text("Search: ");
+            ImGui::SameLine();
+            filter.Draw("##search", 210.f);
 
             for (spawner::LoadedSpawnableObject lso : spawnerObjects) {
 
-                if (counter % 5 != 0) {
-                    ImGui::SameLine();
-                }
-
-                ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar;
-                ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
-                ImGui::BeginChild(std::to_string(counter).c_str(), ImVec2(ImGui::GetWindowWidth() / 6, ImGui::GetWindowHeight() / 3), true, window_flags);
-
-                if (ImGui::BeginMenuBar())
-                {
-                    if (ImGui::BeginMenu(lso.basePath.c_str()))
-                    {
-                        ImGui::EndMenu();
+                if (filter.PassFilter(lso.basePath.c_str())) {
+                    if (counter % 5 != 0) {
+                        ImGui::SameLine();
                     }
-                    ImGui::EndMenuBar();
-                }
 
-                ImGui::Image((void*)(intptr_t)lso.imageTexture, ImVec2(ImGui::GetWindowWidth() - 17, ImGui::GetWindowWidth() - 17));
+                    ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar;
+                    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
+                    ImGui::BeginChild(std::to_string(counter).c_str(), ImVec2(ImGui::GetWindowWidth() / 6, ImGui::GetWindowHeight() / 3), true, window_flags);
 
-                if (ImGui::Button("Spawn")) {
-                    spawner::spawnObjectProxy(lso.voxPath);
-                }
+                    if (ImGui::BeginMenuBar())
+                    {
+                        if (ImGui::BeginMenu(lso.basePath.substr(4, lso.basePath.length() - 4).c_str()))
+                        {
+                            ImGui::EndMenu();
+                        }
+                        ImGui::EndMenuBar();
+                    }
 
-                if (ImGui::Button("Spawn w/ spawngun")) {
-                    spawner::currentSpawngunObject = lso.voxPath;
-                }
+                    ImGui::Image((void*)(intptr_t)lso.imageTexture, ImVec2(ImGui::GetWindowWidth() - 17, ImGui::GetWindowWidth() - 17));
 
-                ImGui::EndChild();
-                ImGui::PopStyleVar();
+                    if (ImGui::Button("Spawn")) {
+                        spawner::objectSpawnerParams osp;
+                        spawner::spawnObjectProxy(lso.voxPath, osp);
+                    }
 
-                counter++;
+                    if (ImGui::Button("Spawn w/ spawngun")) {
+                        spawner::currentSpawngunObject = lso.voxPath;
+                    }
+
+                    ImGui::EndChild();
+                    ImGui::PopStyleVar();
+
+                    counter++;
+                }       
             }
 
             ImGui::EndChild();
