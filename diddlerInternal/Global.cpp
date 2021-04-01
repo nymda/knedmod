@@ -8,6 +8,7 @@ namespace glb {
 	TDRenderer* renderer;
 	TDScene* scene;
 
+	deleteBody oTdDelBdy;
 	cameraPositioning oCamPos;
 	damageObject oDamageObject;
 	modApiLinker oMAL;
@@ -24,6 +25,7 @@ namespace glb {
 	S_Constructor oS_Constructor;
 	SetDynamic oSetDynamic;
 	TMalloc oTMalloc;
+	TFree oTFree;
 	frameDrawLine oFDL;
 	rayCast oRC;
 	damageStuff oDamageStuff;

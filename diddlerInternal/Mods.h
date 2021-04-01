@@ -10,6 +10,7 @@ namespace mods {
 	extern bool jetpack;
 	extern bool flamethrower;
 	extern bool godmode;
+	extern bool c4_global_detonation;
 
 	void execMods();
 }

@@ -37,6 +37,7 @@ typedef void (*tFire) (uintptr_t* Scene, td::Vec3* Position);
 typedef uintptr_t(__fastcall* tSpawnVox) (td::small_string* path, TDScene* scene, float scale);
 typedef char(__fastcall* idfk) (__int64 a1, __int64 a2, signed int* a3, signed int* a4, signed int* a5);
 
+typedef void(__fastcall* deleteBody) (INT64 a1, INT64 a2, INT64 a3, INT64 a4, INT64 a5, INT64 a6, INT64 a7, INT64 a8);
 typedef void(__fastcall* damagePlayer) (TDPlayer* player, float damage);
 typedef void(__fastcall* CreateTexture) (uintptr_t ptr);
 typedef void(__fastcall* CreatePhysics) (uintptr_t ptr);
@@ -70,6 +71,7 @@ namespace glb {
     extern TDRenderer* renderer;
     extern TDScene* scene;
     
+    extern deleteBody oTdDelBdy;
     extern cameraPositioning oCamPos;
     extern damageObject oDamageObject;
     extern modApiLinker oMAL;
@@ -86,6 +88,7 @@ namespace glb {
     extern S_Constructor oS_Constructor;
     extern SetDynamic oSetDynamic;
     extern TMalloc oTMalloc;
+    extern TFree oTFree;
     extern frameDrawLine oFDL;
     extern rayCast oRC;
     extern damageStuff oDamageStuff;

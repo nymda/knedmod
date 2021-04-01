@@ -45,8 +45,15 @@ DWORD WINAPI main(HMODULE hModule)
     std::cout << "injected" << std::endl;
 
     glb::gWnd = FindWindow(0, L"Teardown");
-    HANDLE mainHandle = GetModuleHandle(L"teardown.exe.unpacked.exe");
-    glb::moduleBase = (uintptr_t)mainHandle;
+    HANDLE mainHandleDebug = GetModuleHandle(L"teardown.exe.unpacked.exe");
+    HANDLE mainHandleSteam = GetModuleHandle(L"teardown.exe");
+
+    if (mainHandleSteam != 0) {
+        glb::moduleBase = (uintptr_t)mainHandleSteam;
+    }
+    else {
+        glb::moduleBase = (uintptr_t)mainHandleDebug;
+    }
 
     initSwapBuffersHook();
     initHIDsHook();

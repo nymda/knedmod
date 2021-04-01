@@ -13,6 +13,7 @@ namespace mods {
 	bool jetpack = false;
 	bool flamethrower = true;
 	bool godmode = true;
+	bool c4_global_detonation = false;
 
 	void execMods() {
 		spawner::processMostRecentObject();
@@ -24,7 +25,6 @@ namespace mods {
 			flamethrower::execFlamethrower();
 		}
 		spawner::handleSpawnerWeapon();
-		cutter::runCutter();
 		noclip::update();
 		c4::runC4();
 	}

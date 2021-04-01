@@ -5,6 +5,8 @@
 #include "Raycaster.h"
 #include "Mods.h"
 #include "noclip.h"
+#include "objectSpawner.h"
+#include "c4.h"
 
 #pragma comment(lib, "glew32s.lib")
 
@@ -26,6 +28,10 @@ LRESULT APIENTRY hWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         if (wParam == mods::noclipKey) {
             noclip::ToggleNoclip();
+        }
+
+        if (wParam == 0x5A) { //Z
+            spawner::deleteLastObject();
         }
     }
 
@@ -184,6 +190,8 @@ bool hwglSwapBuffers(_In_ HDC hDc)
             ImGui::Checkbox("Godmode", &mods::godmode);
             ImGui::Checkbox("Jetpack", &mods::jetpack);
             ImGui::Checkbox("Flamethrower", &mods::flamethrower);
+            ImGui::Checkbox("Global C4 detonation", &mods::c4_global_detonation);
+            ImGui::SliderInt("C4 size", &c4::selectedBombSizeInt, 1, 3);
 
             ImGui::EndChild();
             ImGui::PopStyleVar();

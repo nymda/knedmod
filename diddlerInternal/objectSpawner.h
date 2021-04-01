@@ -20,6 +20,9 @@ namespace spawner {
 		td::Vec3 startVelocity = { 0, 0, 0 };
 		float maximumPlaceDistance = 1000.f;
 		bool rotateFacePlayer = false;
+		bool unbreakable = false;
+		bool nocull = false;
+		bool pushSpawnList = true;
 	};
 
 	struct KMSpawnedObject {
@@ -27,7 +30,9 @@ namespace spawner {
 		bool isInitByGame = false;
 		TDShape* shape = 0;
 		TDBody* body = 0;
+		TDVox* vox = 0;
 	};
+
 	struct LoadedSpawnableObject {
 		std::string basePath;
 		std::string voxPath;
@@ -35,6 +40,7 @@ namespace spawner {
 		GLuint imageTexture = 0;
 	};
 
+	void deleteLastObject();
 	KMSpawnedObject spawnObjectProxy(std::string path, objectSpawnerParams params);
 	void processMostRecentObject();
 	std::vector<LoadedSpawnableObject> enumerateSpawnableObjects();
