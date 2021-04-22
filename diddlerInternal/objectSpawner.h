@@ -10,6 +10,11 @@ namespace spawner {
 
 	extern std::string currentSpawngunObject;
 
+	struct objectAttribute {
+		td::small_string attribute;
+		td::small_string level;
+	};
+
 	enum objectSpawnType {
 		placed = 0,
 		thrown = 1
@@ -17,7 +22,9 @@ namespace spawner {
 
 	struct objectSpawnerParams {
 		objectSpawnType spawnType = objectSpawnType::placed;
+		std::vector<objectAttribute> attributes;
 		td::Vec3 startVelocity = { 0, 0, 0 };
+		td::Vec3 customRotation = { 0, 0, 0 };
 		float maximumPlaceDistance = 1000.f;
 		bool rotateFacePlayer = false;
 		bool unbreakable = false;
@@ -34,16 +41,23 @@ namespace spawner {
 	};
 
 	struct LoadedSpawnableObject {
+		std::string catagory;
 		std::string basePath;
 		std::string voxPath;
 		std::string imagePath;
 		GLuint imageTexture = 0;
+		std::vector<objectAttribute> attributes;
+	};
+
+	struct spawnerCatagory {
+		std::string name;
+		std::vector<LoadedSpawnableObject> objects;
 	};
 
 	void deleteLastObject();
 	KMSpawnedObject spawnObjectProxy(std::string path, objectSpawnerParams params);
 	void processMostRecentObject();
-	std::vector<LoadedSpawnableObject> enumerateSpawnableObjects();
+	std::vector<spawnerCatagory> enumerateSpawnableObjects();
 	void handleSpawnerWeapon();
 	KMSpawnedObject spawnEntity(std::string filepath, objectSpawnerParams osp);
 }

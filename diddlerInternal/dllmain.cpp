@@ -21,6 +21,8 @@
 #include "TDFuncs.h"
 #include "hookTests.h"
 #include "Mods.h"
+#include "mainHook.h"
+#include "movementLoop.h"
 
 FILE* makeConsole() {
     AllocConsole();
@@ -42,11 +44,20 @@ DWORD WINAPI main(HMODULE hModule)
 {
     glb::hMdl = hModule;
     FILE* cnsl = makeConsole();
-    std::cout << "injected" << std::endl;
+    std::cout << " __  __ _______ _______ _____  _______ _______ _____  " << std::endl;
+    std::cout << "|  |/  |    |  |    ___|     \|   |   |       |     \ " << std::endl;
+    std::cout << "|     <|       |    ___|  --  |       |   -   |  --  |" << std::endl;
+    std::cout << "|__|\__|__|____|_______|_____/|__|_|__|_______|_____/ " << std::endl;
+    std::cout << "" << std::endl;
+    std::cout << "" << std::endl;
 
     glb::gWnd = FindWindow(0, L"Teardown");
-    HANDLE mainHandleDebug = GetModuleHandle(L"teardown.exe.unpacked.exe");
+    HANDLE mainHandleDebug = GetModuleHandle(L"teardownsteamless.exe");
     HANDLE mainHandleSteam = GetModuleHandle(L"teardown.exe");
+
+    std::cout << "GWND: " << glb::gWnd << std::endl;
+    std::cout << "mainHandleDebug: " << mainHandleDebug << std::endl;
+    std::cout << "mainHandleSteam: " << mainHandleSteam << std::endl;
 
     if (mainHandleSteam != 0) {
         glb::moduleBase = (uintptr_t)mainHandleSteam;
@@ -56,8 +67,17 @@ DWORD WINAPI main(HMODULE hModule)
     }
 
     initSwapBuffersHook();
+
+    std::cout << "Hooked swapBuffers" << std::endl;
+
     initHIDsHook();
+
+    std::cout << "Hooked WNDPROC" << std::endl;
+
     sigscanItems();
+
+    std::cout << "Completed sigscanning" << std::endl;
+
     initTestHook();
     initGodmodeHook();
 
@@ -69,6 +89,7 @@ DWORD WINAPI main(HMODULE hModule)
                 FreeConsole();
 
                 terminateSwapBuffersHook();
+                terminateMovementHook();
                 terminateHIDsHook();
                 terminateTestHook();
                 terminateGodmodeHook();

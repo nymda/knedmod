@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -164,16 +164,22 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="c4.h" />
+    <ClInclude Include="camera.h" />
     <ClInclude Include="cutter.h" />
     <ClInclude Include="detours.h" />
     <ClInclude Include="detver.h" />
     <ClInclude Include="drawCube.h" />
+    <ClInclude Include="envOptions.h" />
     <ClInclude Include="Flamethrower.h" />
     <ClInclude Include="godmode.h" />
     <ClInclude Include="hookTests.h" />
     <ClInclude Include="Jetpack.h" />
+    <ClInclude Include="lantern.h" />
+    <ClInclude Include="mainHook.h" />
     <ClInclude Include="maths.h" />
+    <ClInclude Include="miscPatches.h" />
     <ClInclude Include="Mods.h" />
+    <ClInclude Include="movementLoop.h" />
     <ClInclude Include="noclip.h" />
     <ClInclude Include="objectSpawner.h" />
     <ClInclude Include="Raycaster.h" />
@@ -192,19 +198,26 @@
     <ClInclude Include="mem.h" />
     <ClInclude Include="swapBuffers.h" />
     <ClInclude Include="TDObjects.h" />
+    <ClInclude Include="toolgun.h" />
     <ClInclude Include="types.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="c4.cpp" />
+    <ClCompile Include="camera.cpp" />
     <ClCompile Include="cutter.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="drawCube.cpp" />
+    <ClCompile Include="envOptions.cpp" />
     <ClCompile Include="Flamethrower.cpp" />
     <ClCompile Include="godmode.cpp" />
     <ClCompile Include="hookTests.cpp" />
     <ClCompile Include="Jetpack.cpp" />
+    <ClCompile Include="lantern.cpp" />
+    <ClCompile Include="mainHook.cpp" />
     <ClCompile Include="maths.cpp" />
+    <ClCompile Include="miscPatches.cpp" />
     <ClCompile Include="Mods.cpp" />
+    <ClCompile Include="movementLoop.cpp" />
     <ClCompile Include="noclip.cpp" />
     <ClCompile Include="objectSpawner.cpp" />
     <ClCompile Include="Raycaster.cpp" />
@@ -219,6 +232,7 @@
     <ClCompile Include="mem.cpp" />
     <ClCompile Include="swapBuffers.cpp" />
     <ClCompile Include="TDObjects.cpp" />
+    <ClCompile Include="toolgun.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

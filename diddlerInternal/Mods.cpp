@@ -5,6 +5,9 @@
 #include "objectSpawner.h"
 #include "noclip.h"
 #include "c4.h"
+#include "camera.h"
+#include "toolgun.h"
+#include "lantern.h"
 
 namespace mods {
 	char jetpackKey = VK_SPACE;
@@ -14,18 +17,38 @@ namespace mods {
 	bool flamethrower = true;
 	bool godmode = true;
 	bool c4_global_detonation = false;
+	bool removeWalls = false;
 
 	void execMods() {
 		spawner::processMostRecentObject();
+		toolgun::handleToolgun();
+		noclip::update();
+		c4::runC4();
+		lantern::updateLantern();
 
 		if (jetpack) {
 			jetpack::executeJetpack();
 		}
-		if (flamethrower) {
-			flamethrower::execFlamethrower();
+
+		if (removeWalls) {
+			
+			int count = 0;
+
+			if (*(byte*)&(glb::scene->Boundaries) != 0x00) {
+				for (td::Vec2** pt : glb::scene->Boundaries) {
+					count++;
+				}
+				mem::Null((byte*)&(glb::scene->Boundaries), 8 * count);
+			}
+
+
 		}
-		spawner::handleSpawnerWeapon();
-		noclip::update();
-		c4::runC4();
+
+		//if (flamethrower) {
+		//	flamethrower::execFlamethrower();
+		//}
+		//spawner::handleSpawnerWeapon();
+
+		//camera::runCamera();
 	}
 }

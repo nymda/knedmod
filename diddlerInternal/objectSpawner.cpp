@@ -60,8 +60,6 @@ bool LoadTextureFromFile(const char* filename, GLuint* out_texture, int* out_wid
 namespace spawner {
 
     std::vector<KMSpawnedObject> spawnList = {};
-
-    std::string currentSpawngunObject = "vox\\crate\\object.vox";
     KMSpawnedObject lastSpawnedObject{};
     td::Color white{ 1.f, 1.f, 1.f, 1.f };
     bool spawnOnce = true;
@@ -73,17 +71,38 @@ namespace spawner {
         if (params.pushSpawnList) {
             spawnList.push_back(lsp);
         }
+
+        for (objectAttribute att : params.attributes) {
+            std::cout << "Run oSOA" << std::endl;
+            glb::oSOA(lsp.shape, &att.attribute, &att.level);
+        }
+
         return lsp;
     }
 
+    void cleanup() {
+        lastSpawnedObject = {};
+        spawnList.clear();
+    }
+
     void processMostRecentObject() {
+
+        if (glb::game) {
+            if (glb::game->State == gameState::menu) {
+                if (spawnList.size() > 0) {
+                    std::cout << "Cleaning spawned objects" << std::endl;
+                    cleanup();
+                }
+            }
+        }
 
         if (lastSpawnedObject.body != 0 && lastSpawnedObject.shape != 0 && lastSpawnedObject.isInitByGame == false) {
             if (lastSpawnedObject.shape->posMin.x == 0 && lastSpawnedObject.shape->posMax.x == 0) {
                 return;
             }
             else {
-                td::Vec4 target = castRayPlayer();
+                raycaster::rayData rd = raycaster::castRayPlayer();
+                td::Vec3 target = rd.worldPos;
                 td::Vec3 objectMin = lastSpawnedObject.shape->posMin;
                 td::Vec3 objectMax = lastSpawnedObject.shape->posMax;
                 td::Vec3 centerBottom = { objectMax.x - ((objectMax.x - objectMin.x) / 2), objectMin.y, objectMax.z - ((objectMax.z - objectMin.z) / 2) };
@@ -117,59 +136,117 @@ namespace spawner {
         }
     }
 
-    std::vector<LoadedSpawnableObject> enumerateSpawnableObjects() {
-        std::vector<LoadedSpawnableObject> returnObj = {};
+    std::vector<objectAttribute> enumAttributes(std::string atPath) {
+        std::vector<objectAttribute> processed;
+        char splitter = ':';
+        std::ifstream file(atPath);
+        std::string str;
+        std::string file_contents;
+
+        while (std::getline(file, str))
+        {
+            size_t spPos = str.find(splitter);
+
+            int lenChunkOne = spPos;
+            int lenChunkTwo = str.length() - spPos;
+            
+            std::string chunkOne = str.substr(0, lenChunkOne);
+            std::string chunkTwo = str.substr(spPos+1, lenChunkTwo);
+
+            objectAttribute current;
+
+            current.attribute = td::small_string(chunkOne.c_str());
+            current.level = td::small_string(chunkTwo.c_str());
+
+            processed.push_back(current);
+        }
+
+        return processed;
+    }
+
+    std::vector<spawnerCatagory> enumerateSpawnableObjects() {
+        std::vector<spawnerCatagory> returnObj = {};
         for (const auto& file : fs::directory_iterator("vox"))
         {
-            bool foundVox = false;
-            bool foundImage = false;
-            char* currentVoxPath;
-            char* currentImagePath;
+            // /\ iterate over each folder within [VOX]
+            std::string path = file.path().string();
+            std::string catig = path.substr(4, path.size() - 4);
+            std::cout << catig << std::endl;
 
-            for (const auto& fileSubdir : fs::directory_iterator(file.path()))
+            spawnerCatagory current;
+            current.name = catig;
+
+            for (const auto& catagoryFolder : fs::directory_iterator(file.path()))
             {
-                if (strcmp(fileSubdir.path().filename().string().c_str(), "object.vox") == 0)
+                // /\ iterate over each subfolder within [VOX / CATIG]
+                bool foundVox = false;
+                bool foundImage = false;
+                bool foundAttrib = false;
+                char* currentVoxPath;
+                char* currentImagePath;
+
+                //iterate over [VOX / CATIG / ITEM]
+                for (const auto& fileSubdir : fs::directory_iterator(catagoryFolder.path()))
                 {
-                    foundVox = true;
-                }
-                if (strcmp(fileSubdir.path().filename().string().c_str(), "object.png") == 0)
-                {
-                    foundImage = true;
-                }
+                    if (strcmp(fileSubdir.path().filename().string().c_str(), "object.vox") == 0)
+                    {
+                        foundVox = true;
+                    }
+                    if (strcmp(fileSubdir.path().filename().string().c_str(), "object.png") == 0)
+                    {
+                        foundImage = true;
+                    }
+                    if (strcmp(fileSubdir.path().filename().string().c_str(), "attri.txt") == 0)
+                    {
+                        foundAttrib = true;
+                    }
 
-                if (foundVox && foundImage) {
-                    LoadedSpawnableObject lso{};
-                    lso.basePath = file.path().string();
-                    lso.imagePath = lso.basePath + "\\object.png";
-                    lso.voxPath = lso.basePath + "\\object.vox";
+                    if (foundVox && foundImage) {
+                        LoadedSpawnableObject lso{};
+                        lso.catagory = catig;
+                        lso.basePath = catagoryFolder.path().string();
+                        lso.imagePath = lso.basePath + "\\object.png";
+                        lso.voxPath = lso.basePath + "\\object.vox";
 
-                    int imgSize = 255;
-                    LoadTextureFromFile(lso.imagePath.c_str(), &lso.imageTexture, &imgSize, &imgSize);
+                        if (foundAttrib) {
+                            lso.attributes = enumAttributes(lso.basePath + "\\attri.txt");
+                        }
 
-                    returnObj.push_back(lso);
+                        int imgSize = 255;
+                        LoadTextureFromFile(lso.imagePath.c_str(), &lso.imageTexture, &imgSize, &imgSize);
+
+                        current.objects.push_back(lso);
+                    }
+
                 }
             }
+
+            returnObj.push_back(current);
         }
         return returnObj;
     }
 
-    void handleSpawnerWeapon() {
-        const char* spawngunName = "spawngun";
-        if (memcmp(glb::player->heldItemName, spawngunName, 8) == 0) {
-            td::Vec4 target = castRayPlayer();
-            drawCube({ target.x, target.y, target.z }, 0.25, white);
+    //void handleSpawnerWeapon() {
+    //    const char* spawngunName = "spawngun";
+    //    if (memcmp(glb::player->heldItemName, spawngunName, 8) == 0) {
+    //        raycaster::rayData rd = raycaster::castRayPlayer();
+    //        td::Vec3 target = rd.worldPos;
+    //        drawCube({ target.x, target.y, target.z }, 0.05, white);
 
-            if (glb::player->isAttacking == true) {
-                if (spawnOnce) {
-                    spawnOnce = false;
-                    lastSpawnedObject = spawnObjectProxy(currentSpawngunObject, defaultParams);
-                }
-            }
-            else {
-                spawnOnce = true;
-            }
-        }
-    }
+    //        objectSpawnerParams osp{};
+    //        osp.customRotation = rd.angle;
+
+    //        if (glb::player->isAttacking == true) {
+    //            if (spawnOnce) {
+    //                spawnOnce = false;
+    //                lastSpawnedObject = spawnObjectProxy(currentSpawngunObject, osp);
+    //            }
+    //        }
+    //        else {
+    //            spawnOnce = true;
+    //        }
+    //    }
+    //}
 
     void deleteLastObject() {
         if (spawnList.size() > 0) {
@@ -179,26 +256,30 @@ namespace spawner {
         }
     }
 
-    byte unkn[32] = {};
     KMSpawnedObject spawnEntity(std::string filepath, objectSpawnerParams osp) {
         if (!exists(filepath)) {
             std::cout << "no file" << std::endl;
             return { defaultParams, false, 0, 0 };
         }
 
+        std::cout << "======================================" << std::endl;
+
         td::small_string file_path((char*)(filepath).c_str());
+        td::small_string sub_path("");
 
         uintptr_t BODY = glb::oTMalloc(0x232u);
         glb::oB_Constructor((uintptr_t)BODY, (uintptr_t)nullptr);
         glb::oSetDynamic((uintptr_t)BODY, true);
+        std::cout << "Body address:  0x" << std::hex << BODY << std::endl;
 
         uintptr_t SHAPE = glb::oTMalloc(0x176u);
         glb::oS_Constructor((uintptr_t)SHAPE, (uintptr_t)BODY);
+        std::cout << "Shape address: 0x" << std::hex << SHAPE << std::endl;
 
         //std::cout << "make spawnVox work, o magic man" << std::endl;
 
-        FillMemory(&unkn, 32, 0x00);
-        uintptr_t vox = glb::oSpawnVox(&file_path, (TDScene*)&unkn, 1.f);
+        uintptr_t vox = glb::oSpawnVox(&file_path, &sub_path, 1.f);
+        std::cout << "Vox address:   0x" << std::hex << vox << std::endl;
 
         if (vox == 0x00) {
             std::cout << "Created vox was null" << std::endl;
@@ -227,19 +308,9 @@ namespace spawner {
         float bodyY = ((voxY / 10.f) / 2.f);
         float bodyZ = ((voxZ / 10.f) / 2.f);
 
-        td::Vec4 ray = castRayPlayer();
-
+        raycaster::rayData rd = raycaster::castRayPlayer();
+        td::Vec3 target = rd.worldPos;
         td::Vec4 newRot = { -0.5, -0.5, -0.5, 0.5 };
-
-        //td::Vec3 cameraEuler = glb::player->cameraEuler();
-        //td::Vec4 newRot = degreeToQuaternion(cameraEuler.x, cameraEuler.y, cameraEuler.z);
-        //td::Vec4 newRot = glb::player->cameraQuat;
-
-        std::cout << "======================================" << std::endl;
-        std::cout << "Shape address: 0x" << std::hex << SHAPE << std::endl;
-        std::cout << "Body address:  0x" << std::hex << BODY << std::endl;
-        std::cout << "Vox address:   0x" << std::hex << vox << std::endl;
-        std::cout << "Vox special:   0x" << std::hex << &unkn << std::endl;
 
         *(float*)(BODY + 0x28) = 0;
         *(float*)(BODY + 0x28 + 4) = 0;

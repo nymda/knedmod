@@ -15,12 +15,11 @@ namespace noclip {
 	td::Vec3 cameraSideVector = { 0, 0, 0 };
 	td::Vec4 cameraQuat = { 0, 0, 0, 0 };
 
-
 	void ToggleNoclip() {
 		uintptr_t baseAddy = (uintptr_t)glb::oCamPos;
-		uintptr_t xInstruction = baseAddy + 0x629; // ok
-		uintptr_t yInstruction = baseAddy + 0x667; // ok 
-		uintptr_t zInstruction = baseAddy + 0x62E; // ok
+		uintptr_t xInstruction = baseAddy + 0x62c; // ok
+		uintptr_t yInstruction = baseAddy + 0x66a; // ok 
+		uintptr_t zInstruction = baseAddy + 0x631; // ok
 
 		inNoclip = !inNoclip;
 		if (inNoclip) {
@@ -34,7 +33,6 @@ namespace noclip {
 			mem::Patch((byte*)zInstruction, zBuffer, 8);
 
 			glb::player->position = { glb::player->cameraPosition.x, glb::player->cameraPosition.y - 1.7f, glb::player->cameraPosition.z };
-
 			glb::player->velocity = { lastMmovementVector.x * 50, lastMmovementVector.y * 50, lastMmovementVector.z * 50 };
 		}
 	}

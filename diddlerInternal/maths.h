@@ -2,8 +2,5 @@
 #include <cmath>
 #include "types.h"
 
-td::Vec3 quat2euler(td::Vec4 quat);
-
-td::Vec4 degreeToQuaternion(double x, double y, double z);
-
-td::Vec4 radianToQuaternion(double yaw, double pitch, double roll);
+td::Vec3 quat2euler(td::Vec4 quat, int rot, bool invert);
+td::Vec4 euler2quat(float x, float y, float z);

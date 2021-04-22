@@ -7,7 +7,14 @@ namespace glb {
 	TDGame* game;
 	TDRenderer* renderer;
 	TDScene* scene;
+	tdMain oTDmain;
+	movementLoop oMovLoop;
 
+	outlineShape oOutlineshape;
+	SetObjectAttribute oSOA;
+	spreadFire oSpreadFire;
+	environmentUpdate oEnvUpdate;
+	createLight oCreateLight;
 	deleteBody oTdDelBdy;
 	cameraPositioning oCamPos;
 	damageObject oDamageObject;
@@ -16,7 +23,6 @@ namespace glb {
 	damagePlayer oDamagePlayer;
 	idfk killme;
 	tPaint oPaint;
-	tFire oFire;
 	tSpawnVox oSpawnVox;
 	CreateTexture oCreateTexture;
 	CreatePhysics oCreatePhysics;
@@ -28,9 +34,8 @@ namespace glb {
 	TFree oTFree;
 	frameDrawLine oFDL;
 	rayCast oRC;
-	damageStuff oDamageStuff;
 	spawnFire oSpawnFire;
-	pewpew oPewpew;
+	createProjectile oPewpew;
 
 	createExplosion TDcreateExplosion;
 	spawnParticle TDspawnParticle;
@@ -44,6 +49,7 @@ namespace glb {
 	HWND gWnd;
 	hk_SetCursorPos ocursor;
 	HMODULE hMdl;
+	uintptr_t plankPatchFunction;
 }
 
 

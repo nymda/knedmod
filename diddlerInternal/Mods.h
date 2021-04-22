@@ -11,6 +11,7 @@ namespace mods {
 	extern bool flamethrower;
 	extern bool godmode;
 	extern bool c4_global_detonation;
+	extern bool removeWalls;
 
 	void execMods();
 }

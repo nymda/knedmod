@@ -2,5 +2,17 @@
 #include "types.h"
 #include "Global.h"
 
-td::Vec3 castRayManual();
-td::Vec4 castRayPlayer();
+namespace raycaster {
+
+	struct rayData {
+		float distance;
+		td::Vec3 worldPos;
+		td::Vec3 angle;
+		TDShape* hitShape;
+	};
+
+	rayData castRayManual(td::Vec3 position, td::Vec3 rotation, RaycastFilter filter);
+	rayData castRayPlayer();
+
+}
+
