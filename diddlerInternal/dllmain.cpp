@@ -80,6 +80,7 @@ DWORD WINAPI main(HMODULE hModule)
 
     initTestHook();
     initGodmodeHook();
+    initMovementHook();
 
     while (true) {
         if (((GetAsyncKeyState(VK_END) >> 15) & 0x0001) == 0x0001) {

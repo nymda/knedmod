@@ -27,6 +27,8 @@ namespace toolgun {
     extern int minigunBulletType;
     extern int particalID;
     extern float power;
+    extern float maxRange;
+    extern float holeSize;
 
     extern spawner::LoadedSpawnableObject currentSpawngunObject;
     extern tgSettings currentsetting;

@@ -39,6 +39,10 @@ namespace toolgun {
     //testing specific items
     int particalID = 0;
 
+    //cutter specific items
+    float maxRange = 10.f;
+    float holeSize = 0.25f;
+
     void handleToolgun() {
 
         if (createOrigionalSpawnObject) {
@@ -172,14 +176,18 @@ namespace toolgun {
             }
         
             if (currentsetting == tgSettings::testing) {
-                if (glb::player->isAttacking == true) {
-                    std::cout << "fuck" << std::endl;
-                    uintptr_t special = *(uintptr_t*)((uintptr_t)glb::scene + 0x68);
-                    raycaster::rayData rayDat = raycaster::castRayPlayer();
-                    td::particleInfo pif = { 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f };
-                    td::Vec3 velo = { 0, 0, 0 };
-                    //glb::TDspawnParticle((DWORD*)special, pif, rayDat.worldPos, velo, 5.f, 0);     
+                td::Color green{ 0.f, 1.f, 0.f, 1.f };
+                td::Color red{ 1.f, 0.f, 0.f, 1.f };
+                raycaster::rayData rayDat = raycaster::castRayPlayer();
+                if (rayDat.distance <= maxRange) {
+                    drawCube({ rayDat.worldPos.x, rayDat.worldPos.y, rayDat.worldPos.z }, 0.05, green);
+                    if (glb::player->isAttacking == true) {
+                        glb::oWrappedDamage(glb::scene, &rayDat.worldPos, holeSize, holeSize, 0, 0);
+                    }
                 }
+                else {
+                    drawCube({ rayDat.worldPos.x, rayDat.worldPos.y, rayDat.worldPos.z }, 0.05, red);
+                }  
             }
 
             if (currentsetting == tgSettings::remover) {

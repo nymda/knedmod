@@ -33,11 +33,12 @@ typedef void(__fastcall* environmentUpdate)(uintptr_t env);
 typedef void(__fastcall* rayCast)(TDScene* scene, td::Vec3* pos, td::Vec3* rot, float dist, RaycastFilter* filter, float* outDist, td::Vec3* out, uintptr_t* out_shape, uintptr_t* out_palette);
 typedef void(__fastcall* frameDrawLine)(TDRenderer* renderer, const td::Vec3& p1, const td::Vec3& p2, const td::Color& c1, const td::Color& c2, bool use_depth);
 typedef void(__fastcall* outlineShape)(TDRenderer* renderer, TDShape* shape, td::Color* color);
-typedef void(__fastcall* movementLoop)(float* a1, float* a2, DWORD* a3);
+typedef void(__fastcall* movementLoop)(uintptr_t a1, float a2, uintptr_t a3, uintptr_t a4);
+typedef void(__fastcall* wrappedDoDamage)(TDScene* scene, td::Vec3* position, float damageA, float damageB, int unkn1, int* unkn2);
 
 //creation
 typedef uintptr_t(__fastcall* tSpawnVox) (td::small_string* path, td::small_string* subpath, float scale);
-typedef uintptr_t(__fastcall* spawnParticle)(DWORD* ptr, td::particleInfo* info, td::Vec3& position, td::Vec3& velocity, float lifetime, int type);
+typedef uintptr_t(__fastcall* spawnParticle)(DWORD* ptr, td::particleInfo* info, td::Vec3& position, td::Vec3& velocity, float lifetime);
 typedef void(__fastcall* createExplosion)(uintptr_t scene, td::Vec3* pos, float radius);
 typedef void(__fastcall* createLight)(TDRenderer* renderer, td::Vec3* a2, td::Vec3* a3, float a4, float a5, float a6, float a7);
 typedef void(__fastcall* spawnFire)(uintptr_t scene, td::Vec3* pos);
@@ -61,7 +62,7 @@ typedef void(__fastcall* attach)(TDJoint* joint, TDShape* shape1, TDShape* shape
 typedef void(__fastcall* update)(TDJoint* joint);
 
 //misc
-typedef void(__stdcall* damageObject)(uintptr_t a1, uintptr_t a2, td::Vec3* a3, float a4, float a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9);
+typedef void(__stdcall* damageObject)(uintptr_t a1, uintptr_t a2, td::Vec3* a3, float a4, float a5, uintptr_t a6, uintptr_t a7, uintptr_t a8);
 typedef void(__stdcall* createExplosionWrapped)(double unkn, td::Vec3* pos, float power);
 typedef void(__fastcall* spawnParticleWrapped)(double a1, __int64 a2);
 typedef void(__fastcall* tdMain)(TDGame* game, void* a2);
@@ -86,6 +87,7 @@ namespace glb {
     extern TDScene* scene;
     extern tdMain oTDmain;
     extern movementLoop oMovLoop;
+    extern wrappedDoDamage oWrappedDamage;
 
     extern outlineShape oOutlineshape;
     extern SetObjectAttribute oSOA;

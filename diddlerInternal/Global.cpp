@@ -9,6 +9,7 @@ namespace glb {
 	TDScene* scene;
 	tdMain oTDmain;
 	movementLoop oMovLoop;
+	wrappedDoDamage oWrappedDamage;
 
 	outlineShape oOutlineshape;
 	SetObjectAttribute oSOA;

@@ -22,9 +22,9 @@ namespace mods {
 	void execMods() {
 		spawner::processMostRecentObject();
 		toolgun::handleToolgun();
-		noclip::update();
 		c4::runC4();
 		lantern::updateLantern();
+		smoker::updateSmoker();
 
 		if (jetpack) {
 			jetpack::executeJetpack();

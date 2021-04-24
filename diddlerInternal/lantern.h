@@ -1,4 +1,5 @@
 #pragma once
+#include "objectSpawner.h"
 
 namespace lantern {
 	extern float a1;
@@ -12,4 +13,14 @@ namespace lantern {
 
 	void spawnLantern();
 	void updateLantern();
+}
+
+
+namespace smoker {
+	extern td::particleInfo pInfo;
+	extern td::Vec3 velocity;
+	extern float lifetime;
+
+    void spawnSmoker();
+	void updateSmoker();
 }

@@ -22,7 +22,7 @@ void sigscanItems() {
     glb::oPewpew = (createProjectile)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x57\x48\x81\xEC\x80\x00\x00\x00", "xxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::TDcreateExplosionWrapped = (createExplosionWrapped)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x30\x48\x8B\xDA\x48\xC7\x44\x24\x20\x00\x00", "xxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::TDspawnParticleWrapped = (spawnParticleWrapped)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x48\x8D\x68\xA1\x48\x81\xEC\xE0\x00\x00\x00\x48\xC7\x45\x27\xFE\xFF\xFF\xFF\x48\x89\x58\x08\x0F\x29\x70\xE8\x0F", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
-    glb::TDspawnParticle = (spawnParticle)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x48\x89\x68\x10\x48\x89\x70\x18\x48\x89\x78\x20\x41\x56\x48\x81\xEC\x10\x06\x00\x00\x81\x39\xFF\xFF\x00\x00\x49\x8B", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    glb::TDspawnParticle = (spawnParticle)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x48\x89\x6C\x24\x10\x48\x89\x74\x24\x18\x57\x48\x83\xEC\x20\x48\x8D\x99\x80\x00\x00\x00\x49\x8B\xF1\x81\x3B", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::oDamagePlayer = (damagePlayer)mem::FindPattern((PBYTE)"\xF3\x0F\x11\x91\x5C\x01\x00\x00\xC3\xCC\xCC\xCC\xCC\x48\x8B\xC4", "xxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::oMAL = (modApiLinker)mem::FindPattern((PBYTE)"\x40\x55\x48\x8D\xAC\x24\x80\xFA\xFF\xFF\x48\x81\xEC\x80\x06\x00", "xxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::oDamageObject = (damageObject)mem::FindPattern((PBYTE)"\x48\x81\xEC\xC8\x00\x00\x00\x48\xC7\x44\x24\x48\xFE\xFF\xFF\xFF\x48\x8D\x44\x24\x60\x48\x89\x44\x24\x58\xC7\x44\x24\x54\x04\x00", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
@@ -34,7 +34,9 @@ void sigscanItems() {
     glb::oSOA = (SetObjectAttribute)mem::FindPattern((PBYTE)"\x4C\x89\x44\x24\x18\x57\x41\x56\x41\x57\x48\x83\xEC\x30\x48\xC7", "xxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::oOutlineshape = (outlineShape)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x40\x48\x8B\x05\x63\x79\x3E\x00\x49\x8B\xD8", "xxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::plankPatchFunction = mem::FindPattern((PBYTE)"\x40\x55\x56\x57\x41\x54\x41\x55\x41\x56\x41\x57\x48\x8D\xAC\x24\x40\xCF\xFF\xFF\xB8\xC0\x31\x00\x00\xE8\xB2\x33\x19\x00\x48\x2B\xE0\x48\xC7\x45\x00\xFE\xFF\xFF\xFF\x48\x89\x9C\x24\x08\x32\x00", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
-    glb::oMovLoop = (movementLoop)mem::FindPattern((PBYTE)"\x48\x89\x54\x24\x10\x55\x53\x41\x56\x48\x8D\xAC\x24\x20\xFD\xFF\xFF\x48\x81\xEC\xE0\x03\x00\x00\x48\x63\x81\x80\x01\x00\x00\x4C", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    glb::oMovLoop = (movementLoop)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x48\x8D\xA8\x58\xFF\xFF\xFF\x48\x81\xEC\xA0\x01\x00\x00\x48\xC7\x45\x10\xFE\xFF\xFF\xFF\x48\x89\x58\x08\x48\x89", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    glb::oWrappedDamage = (wrappedDoDamage)mem::FindPattern((PBYTE)"\x48\x83\xEC\x48\x48\x8B\x44\x24\x78\x4C\x8B\xC2\xF3\x0F\x10\x44", "xxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+
     //sadly cant sigscan for this, yet
     //0x0041CB00 requires further investigation - looks like a table of pointers for various game functions
 
@@ -48,6 +50,7 @@ void sigscanItems() {
 
          
     std::cout << "[Function Addresses:       ]" << std::endl;
+    std::cout << "Wrapped damage:        " << std::hex << glb::oWrappedDamage << std::endl;
     std::cout << "Create point light:    " << std::hex << glb::oCreateLight << std::endl;
     std::cout << "outlineShape:          " << std::hex << glb::oOutlineshape << std::endl;
     std::cout << "SetObjectAttribute:    " << std::hex << glb::oSOA << std::endl;
@@ -84,6 +87,7 @@ void sigscanItems() {
     std::cout << "player:                " << std::hex << glb::player << std::endl;
     std::cout << "scene :                " << std::hex << glb::scene << std::endl;
     std::cout << "renderer :             " << std::hex << glb::renderer << std::endl;
+    std::cout << "envrionment :          " << std::hex << glb::scene->pEnvironment << std::endl;
     std::cout << "playerX:               " << &glb::player->cameraPosition.x << std::endl;
     std::cout << "playerY:               " << &glb::player->cameraPosition.y << std::endl;
     std::cout << "playerZ:               " << &glb::player->cameraPosition.z << std::endl;

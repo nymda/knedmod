@@ -19,6 +19,11 @@ namespace c4 {
         int explosionSize;
     };
 
+    struct thrownFirecracker {
+        int frameCountdown = 120;
+        spawner::KMSpawnedObject object;
+    };
+
     int selectedBombSizeInt = 1;
     std::vector<spawnedC4> explosiveObjects = {};
     bool isDetonating = false;
@@ -31,6 +36,7 @@ namespace c4 {
     bool runOnce = true;
     bool runOnceImp = true;
     spawner::KMSpawnedObject impNade;
+    std::vector<thrownFirecracker> thrownCrackers = {};
 
     void runC4() {
         if (frameCount == 0) {
@@ -114,8 +120,8 @@ namespace c4 {
             }
         }
 
-        const char* impname = "impnade";
-        if (memcmp(glb::player->heldItemName, impname, 5) == 0) {
+        const char* impname = "cracker";
+        if (memcmp(glb::player->heldItemName, impname, 7) == 0) {
             if (glb::player->isAttacking == true) {
                 if (runOnceImp) {
                     runOnceImp = false;
@@ -132,18 +138,47 @@ namespace c4 {
                     osp.nocull = true;
                     osp.pushSpawnList = false;
                     
-                    spawner::objectAttribute expl = { td::small_string("explosive"), td::small_string("2") };
-                    osp.attributes.push_back(expl);
-                    //osp.customRotation = rd.angle;
-
-                    const char* currentPath = "vox\\impactNade\\object.vox";
+                    const char* currentPath = "vox\\Default\\Cracker\\object.vox";
                     impNade = spawner::spawnObjectProxy(currentPath, osp);
+
+                    thrownFirecracker tfc = { 120, impNade };
+                    thrownCrackers.push_back(tfc);
                 }
             }
             else {
                 frameCount = 0;
                 runOnceImp = true;
             }
+        }
+
+        bool hasActiveCracker = false;
+        for (thrownFirecracker& tfc : thrownCrackers)
+        {
+            if (tfc.frameCountdown >= 0) {
+                uintptr_t special = *(uintptr_t*)((uintptr_t)glb::scene + 0x68);
+                td::Vec3 objectMin = tfc.object.shape->posMin;
+                td::Vec3 objectMax = tfc.object.shape->posMax;
+                td::Vec3 centerpoint = { objectMax.x - ((objectMax.x - objectMin.x) / 2), objectMax.y - ((objectMax.y - objectMin.y) / 2), objectMax.z - ((objectMax.z - objectMin.z) / 2) };
+                td::Vec3 vel = { 0, 0, 0 };
+
+                td::particleInfo tdpi = { 0.f, 0.f, 0.f, 0.7f, 0.7f, 0.7f, 1.f, 0.7f, 0.7f, 0.7f, 1.f, 0.f, 0.f, 0.f, 0.2f, 0.f, 0.f, 0.f, 0.f, 0.15f, 0.25f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 1.f, 1.f, 0.f, 0.f, 0.f, 1.f, 1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f };
+                glb::TDspawnParticle((DWORD*)special, &tdpi, centerpoint, vel, 1.f);
+
+                hasActiveCracker = true;
+                tfc.frameCountdown--;
+            }
+            if(tfc.frameCountdown == 0){
+                td::Vec3 objectMin = tfc.object.shape->posMin;
+                td::Vec3 objectMax = tfc.object.shape->posMax;
+                td::Vec3 centerpoint = { objectMax.x - ((objectMax.x - objectMin.x) / 2), objectMax.y - ((objectMax.y - objectMin.y) / 2), objectMax.z - ((objectMax.z - objectMin.z) / 2) };
+                glb::TDcreateExplosion((uintptr_t)glb::scene, &centerpoint, 0.f);
+                tfc.object.shape->attributes = 0x00;
+                tfc.object.shape->Destroy(tfc.object.shape, true);
+                tfc.object.body->Destroy(tfc.object.body, true);
+            }
+        }
+        if (!hasActiveCracker) {
+            thrownCrackers.clear();
         }
 
         //*(byte*)((uintptr_t)(current.shape) + 9) = 0x00;

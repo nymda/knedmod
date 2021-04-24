@@ -162,8 +162,6 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 
     ImGui::End();
 
-   
-
     if (glb::displayMenu) {
         ImGui::Begin("KnedMod");
         {
@@ -282,7 +280,8 @@ bool hwglSwapBuffers(_In_ HDC hDc)
                     ImGui::SliderInt("Chance %", &toolgun::chance, 1, 100);
                 }
                 if (toolgun::currentsetting == toolgun::tgSettings::testing) {
-
+                    ImGui::SliderFloat("Max Dist", &toolgun::maxRange, 0.1f, 100.f, "%.2f");
+                    ImGui::SliderFloat("Hole size", &toolgun::holeSize, 0.1f, 100.f, "%.2f");
                 }
                 if (toolgun::currentsetting == toolgun::tgSettings::setAtttibute) {
                     ImGui::InputText("Attribute 1", toolgun::setAttributeFirst, 128);
@@ -319,24 +318,22 @@ bool hwglSwapBuffers(_In_ HDC hDc)
                 ImGui::SliderInt("C4 size", &c4::selectedBombSizeInt, 1, 4);
             }
 
-            //if (ImGui::CollapsingHeader("environment")) {
+            if (ImGui::CollapsingHeader("environment")) {
             //    if (ImGui::Button("Set night")) {
             //        envOptions::setNight();
             //    }
 
-            //    if (ImGui::Button("All lights off")) {
-            //        for (TDLight** tdl : *(glb::scene->pLightList)) {
-            //            ((TDLight*)tdl)->m_Enabled = false;
-            //            //std::cout << ((TDLight*)tdl)->m_Enabled << std::endl;
-            //        }
-            //    }
+                if (ImGui::Button("All lights off")) {
+                    for (TDLight** tdl : *(glb::scene->pLightList)) {
+                        ((TDLight*)tdl)->m_Enabled = false;
+                    }
+                }
 
-            //    if (ImGui::Button("All lights on")) {
-            //        for (TDLight** tdl : *(glb::scene->pLightList)) {
-            //            ((TDLight*)tdl)->m_Enabled = true;
-            //            //std::cout << ((TDLight*)tdl)->m_Enabled << std::endl;
-            //        }
-            //    }
+                if (ImGui::Button("All lights on")) {
+                    for (TDLight** tdl : *(glb::scene->pLightList)) {
+                        ((TDLight*)tdl)->m_Enabled = true;
+                    }
+                }
 
             //    ImGui::InputText("Skybox", tempSkyboxPath, 128);
             //    ImGui::SliderFloat("Sun brightness", &glb::scene->pEnvironment->sunBrightness, 0.f, 255.f, "%.2f");
@@ -369,7 +366,83 @@ bool hwglSwapBuffers(_In_ HDC hDc)
             //        glb::oEnvUpdate((uintptr_t)glb::scene->pEnvironment);
             //    }
 
-            //}
+            }
+
+            if (ImGui::CollapsingHeader("Smoker")) {
+                if (ImGui::Button("Spawn smoker")) {
+                    smoker::spawnSmoker();
+                }
+
+                ImGui::SliderFloat("Velo X", &smoker::velocity.x, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("Velo Y", &smoker::velocity.y, 0.f, 10.f, "%.2f");
+                ImGui::SliderFloat("Velo Z", &smoker::velocity.z, 0.f, 10.f, "%.2f");
+                ImGui::SliderFloat("Lifetime", &smoker::lifetime, 0.f, 10.f, "%.2f");
+
+                ImGui::SliderFloat("U01", &smoker::pInfo.U01, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U02", &smoker::pInfo.U02, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U03", &smoker::pInfo.U03, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U04", &smoker::pInfo.U04, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U05", &smoker::pInfo.U05, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U06", &smoker::pInfo.U06, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U07", &smoker::pInfo.U07, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U08", &smoker::pInfo.U08, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U09", &smoker::pInfo.U09, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U10", &smoker::pInfo.U10, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U11", &smoker::pInfo.U11, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U12", &smoker::pInfo.U12, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U13", &smoker::pInfo.U13, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U14", &smoker::pInfo.U14, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U15", &smoker::pInfo.U15, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U16", &smoker::pInfo.U16, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U17", &smoker::pInfo.U17, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U18", &smoker::pInfo.U18, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U19", &smoker::pInfo.U19, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U20", &smoker::pInfo.U20, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U21", &smoker::pInfo.U21, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U22", &smoker::pInfo.U22, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U23", &smoker::pInfo.U23, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U24", &smoker::pInfo.U24, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U25", &smoker::pInfo.U25, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U26", &smoker::pInfo.U26, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U27", &smoker::pInfo.U27, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U28", &smoker::pInfo.U28, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U29", &smoker::pInfo.U29, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U30", &smoker::pInfo.U30, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U31", &smoker::pInfo.U31, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U32", &smoker::pInfo.U32, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U33", &smoker::pInfo.U33, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U34", &smoker::pInfo.U34, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U35", &smoker::pInfo.U35, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U36", &smoker::pInfo.U36, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U37", &smoker::pInfo.U37, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U38", &smoker::pInfo.U38, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U39", &smoker::pInfo.U39, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U40", &smoker::pInfo.U40, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U41", &smoker::pInfo.U41, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U42", &smoker::pInfo.U42, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U43", &smoker::pInfo.U43, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U44", &smoker::pInfo.U44, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U45", &smoker::pInfo.U45, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U46", &smoker::pInfo.U46, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U47", &smoker::pInfo.U47, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U48", &smoker::pInfo.U48, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U49", &smoker::pInfo.U49, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U50", &smoker::pInfo.U50, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U51", &smoker::pInfo.U51, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U52", &smoker::pInfo.U52, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U53", &smoker::pInfo.U53, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U54", &smoker::pInfo.U54, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U55", &smoker::pInfo.U55, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U56", &smoker::pInfo.U56, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U57", &smoker::pInfo.U57, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U58", &smoker::pInfo.U58, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U59", &smoker::pInfo.U59, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U60", &smoker::pInfo.U60, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U61", &smoker::pInfo.U61, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U62", &smoker::pInfo.U62, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U63", &smoker::pInfo.U63, 0.f, 5.f, "%.2f");
+                ImGui::SliderFloat("U64", &smoker::pInfo.U64, 0.f, 5.f, "%.2f");
+            }
 
             ImGui::EndChild();
             ImGui::PopStyleVar();

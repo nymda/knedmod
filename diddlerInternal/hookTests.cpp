@@ -35,19 +35,26 @@ void printB4(byte obj[4]) {
     }
 }
 
-void hkDoDamage(uintptr_t a1, uintptr_t a2, td::Vec3* a3, float a4, float a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9) {
+void hkDoDamage(uintptr_t a1, uintptr_t a2, td::Vec3* a3, float a4, float a5, uintptr_t a6, uintptr_t a7, uintptr_t a8) {
   
-    uintptr_t sceneSpecial = mem::FindDMAAddy(((uintptr_t)glb::scene + 0xA8), { 0x80 });
+    //uintptr_t sceneSpecial = mem::FindDMAAddy(((uintptr_t)glb::scene + 0xA8), { 0x16 });
+
+    uintptr_t sceneSpecial = *(uintptr_t*)((uintptr_t)glb::scene + 16);
+
     //std::cout << a1 << " : " << sceneSpecial << std::endl;
     //std::cout << a2  << std::endl;
 
     float damageP1 = 10.f;
     float damageP2 = 10.f;
 
+    std::cout << "A1 " << a1 << " : " << sceneSpecial << std::endl;
+    std::cout << "A2 " << a2 << std::endl;
+    std::cout << "A3 " << a3 << std::endl;
+    std::cout << "A4 " << a4 << std::endl;
+    std::cout << "A5 " << a5 << std::endl;
     std::cout << "A6 " << a6 << std::endl;
     std::cout << "A7 " << a7 << std::endl;
     std::cout << "A8 " << a8 << std::endl;
-    std::cout << "A9 " << a9 << std::endl;
     std::cout << "=========" << std::endl;
 
     //arg 1 : special pointer derived from scene.
@@ -56,66 +63,156 @@ void hkDoDamage(uintptr_t a1, uintptr_t a2, td::Vec3* a3, float a4, float a5, ui
     //arg 4 : damage to SOFT objects
     //arg 5 : unknown float, may be related to power
 
-    return glb::oDamageObject(a1, a2, a3, a4, a5, a6, a7, a8, a9);
+    return glb::oDamageObject(sceneSpecial, a2, a3, damageP1, damageP2, a6, a7, a8);
 }
 
-void hkCreateParticle(uintptr_t* ptr, td::particleInfo& color, td::Vec3& position, td::Vec3& velocity, float lifetime, int type) {
+uintptr_t structContainer;
+void hkCreateParticle(uintptr_t* ptr, td::particleInfo& orig, td::Vec3& position, td::Vec3& velocity, float lifetime) {
     uintptr_t special = *(uintptr_t*)((uintptr_t)glb::scene + 0x68);
-    //std::cout << "pointer: " << ptr << " pred: " << special << " lifetime: " << std::to_string(lifetime) << " type: " << std::to_string(type) << std::endl;
-    
-    //if (init) {
-    //    bufferCopy = (uintptr_t)malloc(64);
-    //    init = false;
-    //}
 
-    //memcpy((void*)bufferCopy, &color, 64);
-    //std::cout << bufferCopy << std::endl;
+    if (!structContainer) {
+        structContainer = (uintptr_t)malloc(256);
+    }
 
-    //particleInfoStruct tmp = *(particleInfoStruct*)color;
+    memcpy((void*)structContainer, (void*)&orig, 256);
+    std::cout << "InfoStruct: " << structContainer << std::endl;
+    std::cout << "Position  : X:" << std::to_string(position.x) << " Y: " << std::to_string(position.y) << " Z: " << std::to_string(position.z) << std::endl;
+    std::cout << "Velocity  : X:" << std::to_string(velocity.x) << " Y: " << std::to_string(velocity.y) << " Z: " << std::to_string(velocity.z) << std::endl;
+    std::cout << "Lifetime  : " << lifetime << std::endl;
+    std::cout << "==========" << std::endl;
 
-    //for (int i = 0; i < 128; ++i)
-    //    std::cout << std::hex << std::setfill('0') << std::setw(2) << (int)buffer[i] << " ";
-    //std::cout << "=====" << std::endl;
+    std::cout << std::to_string(orig.U01) << std::endl;
+    std::cout << std::to_string(orig.U02) << std::endl;
+    std::cout << std::to_string(orig.U03) << std::endl;
+    std::cout << std::to_string(orig.U04) << std::endl;
+    std::cout << std::to_string(orig.U05) << std::endl;
+    std::cout << std::to_string(orig.U06) << std::endl;
+    std::cout << std::to_string(orig.U07) << std::endl;
+    std::cout << std::to_string(orig.U08) << std::endl;
+    std::cout << std::to_string(orig.U09) << std::endl;
+    std::cout << std::to_string(orig.U10) << std::endl;
+    std::cout << std::to_string(orig.U11) << std::endl;
+    std::cout << std::to_string(orig.U12) << std::endl;
+    std::cout << std::to_string(orig.U13) << std::endl;
+    std::cout << std::to_string(orig.U14) << std::endl;
+    std::cout << std::to_string(orig.U15) << std::endl;
+    std::cout << std::to_string(orig.U16) << std::endl;
+    std::cout << std::to_string(orig.U17) << std::endl;
+    std::cout << std::to_string(orig.U18) << std::endl;
+    std::cout << std::to_string(orig.U19) << std::endl;
+    std::cout << std::to_string(orig.U20) << std::endl;
+    std::cout << std::to_string(orig.U21) << std::endl;
+    std::cout << std::to_string(orig.U22) << std::endl;
+    std::cout << std::to_string(orig.U23) << std::endl;
+    std::cout << std::to_string(orig.U24) << std::endl;
+    std::cout << std::to_string(orig.U25) << std::endl;
+    std::cout << std::to_string(orig.U26) << std::endl;
+    std::cout << std::to_string(orig.U27) << std::endl;
+    std::cout << std::to_string(orig.U28) << std::endl;
+    std::cout << std::to_string(orig.U29) << std::endl;
+    std::cout << std::to_string(orig.U30) << std::endl;
+    std::cout << std::to_string(orig.U31) << std::endl;
+    std::cout << std::to_string(orig.U32) << std::endl;
+    std::cout << std::to_string(orig.U33) << std::endl;
+    std::cout << std::to_string(orig.U34) << std::endl;
+    std::cout << std::to_string(orig.U35) << std::endl;
+    std::cout << std::to_string(orig.U36) << std::endl;
+    std::cout << std::to_string(orig.U37) << std::endl;
+    std::cout << std::to_string(orig.U38) << std::endl;
+    std::cout << std::to_string(orig.U39) << std::endl;
+    std::cout << std::to_string(orig.U40) << std::endl;
+    std::cout << std::to_string(orig.U41) << std::endl;
+    std::cout << std::to_string(orig.U42) << std::endl;
+    std::cout << std::to_string(orig.U43) << std::endl;
+    std::cout << std::to_string(orig.U44) << std::endl;
+    std::cout << std::to_string(orig.U45) << std::endl;
+    std::cout << std::to_string(orig.U46) << std::endl;
+    std::cout << std::to_string(orig.U47) << std::endl;
+    std::cout << std::to_string(orig.U48) << std::endl;
+    std::cout << std::to_string(orig.U49) << std::endl;
+    std::cout << std::to_string(orig.U50) << std::endl;
+    std::cout << std::to_string(orig.U51) << std::endl;
+    std::cout << std::to_string(orig.U52) << std::endl;
+    std::cout << std::to_string(orig.U53) << std::endl;
+    std::cout << std::to_string(orig.U54) << std::endl;
+    std::cout << std::to_string(orig.U55) << std::endl;
+    std::cout << std::to_string(orig.U56) << std::endl;
+    std::cout << std::to_string(orig.U57) << std::endl;
+    std::cout << std::to_string(orig.U58) << std::endl;
+    std::cout << std::to_string(orig.U59) << std::endl;
+    std::cout << std::to_string(orig.U60) << std::endl;
+    std::cout << std::to_string(orig.U61) << std::endl;
+    std::cout << std::to_string(orig.U62) << std::endl;
+    std::cout << std::to_string(orig.U63) << std::endl;
+    std::cout << std::to_string(orig.U64) << std::endl;
 
-    td::Vec3 newVelo = { 0, 0, 0 };
-    particleInfoStruct orig = *(particleInfoStruct*)&color;
-
-    particleInfoStruct testing = { };
-    //testing.R = 1.f;
-    //testing.G = 1.f;
-    //testing.B = 1.f;
-    //testing.A = 1.f;
-    //testing.FadeR = 1.f;
-    //testing.FadeG = 0.f;
-    //testing.FadeB = 0.f;
-    //testing.FadeA = 1.f;
-    //testing.U05 = orig.U05;
-    //testing.U06 = orig.U06;
-    //testing.StartSize = 0.1f;
-    //testing.EndSize = 0.5f;
-    //testing.U09 = orig.U09;
-    //testing.U10 = orig.U10;
-    //testing.U11 = orig.U11;
-    //testing.U12 = orig.U12;
-
-    testing.R = orig.R;
-    testing.G = orig.G;
-    testing.B = orig.B;
-    testing.A = orig.A;
-    testing.FadeR = orig.FadeR;
-    testing.FadeG = orig.FadeG;
-    testing.FadeB = orig.FadeB;
-    testing.FadeA = orig.FadeA;
-    testing.U05 = orig.U05;
-    testing.U06 = orig.U06;
-    testing.StartSize = orig.StartSize;
-    testing.EndSize = orig.EndSize;
+    td::particleInfo testing = { };
+    testing.U01 = orig.U01;
+    testing.U02 = orig.U02;
+    testing.U03 = orig.U03;
+    testing.U04 = orig.U04;      //R
+    testing.U05 = orig.U05;      //G
+    testing.U06 = orig.U06;      //B
+    testing.U07 = orig.U07;      //A
+    testing.U08 = orig.U08;
     testing.U09 = orig.U09;
     testing.U10 = orig.U10;
     testing.U11 = orig.U11;
     testing.U12 = orig.U12;
+    testing.U13 = orig.U13;
+    testing.U14 = orig.U14;
+    testing.U15 = orig.U15;
+    testing.U16 = orig.U16;
+    testing.U17 = orig.U17;
+    testing.U18 = orig.U18;
+    testing.U19 = orig.U19;
+    testing.U20 = orig.U20;
+    testing.U21 = orig.U21;
+    testing.U22 = orig.U22;
+    testing.U23 = orig.U23;
+    testing.U24 = orig.U24;
+    testing.U25 = orig.U25;
+    testing.U26 = orig.U26;
+    testing.U27 = orig.U27;
+    testing.U28 = orig.U28;
+    testing.U29 = orig.U29;
+    testing.U30 = orig.U30;
+    testing.U31 = orig.U31;
+    testing.U32 = orig.U32;
+    testing.U33 = orig.U33;
+    testing.U34 = orig.U34;
+    testing.U35 = orig.U35;
+    testing.U36 = orig.U36;
+    testing.U37 = orig.U37;
+    testing.U38 = orig.U38;
+    testing.U39 = orig.U39;
+    testing.U40 = orig.U40;
+    testing.U41 = orig.U41;
+    testing.U42 = orig.U42;
+    testing.U43 = orig.U43;
+    testing.U44 = orig.U44;
+    testing.U45 = orig.U45;
+    testing.U46 = orig.U46;
+    testing.U47 = orig.U47;
+    testing.U48 = orig.U48;
+    testing.U49 = orig.U49;
+    testing.U50 = orig.U50;
+    testing.U51 = orig.U51;
+    testing.U52 = orig.U52;
+    testing.U53 = orig.U53;
+    testing.U54 = orig.U54;
+    testing.U55 = orig.U55;
+    testing.U56 = orig.U56;
+    testing.U57 = orig.U57;
+    testing.U58 = orig.U58;
+    testing.U59 = orig.U59;
+    testing.U60 = orig.U60;
+    testing.U61 = orig.U61;
+    testing.U62 = orig.U62;
+    testing.U63 = orig.U63;
+    testing.U64 = orig.U64;
 
-    glb::TDspawnParticle((DWORD*)special, (td::particleInfo*)&testing, position, velocity, lifetime, type);
+    glb::TDspawnParticle((DWORD*)special, (td::particleInfo*)&testing, position, velocity, lifetime);
 }
 
 bool isKnown(TDShape* test) {
@@ -170,30 +267,24 @@ void hkPointLight(TDRenderer* renderer, td::Vec3* a2, td::Vec3* a3, float a4, fl
     return glb::oCreateLight(renderer, a2, a3, 0.1f, 0.1f, 1.5f, 1.5f);
 }
 
-void testMainHook(float* a1, float* a2, DWORD* a3) {
 
-    td::Vec3 col = { 1.f, 1.f, 1.f };
-    glb::oCreateLight(glb::renderer, &glb::player->position, &col, 0.1f, 0.1f, 1.5f, 1.5f);
-
-    return glb::oMovLoop(a1, a2, a3);
-}
 
 void initTestHook() {
     return;
 
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    DetourAttach(&(PVOID&)glb::oCreateLight, hkPointLight);
+    //DetourAttach(&(PVOID&)glb::oCreateLight, hkPointLight);
     //DetourAttach(&(PVOID&)glb::TDspawnParticle, hkCreateParticle);
-    //DetourAttach(&(PVOID&)glb::oDamageObject, hkDoDamage);
+    //DetourAttach(&(PVOID&)glb::oMovLoop, hkMovementLoop);
     DetourTransactionCommit();
 }
 
 void terminateTestHook() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    DetourDetach(&(PVOID&)glb::oCreateLight, hkPointLight);
+    //DetourDetach(&(PVOID&)glb::oCreateLight, hkPointLight);
     //DetourDetach(&(PVOID&)glb::TDspawnParticle, hkCreateParticle);
-    //DetourDetach(&(PVOID&)glb::oDamageObject, hkDoDamage);
+    //DetourDetach(&(PVOID&)glb::oMovLoop, hkMovementLoop);
     DetourTransactionCommit();
 }
