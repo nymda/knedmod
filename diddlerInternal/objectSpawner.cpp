@@ -126,6 +126,14 @@ namespace spawner {
                     float roVeloZ = (rand() % 20) - 10;
                     lastSpawnedObject.body->RotationVelocity = { roVeloX, roVeloY, roVeloZ };
                 }
+                else if (lastSpawnedObject.params.spawnType == objectSpawnType::front) {
+                    float spawnPosx = (glb::player->cameraPosition.x - (objectSize.x / 2)) + (glb::player->cameraEuler().x * 2.25f);
+                    float spawnPosy = (glb::player->cameraPosition.y - (objectSize.y / 2)) + (glb::player->cameraEuler().y * 2.25f);
+                    float spawnPosz = (glb::player->cameraPosition.z - (objectSize.z / 2)) + (glb::player->cameraEuler().z * 2.25f);
+                    lastSpawnedObject.body->Rotation = lastSpawnedObject.params.customRotation;
+                    lastSpawnedObject.body->Velocity = lastSpawnedObject.params.startVelocity;
+                    lastSpawnedObject.body->Position = { spawnPosx,  spawnPosy, spawnPosz };
+                }
                 else {
                     lastSpawnedObject.body->Position = { (target.x - (objectSize.x / 2)), target.y, (target.z - (objectSize.z / 2)) };
                 }

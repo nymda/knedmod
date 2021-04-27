@@ -100,7 +100,12 @@ namespace noclip {
 		}
 
 		if (((GetAsyncKeyState(VK_SPACE) >> 15) & 0x0001) == 0x0001) {
-			camPos->y = camPos->y + 0.5;
+			if (((GetAsyncKeyState(VK_SHIFT) >> 15) & 0x0001) == 0x0001) {
+				camPos->y = camPos->y + 2.5;
+			}
+			else {
+				camPos->y = camPos->y + 0.5;
+			}
 		}
 
 		glb::player->position = { 0, 500, 0 };

@@ -150,6 +150,12 @@
     <ClInclude Include="movementLoop.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="missileLauncher.h">
+      <Filter>Header Files\Mods</Filter>
+    </ClInclude>
+    <ClInclude Include="memhandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -243,6 +249,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="movementLoop.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="missileLauncher.cpp">
+      <Filter>Source Files\Mods</Filter>
+    </ClCompile>
+    <ClCompile Include="types.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="memhandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

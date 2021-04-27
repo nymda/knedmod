@@ -11,7 +11,7 @@ namespace raycaster {
 		TDShape* hitShape;
 	};
 
-	rayData castRayManual(td::Vec3 position, td::Vec3 rotation, RaycastFilter filter);
+	rayData castRayManual(td::Vec3 position, td::Vec3 rotation, RaycastFilter* filter);
 	rayData castRayPlayer();
 
 }

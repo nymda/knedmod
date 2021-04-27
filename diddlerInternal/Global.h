@@ -24,7 +24,7 @@ struct RaycastFilter
     bool m_RejectTransparent;
     uint8_t m_Pad[3];
     td::small_vector<TDBody*> m_IgnoredBodies;
-    uintptr_t m_IgnoredBodiesMemory[4];
+    TDBody* m_IgnoredBodiesMemory[4]; // small_vector should support pre-reserved buffers... not going to add that right now.
     td::small_vector<TDShape*> m_IgnoredShapes;
 };
 

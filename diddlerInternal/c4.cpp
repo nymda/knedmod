@@ -159,10 +159,10 @@ namespace c4 {
                 td::Vec3 objectMin = tfc.object.shape->posMin;
                 td::Vec3 objectMax = tfc.object.shape->posMax;
                 td::Vec3 centerpoint = { objectMax.x - ((objectMax.x - objectMin.x) / 2), objectMax.y - ((objectMax.y - objectMin.y) / 2), objectMax.z - ((objectMax.z - objectMin.z) / 2) };
-                td::Vec3 vel = { 0, 0, 0 };
+                td::Vec3 vel = { 0.f, 1.f, 0.f };
 
                 td::particleInfo tdpi = { 0.f, 0.f, 0.f, 0.7f, 0.7f, 0.7f, 1.f, 0.7f, 0.7f, 0.7f, 1.f, 0.f, 0.f, 0.f, 0.2f, 0.f, 0.f, 0.f, 0.f, 0.15f, 0.25f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 1.f, 1.f, 0.f, 0.f, 0.f, 1.f, 1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f };
-                glb::TDspawnParticle((DWORD*)special, &tdpi, centerpoint, vel, 1.f);
+                glb::TDspawnParticle((DWORD*)special, &tdpi, centerpoint, vel, 0.5f);
 
                 hasActiveCracker = true;
                 tfc.frameCountdown--;
@@ -180,8 +180,6 @@ namespace c4 {
         if (!hasActiveCracker) {
             thrownCrackers.clear();
         }
-
-        //*(byte*)((uintptr_t)(current.shape) + 9) = 0x00;
 
         if (isDetonating) {
             if (!mods::c4_global_detonation) {

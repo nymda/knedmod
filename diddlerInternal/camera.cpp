@@ -22,7 +22,7 @@ namespace camera {
 			//td::Vec3 centerpoint = camera.body->Position;
 
 			RaycastFilter rcf{ 0 };
-			raycaster::rayData rayDat = raycaster::castRayManual(centerpoint, quat2euler(camera.body->Rotation, 1, true), rcf);
+			raycaster::rayData rayDat = raycaster::castRayManual(centerpoint, quat2euler(camera.body->Rotation, 1, true), &rcf);
 			glb::oFDL(glb::renderer, centerpoint, rayDat.worldPos, white, white, false);
 		}
 	}

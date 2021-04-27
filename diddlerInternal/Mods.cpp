@@ -8,6 +8,7 @@
 #include "camera.h"
 #include "toolgun.h"
 #include "lantern.h"
+#include "missileLauncher.h"
 
 namespace mods {
 	char jetpackKey = VK_SPACE;
@@ -25,6 +26,7 @@ namespace mods {
 		c4::runC4();
 		lantern::updateLantern();
 		smoker::updateSmoker();
+		missile::runMissile();
 
 		if (jetpack) {
 			jetpack::executeJetpack();
@@ -35,7 +37,7 @@ namespace mods {
 			int count = 0;
 
 			if (*(byte*)&(glb::scene->Boundaries) != 0x00) {
-				for (td::Vec2** pt : glb::scene->Boundaries) {
+				for (td::Vec2* pt : glb::scene->Boundaries) {
 					count++;
 				}
 				mem::Null((byte*)&(glb::scene->Boundaries), 8 * count);

@@ -267,24 +267,23 @@ void hkPointLight(TDRenderer* renderer, td::Vec3* a2, td::Vec3* a3, float a4, fl
     return glb::oCreateLight(renderer, a2, a3, 0.1f, 0.1f, 1.5f, 1.5f);
 }
 
+void hkEnvUpdate(uintptr_t environment) {
 
+    std::cout << "Env: " << environment << std::endl;
+
+    return glb::oEnvUpdate(environment);
+}
 
 void initTestHook() {
-    return;
-
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    //DetourAttach(&(PVOID&)glb::oCreateLight, hkPointLight);
-    //DetourAttach(&(PVOID&)glb::TDspawnParticle, hkCreateParticle);
-    //DetourAttach(&(PVOID&)glb::oMovLoop, hkMovementLoop);
+    DetourAttach(&(PVOID&)glb::oEnvUpdate, hkEnvUpdate);
     DetourTransactionCommit();
 }
 
 void terminateTestHook() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    //DetourDetach(&(PVOID&)glb::oCreateLight, hkPointLight);
-    //DetourDetach(&(PVOID&)glb::TDspawnParticle, hkCreateParticle);
-    //DetourDetach(&(PVOID&)glb::oMovLoop, hkMovementLoop);
+    DetourDetach(&(PVOID&)glb::oEnvUpdate, hkEnvUpdate);
     DetourTransactionCommit();
 }

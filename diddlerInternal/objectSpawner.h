@@ -17,14 +17,15 @@ namespace spawner {
 
 	enum objectSpawnType {
 		placed = 0,
-		thrown = 1
+		thrown = 1,
+		front = 2
 	};
 
 	struct objectSpawnerParams {
 		objectSpawnType spawnType = objectSpawnType::placed;
 		std::vector<objectAttribute> attributes;
 		td::Vec3 startVelocity = { 0, 0, 0 };
-		td::Vec3 customRotation = { 0, 0, 0 };
+		td::Vec4 customRotation = { 0, 0, 0 };
 		float maximumPlaceDistance = 1000.f;
 		bool rotateFacePlayer = false;
 		bool unbreakable = false;

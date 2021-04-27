@@ -177,7 +177,9 @@
     <ClInclude Include="lantern.h" />
     <ClInclude Include="mainHook.h" />
     <ClInclude Include="maths.h" />
+    <ClInclude Include="memhandler.h" />
     <ClInclude Include="miscPatches.h" />
+    <ClInclude Include="missileLauncher.h" />
     <ClInclude Include="Mods.h" />
     <ClInclude Include="movementLoop.h" />
     <ClInclude Include="noclip.h" />
@@ -215,7 +217,9 @@
     <ClCompile Include="lantern.cpp" />
     <ClCompile Include="mainHook.cpp" />
     <ClCompile Include="maths.cpp" />
+    <ClCompile Include="memhandler.cpp" />
     <ClCompile Include="miscPatches.cpp" />
+    <ClCompile Include="missileLauncher.cpp" />
     <ClCompile Include="Mods.cpp" />
     <ClCompile Include="movementLoop.cpp" />
     <ClCompile Include="noclip.cpp" />
@@ -233,6 +237,7 @@
     <ClCompile Include="swapBuffers.cpp" />
     <ClCompile Include="TDObjects.cpp" />
     <ClCompile Include="toolgun.cpp" />
+    <ClCompile Include="types.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

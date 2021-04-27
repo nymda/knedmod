@@ -133,7 +133,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 
     char healthTx[256] = {};
     char positionTx[256] = {};
-    sprintf_s(positionTx, 256, "X: %.2f, Y: %.2f, Z: %.2f", (glb::player->position.x), (glb::player->position.y), (glb::player->position.z));
+    sprintf_s(positionTx, 256, "X: %.2f, Y: %.2f, Z: %.2f", (glb::player->cameraPosition.x), (glb::player->cameraPosition.y), (glb::player->cameraPosition.z));
     sprintf_s(healthTx, 256, "Health : %i", (int)(glb::player->health * 100));
     
     ImGui::Text(positionTx);
@@ -319,52 +319,52 @@ bool hwglSwapBuffers(_In_ HDC hDc)
             }
 
             if (ImGui::CollapsingHeader("environment")) {
-            //    if (ImGui::Button("Set night")) {
-            //        envOptions::setNight();
-            //    }
-
-                if (ImGui::Button("All lights off")) {
-                    for (TDLight** tdl : *(glb::scene->pLightList)) {
-                        ((TDLight*)tdl)->m_Enabled = false;
-                    }
+                if (ImGui::Button("Set night")) {
+                    envOptions::setNight();
                 }
 
-                if (ImGui::Button("All lights on")) {
-                    for (TDLight** tdl : *(glb::scene->pLightList)) {
-                        ((TDLight*)tdl)->m_Enabled = true;
-                    }
-                }
+                //if (ImGui::Button("All lights off")) {
+                //    for (TDLight** tdl : *(glb::scene->pLightList)) {
+                //        ((TDLight*)tdl)->m_Enabled = false;
+                //    }
+                //}
 
-            //    ImGui::InputText("Skybox", tempSkyboxPath, 128);
-            //    ImGui::SliderFloat("Sun brightness", &glb::scene->pEnvironment->sunBrightness, 0.f, 255.f, "%.2f");
-            //    ImGui::SliderFloat("Sun spread", &glb::scene->pEnvironment->sunSpread, 0.f, 255.f, "%.2f");
-            //    ImGui::SliderFloat("Sun length", &glb::scene->pEnvironment->sunLength, 0.f, 255.f, "%.2f");
-            //    ImGui::SliderFloat("Sun fog", &glb::scene->pEnvironment->sunFogScale, 0.f, 255.f, "%.2f");
-            //    ImGui::SliderFloat("Sun glare", &glb::scene->pEnvironment->sunGlare, 0.f, 255.f, "%.2f");
-            //    ImGui::Spacing();
-            //    ImGui::SliderFloat("sun R", &glb::scene->pEnvironment->sunColor.x, 0.f, 255.f, "%.2f");
-            //    ImGui::SliderFloat("sun G", &glb::scene->pEnvironment->sunColor.y, 0.f, 255.f, "%.2f");
-            //    ImGui::SliderFloat("sun B", &glb::scene->pEnvironment->sunColor.z, 0.f, 255.f, "%.2f");
-            //    ImGui::Spacing();
-            //    ImGui::SliderFloat("sun TR", &glb::scene->pEnvironment->sunColorTint.x, 0.f, 255.f, "%.2f");
-            //    ImGui::SliderFloat("sun TG", &glb::scene->pEnvironment->sunColorTint.y, 0.f, 255.f, "%.2f");
-            //    ImGui::SliderFloat("sun TB", &glb::scene->pEnvironment->sunColorTint.z, 0.f, 255.f, "%.2f");
-            //    ImGui::Spacing();
-            //    ImGui::SliderFloat("Exposure max", &glb::scene->pEnvironment->exposure.x, 0.f, 255.f, "%.2f");
-            //    ImGui::SliderFloat("Exposure min", &glb::scene->pEnvironment->exposure.y, 0.f, 255.f, "%.2f");
-            //    ImGui::Spacing();
-            //    ImGui::SliderFloat("Ambience", &glb::scene->pEnvironment->ambient, 0.f, 255.f, "%.2f");
-            //    ImGui::SliderFloat("Brightness", &glb::scene->pEnvironment->brightness, 0.f, 255.f, "%.2f");
-            //    ImGui::SliderFloat("rain", &glb::scene->pEnvironment->rain, 0.f, 1.f, "%.2f");
-            //    ImGui::SliderFloat("wetness", &glb::scene->pEnvironment->wetness, 0.f, 1.f, "%.2f");
-            //    ImGui::SliderFloat("puddle ammount", &glb::scene->pEnvironment->puddleamount, 0.f, 1.f, "%.2f");
-            //    ImGui::SliderFloat("puddle size", &glb::scene->pEnvironment->puddlesize, 0.f, 1.f, "%.2f");
-            //    ImGui::SliderFloat("slippery", &glb::scene->pEnvironment->slippery, 0.f, 1.f, "%.2f");
-            //    ImGui::SliderFloat("sky rotation", &glb::scene->pEnvironment->skyboxrot, 0.f, 255.f, "%.2f");
-            //    ImGui::Checkbox("Nightlight", &glb::scene->pEnvironment->nightlight);
-            //    if (ImGui::Button("Update pEnvironment") && glb::game->State == gameState::ingame) {
-            //        glb::oEnvUpdate((uintptr_t)glb::scene->pEnvironment);
-            //    }
+                //if (ImGui::Button("All lights on")) {
+                //    for (TDLight** tdl : *(glb::scene->pLightList)) {
+                //        ((TDLight*)tdl)->m_Enabled = true;
+                //    }
+                //}
+
+                //ImGui::InputText("Skybox", tempSkyboxPath, 128);
+                ImGui::SliderFloat("Sun brightness", &glb::scene->pEnvironment->sunBrightness, 0.f, 255.f, "%.2f");
+                ImGui::SliderFloat("Sun spread", &glb::scene->pEnvironment->sunSpread, 0.f, 255.f, "%.2f");
+                ImGui::SliderFloat("Sun length", &glb::scene->pEnvironment->sunLength, 0.f, 255.f, "%.2f");
+                ImGui::SliderFloat("Sun fog", &glb::scene->pEnvironment->sunFogScale, 0.f, 255.f, "%.2f");
+                ImGui::SliderFloat("Sun glare", &glb::scene->pEnvironment->sunGlare, 0.f, 255.f, "%.2f");
+                ImGui::Spacing();
+                ImGui::SliderFloat("sun R", &glb::scene->pEnvironment->sunColor.x, 0.f, 255.f, "%.2f");
+                ImGui::SliderFloat("sun G", &glb::scene->pEnvironment->sunColor.y, 0.f, 255.f, "%.2f");
+                ImGui::SliderFloat("sun B", &glb::scene->pEnvironment->sunColor.z, 0.f, 255.f, "%.2f");
+                ImGui::Spacing();
+                ImGui::SliderFloat("sun TR", &glb::scene->pEnvironment->sunColorTint.x, 0.f, 255.f, "%.2f");
+                ImGui::SliderFloat("sun TG", &glb::scene->pEnvironment->sunColorTint.y, 0.f, 255.f, "%.2f");
+                ImGui::SliderFloat("sun TB", &glb::scene->pEnvironment->sunColorTint.z, 0.f, 255.f, "%.2f");
+                ImGui::Spacing();
+                ImGui::SliderFloat("Exposure max", &glb::scene->pEnvironment->exposure.x, 0.f, 255.f, "%.2f");
+                ImGui::SliderFloat("Exposure min", &glb::scene->pEnvironment->exposure.y, 0.f, 255.f, "%.2f");
+                ImGui::Spacing();
+                ImGui::SliderFloat("Ambience", &glb::scene->pEnvironment->ambient, 0.f, 255.f, "%.2f");
+                ImGui::SliderFloat("Brightness", &glb::scene->pEnvironment->brightness, 0.f, 255.f, "%.2f");
+                ImGui::SliderFloat("rain", &glb::scene->pEnvironment->rain, 0.f, 1.f, "%.2f");
+                ImGui::SliderFloat("wetness", &glb::scene->pEnvironment->wetness, 0.f, 1.f, "%.2f");
+                ImGui::SliderFloat("puddle ammount", &glb::scene->pEnvironment->puddleamount, 0.f, 1.f, "%.2f");
+                ImGui::SliderFloat("puddle size", &glb::scene->pEnvironment->puddlesize, 0.f, 1.f, "%.2f");
+                ImGui::SliderFloat("slippery", &glb::scene->pEnvironment->slippery, 0.f, 1.f, "%.2f");
+                ImGui::SliderFloat("sky rotation", &glb::scene->pEnvironment->skyboxrot, 0.f, 255.f, "%.2f");
+                ImGui::Checkbox("Nightlight", &glb::scene->pEnvironment->nightlight);
+                if (ImGui::Button("Update pEnvironment") && glb::game->State == gameState::ingame) {
+                    glb::oEnvUpdate((uintptr_t)glb::scene->pEnvironment);
+                }
 
             }
 

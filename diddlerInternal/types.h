@@ -4,9 +4,9 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include "memhandler.h"
 
 namespace td {
-
 	struct Vec2 {
 		float x;
 		float y;
@@ -140,6 +140,40 @@ namespace td {
 		Vector4_f32 m_Rotation;
 	};
 
+	// Misuse of these will cause crashes if used improperly!
+	// I'm forcing you to initialize them somewhere inside of your code to ensure correct usage.
+	// You can find Teardown's instances of malloc and free using signature scanning. If you are exceptionally lazy you can initialize these using pointers to <cstdlib.h> with &malloc and &free.
+	// Be aware, if you pass data to Teardown using the incorrect malloc then you will crash, trigger asserts, and leak memory. So don't be lazy; use the signatures in <teardown/game.h>!
+
+	/*
+	 * Helper for creating an object of a given type.
+	 */
+	template<class T>
+	T* MemoryNew()
+	{
+		return static_cast<T*>((void*)containedMalloc(sizeof(T)));
+	}
+
+	/*
+	 * Helper for creating an array of objects of a given type.
+	 */
+	template<class T>
+	T* MemoryNew(size_t size)
+	{
+		return static_cast<T*>((void*)containedMalloc(sizeof(T) * size));
+	}
+
+	/*
+	 * Helper class for interacting with Teardown strings.
+	 *
+	 * This string is only meant to be used to forward and receive data from the game.
+	 *
+	 * It does not support:
+	 *     Copying and assignment
+	 *     Modifications
+	 *
+	 * You are welcome to submit pull requests for these if you wish.
+	 */
 	class small_string
 	{
 	public:
@@ -188,138 +222,83 @@ namespace td {
 		};
 	};
 
-	//template<class T>
-	//T* MemoryNew()
-	//{
-	//	return static_cast<T*>(MemoryAlloc(sizeof(T)));
-	//}
-
-	//template<class T>
-	//T* MemoryNew(size_t size)
-	//{
-	//	return static_cast<T*>(MemoryAlloc(sizeof(T) * size));
-	//}
-
-	//template<typename T>
-	//class small_vector {
-	//public:
-	//	small_vector() {};
-	//	small_vector(uint32_t capacity) { reserve(capacity); };
-	//	small_vector(const small_vector&) = delete;
-	//	void operator=(const small_vector&) = delete;
-	//	~small_vector() { clear(); }
-
-	//	T* begin() const { return m_Data; }
-	//	T* end() const { return m_Data + m_Size; }
-	//	T* data() const { return m_Data; }
-	//	uint32_t size() const { return m_Size; }
-	//	uint32_t capacity() const { return m_Capacity; }
-
-	//	void push_back(const T& value)
-	//	{
-	//		if (m_Capacity <= m_Size)
-	//		{
-	//			reserve(2 * m_Capacity + 1);
-	//		}
-
-	//		m_Data[m_Size] = value;
-	//		++m_Size;
-	//	}
-
-	//	void reserve(uint32_t capacity) {
-	//		if (auto memory = MemoryNew<T>(capacity))
-	//		{
-	//			T* data = m_Data;
-	//			uint32_t size = m_Size;
-
-	//			if (data != nullptr)
-	//			{
-	//				if (size >= capacity)
-	//				{
-	//					size = capacity;
-	//				}
-	//				else
-	//				{
-	//					memset(memory, sizeof(T) * size, sizeof(T) * capacity - size);
-	//				}
-
-	//				memcpy(m_Data, data, sizeof(T) * size);
-	//				MemoryFree(data);
-	//				m_Size = size;
-	//			}
-	//			else
-	//			{
-	//				m_Size = 0;
-	//				memset(memory, 0, sizeof(T) * capacity);
-	//			}
-
-	//			m_Data = memory;
-	//			m_Capacity = capacity;
-	//		}
-	//	}
-
-	//	void clear()
-	//	{
-	//		if (m_Data != nullptr)
-	//		{
-	//			m_Size = 0;
-	//			m_Capacity = 0;
-	//			MemoryFree(m_Data);
-	//			m_Data = nullptr;
-	//		}
-	//	}
-
-	//private:
-	//	uint32_t m_Size = 0;
-	//	uint32_t m_Capacity = 0;
-	//	T* m_Data = nullptr;
-	//};
-
+	/*
+	 * Helper class for interacting with Teardown vectors.
+	 *
+	 * This vector is only meant to be used to forward and receive data from the game.
+	 *
+	 * It does not support:
+	 *     Copying and assignment
+	 *     Non-trivially constructible types
+	 *     Deletion
+	 *
+	 * You are welcome to submit pull requests for these if you wish.
+	 */
 	template<typename T>
 	class small_vector {
 	public:
 		small_vector() {};
-		small_vector(uint32_t capacaity) { reserve(capacity); };
+		small_vector(uint32_t capacity) { reserve(capacity); };
+		small_vector(const small_vector&) = delete;
+		void operator=(const small_vector&) = delete;
 		~small_vector() { clear(); }
 
-		T** begin() const { return m_Data; }
-		T** end() const { return m_Data + m_Size; }
-		T** data() const { return m_Data; }
+		T* begin() const { return m_Data; }
+		T* end() const { return m_Data + m_Size; }
+		T* data() const { return m_Data; }
 		uint32_t size() const { return m_Size; }
 		uint32_t capacity() const { return m_Capacity; }
 
-		void reserve(uint32_t capacity) {
-			T** data = m_Data;
-			uint32_t size = m_Size;
-
-			if (auto memory = malloc(sizeof(T) * capacity))
+		void push_back(const T& value)
+		{
+			if (m_Capacity <= m_Size)
 			{
-				m_Size = 0;
-				m_Capacity = capacity;
-				m_Data = (T**)memory;
-				memset(m_Data, 0, sizeof(T) * capacity);
+				reserve(2 * m_Capacity + 1);
+			}
 
-				if (data)
+			m_Data[m_Size] = value;
+			++m_Size;
+		}
+
+		void reserve(uint32_t capacity) {
+			if (auto memory = MemoryNew<T>(capacity))
+			{
+				T* data = m_Data;
+				uint32_t size = m_Size;
+
+				if (data != nullptr)
 				{
-					if (size > m_Capacity)
+					if (size >= capacity)
 					{
-						size = m_Capacity;
+						size = capacity;
+					}
+					else
+					{
+						memset(memory, sizeof(T) * size, sizeof(T) * capacity - size);
 					}
 
-					m_Size = capacity;
 					memcpy(m_Data, data, sizeof(T) * size);
-					free(data);
+					containedFree(data);
+					m_Size = size;
 				}
+				else
+				{
+					m_Size = 0;
+					memset(memory, 0, sizeof(T) * capacity);
+				}
+
+				m_Data = memory;
+				m_Capacity = capacity;
 			}
 		}
 
 		void clear()
 		{
-			if (m_Data)
+			if (m_Data != nullptr)
 			{
 				m_Size = 0;
 				m_Capacity = 0;
-				free(m_Data);
+				containedFree(m_Data);
 				m_Data = nullptr;
 			}
 		}
@@ -327,7 +306,7 @@ namespace td {
 	private:
 		uint32_t m_Size = 0;
 		uint32_t m_Capacity = 0;
-		T** m_Data = nullptr;
+		T* m_Data = nullptr;
 	};
 
 	/*
@@ -337,6 +316,8 @@ namespace td {
 	 * decltype(Teardown::Game::Update)::Type Game_Update = FindSignature(Teardown::Game.Signature);
 	 *
 	 * FindSignature is a user defined function accepting a const* char which scans the main Teardown.exe module.
+	 *
+	 * These signatures do not have a "mask" on purpose. I use (*) \x2A to represent wildcards. This maps to an unused instruction in x86/x64.
 	 */
 	template<typename T>
 	struct function_signature
@@ -348,7 +329,5 @@ namespace td {
 	};
 
 	static_assert(sizeof(small_string) == 16, "small_string size is incorrect!");
-	static_assert(sizeof(small_vector<void>) == 16, "small_vector size is incorrect!");
-
-
+	static_assert(sizeof(small_vector<uint8_t>) == 16, "small_vector size is incorrect!");
 };

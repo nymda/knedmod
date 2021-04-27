@@ -77,7 +77,6 @@ namespace toolgun {
 
                 spawner::objectSpawnerParams osp{};
                 osp.attributes = currentSpawngunObject.attributes;
-                osp.customRotation = rd.angle;
 
                 if (glb::player->isAttacking) {
                     if (spawnOnce) {
@@ -133,7 +132,7 @@ namespace toolgun {
                         td::Vec3 shootPos = { camRot.x + noiseX, camRot.y + noiseY, camRot.z + noiseZ };
 
                         RaycastFilter rcf{0};
-                        raycaster::rayData rd = raycaster::castRayManual(camPos, shootPos, rcf);
+                        raycaster::rayData rd = raycaster::castRayManual(camPos, shootPos, &rcf);
                         td::Vec3 target = rd.worldPos;
                         glb::TDcreateExplosion((uintptr_t)glb::scene, &target, power);
                     }

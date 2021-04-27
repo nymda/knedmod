@@ -276,10 +276,11 @@ public:
 	class ppScene* ppScene; //0x0010
 	char pad_0018[88]; //0x0018
 	void* pParticleSystem; //0x0070
-	char pad_0078[48]; //0x0078
+	char pad_0078[40]; //0x0078
+	Environment* pEnvironment; //0x00A0
 	class fireSystem* pFireSystem; //0x00A8
 	td::small_vector<void*> projectileList;
-	Environment* pEnvironment; //0x00C0
+	uintptr_t* unkn; //0x00C0
 	td::Vec3 spawnPos; //0x00C8
 	char pad_00D4[20]; //0x00D4
 	TDLight* pFlashlight; //0x00E8

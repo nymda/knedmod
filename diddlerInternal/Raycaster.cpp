@@ -4,16 +4,16 @@
 
 namespace raycaster {
 
-    rayData castRayManual(td::Vec3 position, td::Vec3 rotation, RaycastFilter filterCus) {
+    rayData castRayManual(td::Vec3 position, td::Vec3 rotation, RaycastFilter* filterCus) {
 
         td::Vec3 pCopy = position;
         td::Vec3 rCopy = rotation;
 
-        filterCus.m_Mask = -1;
+        filterCus->m_Mask = -1;
         td::Vec3 output{};
         uintptr_t oShape;
         float outDist = 0.f;
-        glb::oRC(glb::scene, &pCopy, &rCopy, 250.f, &filterCus, &outDist, &output, &oShape, nullptr);
+        glb::oRC(glb::scene, &pCopy, &rCopy, 250.f, filterCus, &outDist, &output, &oShape, nullptr);
         if (outDist == 0) {
             outDist = 1000.f;
         }
