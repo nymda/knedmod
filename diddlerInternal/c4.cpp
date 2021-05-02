@@ -12,6 +12,14 @@ namespace c4 {
         "vox\\Default\\c4_medium\\object.vox",
         "vox\\Default\\c4_large\\object.vox",
         "vox\\Default\\c4_huge\\object.vox"
+    
+    };
+
+    static const int bombSizePowers[] = {
+        1,
+        2,
+        5,
+        10
     };
 
     struct spawnedC4 {
@@ -77,13 +85,7 @@ namespace c4 {
 
                     const char* currentPath = bombSizeStr[selectedBombSizeInt-1];
                     spawner::KMSpawnedObject object = spawner::spawnObjectProxy(currentPath, osp);
-
-                    if (selectedBombSizeInt == 4) {
-                        explosiveObjects.push_back({ object,  10 });
-                    }
-                    else {
-                        explosiveObjects.push_back({ object,  selectedBombSizeInt });
-                    }
+                    explosiveObjects.push_back({ object,  bombSizePowers[selectedBombSizeInt - 1] });
                 }
             }
             else {

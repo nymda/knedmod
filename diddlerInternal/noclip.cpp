@@ -5,10 +5,11 @@
 namespace noclip {
 	bool enabled = false;
 	bool inNoclip = false;
-	byte xBuffer[5] = { 0xF3, 0x0F, 0x11, 0x43, 0x7C };
-	byte yBuffer[8] = { 0xF3, 0x0F, 0x11, 0x93, 0x80, 0x00, 0x00, 0x00, };
-	byte zBuffer[8] = { 0xF3, 0x0F, 0x11, 0x8B, 0x84, 0x00, 0x00, 0x00 };
-
+	byte xBuffer[5]       = { 0xF2, 0x0F, 0x10, 0x43, 0x7C };
+	byte yBuffer[8]       = { 0xF3, 0x0F, 0x11, 0x93, 0x80, 0x00, 0x00, 0x00 };
+	byte littleBastard[5] = { 0xF2, 0x0F, 0x11, 0x43, 0x7C };					//why the fuck is this nessicary? why do we need two instructions writing to the SAME FUCKING VARIABLE in the SAME FUCKING LOOP? WHAT THE FUCK ARE YOU DOING DENNIS?
+	byte zBuffer[8]       = { 0xF3, 0x0F, 0x11, 0x83, 0x84, 0x00, 0x00, 0x00 };
+	 
 	td::Vec3 movementVector = { 0, 0, 0 };
 	td::Vec3 lastMmovementVector = { 0, 0, 0 };
 	td::Vec3 cameraForwardVector = { 0, 0, 0 };
@@ -17,19 +18,23 @@ namespace noclip {
 
 	void ToggleNoclip() {
 		uintptr_t baseAddy = (uintptr_t)glb::oCamPos;
-		uintptr_t xInstruction = baseAddy + 0x62c; // ok
-		uintptr_t yInstruction = baseAddy + 0x66a; // ok 
-		uintptr_t zInstruction = baseAddy + 0x631; // ok
+
+		uintptr_t xInstruction       = baseAddy + 0x658; // ok
+		uintptr_t yInstruction       = baseAddy + 0x650; // ok 
+		uintptr_t fuckyouinstruction = baseAddy + 0x661; // ok 
+		uintptr_t zInstruction       = baseAddy + 0x614; // ok
 
 		inNoclip = !inNoclip;
 		if (inNoclip) {
 			mem::Nop((byte*)xInstruction, 5); 
 			mem::Nop((byte*)yInstruction, 8);
+			mem::Nop((byte*)fuckyouinstruction, 5);
 			mem::Nop((byte*)zInstruction, 8);
 		}
 		else {
 			mem::Patch((byte*)xInstruction, xBuffer, 5);
 			mem::Patch((byte*)yInstruction, yBuffer, 8);
+			mem::Patch((byte*)fuckyouinstruction, littleBastard, 5);
 			mem::Patch((byte*)zInstruction, zBuffer, 8);
 
 			glb::player->position = { glb::player->cameraPosition.x, glb::player->cameraPosition.y - 1.7f, glb::player->cameraPosition.z };

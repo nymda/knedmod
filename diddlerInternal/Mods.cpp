@@ -27,6 +27,7 @@ namespace mods {
 		lantern::updateLantern();
 		smoker::updateSmoker();
 		missile::runMissile();
+		noclip::update();
 
 		if (jetpack) {
 			jetpack::executeJetpack();
@@ -42,8 +43,6 @@ namespace mods {
 				}
 				mem::Null((byte*)&(glb::scene->Boundaries), 8 * count);
 			}
-
-
 		}
 
 		//if (flamethrower) {

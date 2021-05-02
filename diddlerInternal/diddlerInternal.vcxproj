@@ -124,7 +124,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>C:\cppIncludes\detours;C:\cppIncludes\Glew\include\GL;C:\Users\puffl\source\repos\diddlerInternal;C:\Users\puffl\source\repos\diddlerInternal\diddlerInternal\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\source\repos\knedmod\diddlerInternal\glm;C:\cppIncludes\detours;C:\cppIncludes\Glew\include\GL;C:\Users\puffl\source\repos\diddlerInternal;C:\Users\puffl\source\repos\diddlerInternal\diddlerInternal\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -147,7 +147,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>C:\cppIncludes\detours;C:\cppIncludes\Glew\include\GL;C:\Users\puffl\source\repos\diddlerInternal;C:\Users\puffl\source\repos\diddlerInternal\diddlerInternal\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\source\repos\knedmod\diddlerInternal\glm;C:\cppIncludes\detours;C:\cppIncludes\Glew\include\GL;C:\Users\puffl\source\repos\diddlerInternal;C:\Users\puffl\source\repos\diddlerInternal\diddlerInternal\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -171,6 +171,7 @@
     <ClInclude Include="drawCube.h" />
     <ClInclude Include="envOptions.h" />
     <ClInclude Include="Flamethrower.h" />
+    <ClInclude Include="glm\trigonometric.hpp" />
     <ClInclude Include="godmode.h" />
     <ClInclude Include="hookTests.h" />
     <ClInclude Include="Jetpack.h" />
@@ -185,6 +186,7 @@
     <ClInclude Include="noclip.h" />
     <ClInclude Include="objectSpawner.h" />
     <ClInclude Include="Raycaster.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="TDFuncs.h" />
     <ClInclude Include="framework.h" />
@@ -238,6 +240,9 @@
     <ClCompile Include="TDObjects.cpp" />
     <ClCompile Include="toolgun.cpp" />
     <ClCompile Include="types.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="diddlerInternal.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

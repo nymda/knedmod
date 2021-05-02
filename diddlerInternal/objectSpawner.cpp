@@ -9,6 +9,7 @@
 #include <filesystem>
 #include "stb_image.h"
 #include "maths.h"
+#include <glm/gtc/quaternion.hpp>
 
 namespace fs = std::filesystem;
 
@@ -76,7 +77,7 @@ namespace spawner {
             std::cout << "Run oSOA" << std::endl;
             glb::oSOA(lsp.shape, &att.attribute, &att.level);
         }
-
+        
         return lsp;
     }
 
@@ -120,7 +121,7 @@ namespace spawner {
 
                     lastSpawnedObject.body->Position = { spawnPosx,  spawnPosy, spawnPosz };
                     lastSpawnedObject.body->Velocity = lastSpawnedObject.params.startVelocity;
-                    
+
                     float roVeloX = (rand() % 20) - 10;
                     float roVeloY = (rand() % 20) - 10;
                     float roVeloZ = (rand() % 20) - 10;
@@ -319,6 +320,7 @@ namespace spawner {
         raycaster::rayData rd = raycaster::castRayPlayer();
         td::Vec3 target = rd.worldPos;
         td::Vec4 newRot = { -0.5, -0.5, -0.5, 0.5 };
+
 
         *(float*)(BODY + 0x28) = 0;
         *(float*)(BODY + 0x28 + 4) = 0;

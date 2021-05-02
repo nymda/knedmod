@@ -107,7 +107,7 @@ namespace toolgun {
                         camPos = { camPos.x, camPos.y - 0.05f, camPos.z };
                         td::Vec3 camRot = glb::player->cameraEuler();
                         td::Vec3 shootPos = { camRot.x + noiseX, camRot.y + noiseY, camRot.z + noiseZ };
-                        glb::oPewpew(glb::scene, &camPos, &shootPos, minigunBulletType);
+                        glb::oPewpew(glb::scene, &camPos, &shootPos, minigunBulletType, 50000.f);
                     }
                 }
             }

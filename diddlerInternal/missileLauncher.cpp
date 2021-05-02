@@ -13,8 +13,7 @@ namespace missile {
         bool destroyed = false;
     };
 
-	std::vector<spawner::KMSpawnedObject> launchedMissiles = {};
-    missileObject missile;
+	std::vector<missileObject> launchedMissiles = {};
     bool runOnce = false;
     td::Color white{ 1.f, 1.f, 1.f, 1.f };
 
@@ -30,13 +29,13 @@ namespace missile {
         osp.startVelocity = { cameraDirection.x * 100, cameraDirection.y * 100, cameraDirection.z * 100 };
 
         const char* currentPath = "vox\\Default\\missile\\object.vox";
-        missile = { spawner::spawnObjectProxy(currentPath, osp), 0 };
+        launchedMissiles.push_back({ spawner::spawnObjectProxy(currentPath, osp), 0 });
 	}
 
     void runMissile() {
 
         if (glb::game->State == gameState::menu) {
-            missile = {};
+            launchedMissiles.clear();
         }
           
         const char* launcherName = "launcher";
@@ -52,8 +51,12 @@ namespace missile {
             }
         }
 
-        if (missile.obj.body) {        
-            if (!missile.destroyed) {
+        bool hasActiveMissile = false;
+        for (missileObject& missile : launchedMissiles)
+        {
+            if (!missile.destroyed) {  
+                hasActiveMissile = true;
+
                 uintptr_t special = *(uintptr_t*)((uintptr_t)glb::scene + 0x68);
                 missile.age++;
 
@@ -67,8 +70,6 @@ namespace missile {
                     missile.obj.body->Velocity.z += (rotationEul.z * 5);
                 }
 
-                std::cout << std::to_string(totalSpeed) << std::endl;
-
                 RaycastFilter rcf = {};
                 rcf.m_IgnoredBodies.push_back(missile.obj.body);
                 rcf.m_IgnoredShapes.push_back(missile.obj.shape);
@@ -78,19 +79,22 @@ namespace missile {
                 td::Vec3 centerpoint = { objectMax.x - ((objectMax.x - objectMin.x) / 2), objectMax.y - ((objectMax.y - objectMin.y) / 2), objectMax.z - ((objectMax.z - objectMin.z) / 2) };
 
                 raycaster::rayData rayDat = raycaster::castRayManual(centerpoint, rotationEul, &rcf);
-                //glb::oFDL(glb::renderer, centerpoint, rayDat.worldPos, white, white, false);
 
                 td::Vec3 vel = { 0.f, 0.f, 0.f };
                 td::particleInfo tdpi = { 0.f, 0.f, 0.f, 0.7f, 0.7f, 0.7f, 1.f, 0.7f, 0.7f, 0.7f, 1.f, 0.f, 0.f, 0.f, 0.2f, 0.f, 0.f, 0.f, 0.f, 0.15f, 0.25f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 1.f, 1.f, 0.f, 0.f, 0.f, 1.f, 1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f };
                 glb::TDspawnParticle((DWORD*)special, &tdpi, centerpoint, vel, 0.5f);
 
                 if ((rayDat.distance < 2.f && missile.age > 10) || (missile.age > 300)) {
-                    glb::TDcreateExplosion((uintptr_t)glb::scene, &centerpoint, 3.f);
+                    glb::TDcreateExplosion((uintptr_t)glb::scene, &centerpoint, 2.f);
                     missile.obj.shape->Destroy(missile.obj.shape, true);
                     missile.obj.body->Destroy(missile.obj.body, true);
                     missile.destroyed = true;
                 }
             }
+        }
+        if (!hasActiveMissile && launchedMissiles.size() > 0) {
+            std::cout << "Clearing missiles" << std::endl;
+            launchedMissiles.clear();
         }
     }
 }

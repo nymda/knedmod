@@ -1,6 +1,7 @@
 #include "global.h"
 #include "TDObjects.h"
 
+
 namespace glb {
 	TDObjectList* TDOL;
 	TDPlayer* player;
@@ -8,8 +9,8 @@ namespace glb {
 	TDRenderer* renderer;
 	TDScene* scene;
 	tdMain oTDmain;
-	movementLoop oMovLoop;
 	wrappedDoDamage oWrappedDamage;
+	setBodySomething oSetBody;
 
 	outlineShape oOutlineshape;
 	SetObjectAttribute oSOA;
@@ -43,6 +44,8 @@ namespace glb {
 
 	createExplosionWrapped TDcreateExplosionWrapped;
 	spawnParticleWrapped TDspawnParticleWrapped;
+
+	apiQuatEuler oQuatEul;
 
 	uintptr_t moduleBase;
 	twglSwapBuffers owglSwapBuffers;

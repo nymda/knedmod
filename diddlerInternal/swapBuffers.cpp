@@ -111,6 +111,8 @@ bool hwglSwapBuffers(_In_ HDC hDc)
     //    glb::displayMenu = false;
     //}
 
+    //testing math thing1
+
     if (needToLoadObjects) {
         needToLoadObjects = false;
         spawnerObjects = spawner::enumerateSpawnableObjects();

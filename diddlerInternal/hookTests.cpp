@@ -274,16 +274,26 @@ void hkEnvUpdate(uintptr_t environment) {
     return glb::oEnvUpdate(environment);
 }
 
+void hkSetBody(uintptr_t body, __int8 a1, __int8 a2) {
+
+    //std::cout << "BDY: " << body << " A1: " << (int)a1 << " A2: " << (int)a2 << std::endl;
+
+    return glb::oSetBody(body, a1, a2);
+}
+
+
 void initTestHook() {
+    return;
+
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    DetourAttach(&(PVOID&)glb::oEnvUpdate, hkEnvUpdate);
+    DetourAttach(&(PVOID&)glb::oSetBody, hkSetBody);
     DetourTransactionCommit();
 }
 
 void terminateTestHook() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    DetourDetach(&(PVOID&)glb::oEnvUpdate, hkEnvUpdate);
+    DetourDetach(&(PVOID&)glb::oSetBody, hkSetBody);
     DetourTransactionCommit();
 }

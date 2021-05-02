@@ -45,9 +45,9 @@ DWORD WINAPI main(HMODULE hModule)
     glb::hMdl = hModule;
     FILE* cnsl = makeConsole();
     std::cout << " __  __ _______ _______ _____  _______ _______ _____  " << std::endl;
-    std::cout << "|  |/  |    |  |    ___|     \|   |   |       |     \ " << std::endl;
+    std::cout << "|  |/  |    |  |    ___|     \\|   |   |       |     \\ " << std::endl;
     std::cout << "|     <|       |    ___|  --  |       |   -   |  --  |" << std::endl;
-    std::cout << "|__|\__|__|____|_______|_____/|__|_|__|_______|_____/ " << std::endl;
+    std::cout << "|__|\\__|__|____|_______|_____/|__|_|__|_______|_____/ " << std::endl;
     std::cout << "" << std::endl;
     std::cout << "" << std::endl;
 
@@ -80,7 +80,7 @@ DWORD WINAPI main(HMODULE hModule)
 
     initTestHook();
     initGodmodeHook();
-    initMovementHook();
+    //initMovementHook();
 
     while (true) {
         if (((GetAsyncKeyState(VK_END) >> 15) & 0x0001) == 0x0001) {
