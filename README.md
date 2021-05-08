@@ -6,4 +6,4 @@ This is considered far from a complete project and has a lot of known bugs that 
 
 Building requires MS Detours and GLEW.
 
-Tons of thanks to [SK83RJOSH](https://github.com/SK83RJOSH), * [nxhu64](https://github.com/nxhu64) and [Xorberax](https://github.com/ss-gnalvesteffer)
+Tons of thanks to [SK83RJOSH](https://github.com/SK83RJOSH), [nxhu64](https://github.com/nxhu64) and [Xorberax](https://github.com/ss-gnalvesteffer)
