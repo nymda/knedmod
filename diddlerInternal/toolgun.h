@@ -7,7 +7,14 @@ namespace toolgun {
         flamethrower = 3,
         remover = 4,
         setAtttibute = 5,
-        testing = 6,
+        destroyer = 6,
+        debugObject = 7,
+        testing = 8,
+    };
+
+    struct targetDbgInfo {
+        TDShape* tShape;
+        TDBody* tBody;
     };
 
     struct fadeShapeOutline {
@@ -15,8 +22,10 @@ namespace toolgun {
         int alpha = 255;
     };
 
+    extern targetDbgInfo dbgObject;
     extern char setAttributeFirst[128];
     extern char setAttributeSecond[128];
+    extern bool playerIsHoldingToolgun;
 
     extern float spreadVal;
     extern int bulletsPerFrame;
@@ -29,6 +38,7 @@ namespace toolgun {
     extern float power;
     extern float maxRange;
     extern float holeSize;
+    extern bool fireConst;
 
     extern spawner::LoadedSpawnableObject currentSpawngunObject;
     extern tgSettings currentsetting;

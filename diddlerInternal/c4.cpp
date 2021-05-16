@@ -27,14 +27,11 @@ namespace c4 {
         int explosionSize;
     };
 
-    struct thrownFirecracker {
-        int frameCountdown = 120;
-        spawner::KMSpawnedObject object;
-    };
-
+    float firecrackerExplosionSize = 0.f;
     int selectedBombSizeInt = 1;
     std::vector<spawnedC4> explosiveObjects = {};
     bool isDetonating = false;
+
 
     void cleanup() {
         explosiveObjects.clear();
@@ -44,7 +41,6 @@ namespace c4 {
     bool runOnce = true;
     bool runOnceImp = true;
     spawner::KMSpawnedObject impNade;
-    std::vector<thrownFirecracker> thrownCrackers = {};
 
     void runC4() {
         if (frameCount == 0) {
@@ -143,8 +139,9 @@ namespace c4 {
                     const char* currentPath = "vox\\Default\\Cracker\\object.vox";
                     impNade = spawner::spawnObjectProxy(currentPath, osp);
 
-                    thrownFirecracker tfc = { 120, impNade };
-                    thrownCrackers.push_back(tfc);
+                    glb::setObjectAttribute(impNade.shape, "bombstrength", std::to_string(firecrackerExplosionSize).c_str());
+                    glb::setObjectAttribute(impNade.shape, "bomb", "1.5");
+                    //glb::setObjectAttribute(impNade.shape, "smoke", "");
                 }
             }
             else {
@@ -153,35 +150,41 @@ namespace c4 {
             }
         }
 
-        bool hasActiveCracker = false;
-        for (thrownFirecracker& tfc : thrownCrackers)
-        {
-            if (tfc.frameCountdown >= 0) {
-                uintptr_t special = *(uintptr_t*)((uintptr_t)glb::scene + 0x68);
-                td::Vec3 objectMin = tfc.object.shape->posMin;
-                td::Vec3 objectMax = tfc.object.shape->posMax;
-                td::Vec3 centerpoint = { objectMax.x - ((objectMax.x - objectMin.x) / 2), objectMax.y - ((objectMax.y - objectMin.y) / 2), objectMax.z - ((objectMax.z - objectMin.z) / 2) };
-                td::Vec3 vel = { 0.f, 1.f, 0.f };
+        const char* brickname = "brick";
+        if (memcmp(glb::player->heldItemName, brickname, 5) == 0) {
+            if (glb::player->isAttacking == true) {
+                if (runOnceImp) {
+                    runOnceImp = false;
 
-                td::particleInfo tdpi = { 0.f, 0.f, 0.f, 0.7f, 0.7f, 0.7f, 1.f, 0.7f, 0.7f, 0.7f, 1.f, 0.f, 0.f, 0.f, 0.2f, 0.f, 0.f, 0.f, 0.f, 0.15f, 0.25f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 1.f, 1.f, 0.f, 0.f, 0.f, 1.f, 1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f };
-                glb::TDspawnParticle((DWORD*)special, &tdpi, centerpoint, vel, 0.5f);
+                    td::Vec3 cameraDirection = glb::player->cameraEuler();
+                    spawner::objectSpawnerParams osp;
+                    osp.spawnType = spawner::objectSpawnType::thrown;
+                    osp.startVelocity = { cameraDirection.x * 50, cameraDirection.y * 50, cameraDirection.z * 50 };
+                    osp.rotateFacePlayer = true;
+                    osp.unbreakable = false;
+                    osp.nocull = true;
+                    osp.pushSpawnList = false;
 
-                hasActiveCracker = true;
-                tfc.frameCountdown--;
+                    const char* currentPath = "vox\\Default\\brick\\object.vox";
+                    spawner::KMSpawnedObject brick = spawner::spawnObjectProxy(currentPath, osp);
+
+                    glb::setObjectAttribute(brick.shape, "explosive", "1");
+                    glb::setObjectAttribute(brick.shape, "impactexplode", "");
+
+                    *(byte*)(brick.shape + 8) = 1;
+                    *(byte*)(brick.shape + 229) = 1;
+
+                    brick.body->density = 50.f;
+                    brick.shape->Density = 50.f;
+                    brick.shape->Hardness = 50.f;
+                }
             }
-            if(tfc.frameCountdown == 0){
-                td::Vec3 objectMin = tfc.object.shape->posMin;
-                td::Vec3 objectMax = tfc.object.shape->posMax;
-                td::Vec3 centerpoint = { objectMax.x - ((objectMax.x - objectMin.x) / 2), objectMax.y - ((objectMax.y - objectMin.y) / 2), objectMax.z - ((objectMax.z - objectMin.z) / 2) };
-                glb::TDcreateExplosion((uintptr_t)glb::scene, &centerpoint, 0.f);
-                tfc.object.shape->attributes = 0x00;
-                tfc.object.shape->Destroy(tfc.object.shape, true);
-                tfc.object.body->Destroy(tfc.object.body, true);
+            else {
+                frameCount = 0;
+                runOnceImp = true;
             }
         }
-        if (!hasActiveCracker) {
-            thrownCrackers.clear();
-        }
+
 
         if (isDetonating) {
             if (!mods::c4_global_detonation) {

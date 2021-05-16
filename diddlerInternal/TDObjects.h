@@ -118,25 +118,6 @@ public:
 	int32_t VoxelCount; //0x005C
 }; //Size: 0x0060
 
-class TDShape : public Entity
-{
-public:
-	char pad_0019[8]; //0x0028
-	byte attributes;
-	char pad_008[19];
-	td::Vec3 posMin; //0x0044
-	td::Vec3 posMax; //0x0050
-	char pad_005C[4]; //0x005C
-	void* pDormantSomething; //0x0060
-	void* pActiveSomething; //0x0068
-	char pad_0070[32]; //0x0070
-	TDVox* pVox; //0x0090
-	char pad_0098[8]; //0x0098
-	void* pJoints; //0x00A0 
-	float Intergrity; //0x00A8
-	bool isBroken; //0x00AC
-	char pad_00AD[3]; //0x00AD
-}; //Size: 0xB0
 
 class TDBody : public Entity
 {
@@ -149,7 +130,8 @@ public:
 	td::Vec4 Rotation3; //0x006C
 	td::Vec3 Velocity; //0x007C
 	td::Vec3 RotationVelocity; //0x0088
-	char pad_0094[12]; //0x0094
+	char pad_0094[8]; //0x0094
+	float density;
 	float Lightness; //0x00A0
 	char pad_00A4[24]; //0x00A4
 	float Integrity; //0x00BC
@@ -161,6 +143,36 @@ public:
 	bool Colliding; //0x00E5
 	char pad_00E6[2]; //0x00E6
 }; //Size: 0xE8
+
+
+class TDShape : public Entity
+{
+public:
+	char pad_0019[8]; //0x0028
+	byte attributes;
+	char pad_008[19];
+	td::Vec3 posMin; //0x0044
+	td::Vec3 posMax; //0x0050
+	char pad_005C[4]; //0x005C
+	void* pDormantSomething; //0x0060
+	void* pActiveSomething; //0x0068
+	char pad_0070[4]; //0x0070
+	float Density; //0x0074
+	float Hardness; //0x0078
+	int32_t Texture; //0x007C
+	char pad_0080[12]; //0x0080
+	float TextureIntensity; //0x008C
+	TDVox* pVox; //0x0090
+	char pad_0098[8]; //0x0098
+	void* pJoints; //0x00A0 
+	float Intergrity; //0x00A8
+	bool isBroken; //0x00AC
+	char pad_00AD[3]; //0x00AD
+
+	TDBody* getParentBody() {
+		return (TDBody*)(*(uintptr_t*)((uintptr_t)this + 16));
+	}
+}; //Size: 0xB0
 
 class TDJoint : public Entity {
 public:

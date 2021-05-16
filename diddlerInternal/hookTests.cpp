@@ -274,26 +274,52 @@ void hkEnvUpdate(uintptr_t environment) {
     return glb::oEnvUpdate(environment);
 }
 
-void hkSetBody(uintptr_t body, __int8 a1, __int8 a2) {
+uintptr_t hkSpawnVox(td::small_string* path, td::small_string* subpath, float scale) {
+    std::cout << "Path: " << path->c_str() << std::endl;
+    std::cout << "SPath: " << subpath->c_str() << std::endl;
+    std::cout << "==========" << std::endl;
 
-    //std::cout << "BDY: " << body << " A1: " << (int)a1 << " A2: " << (int)a2 << std::endl;
-
-    return glb::oSetBody(body, a1, a2);
+    return glb::oSpawnVox(path, subpath, scale);
 }
 
+void hkSetAttribute(TDShape* object, td::small_string* a1, td::small_string* a2) {
+
+    std::cout << "SOA | Object: " << object << " | A1: " << a1->c_str() << " | A2: " << a2->c_str() << std::endl;
+
+    glb::oSOA(object, a1, a2);
+
+    return;
+}
+
+void hkAttachJoint(void* a1, void* a2, void* a3, void* a4, void* a5) {
+
+    std::cout << "a1: " << (uintptr_t)a1 << std::endl;
+    std::cout << "a2: " << (uintptr_t)a2 << " (" << std::to_string(((td::Vec3*)a2)->x) << " : " << std::to_string(((td::Vec3*)a2)->y) << " : " << std::to_string(((td::Vec3*)a2)->z) << std::endl;
+    std::cout << "a3: " << (uintptr_t)a3 << std::endl;
+    std::cout << "a4: " << (uintptr_t)a4 << std::endl;
+    std::cout << "a5: " << (uintptr_t)a5 << std::endl;
+    std::cout << "=====" << std::endl;
+
+    glb::oAttachJoint(a1, a2, a3, a4, a5);
+}
+
+void hkContextItem(char* a1, int a2, int a3, float* a4) {
+
+    std::cout << std::string(a1) << std::endl;
+
+    return glb::oAddCItem(a1, a2, a3, a4);
+}
 
 void initTestHook() {
-    return;
-
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    DetourAttach(&(PVOID&)glb::oSetBody, hkSetBody);
+    DetourAttach(&(PVOID&)glb::oAttachJoint, hkAttachJoint);
     DetourTransactionCommit();
 }
 
 void terminateTestHook() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    DetourDetach(&(PVOID&)glb::oSetBody, hkSetBody);
+    DetourDetach(&(PVOID&)glb::oAttachJoint, hkAttachJoint);
     DetourTransactionCommit();
 }

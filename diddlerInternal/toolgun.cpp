@@ -10,7 +10,8 @@ namespace toolgun {
     const char* tgName = "toolgun";
     td::Color white{ 1.f, 1.f, 1.f, 1.f };
     tgSettings currentsetting = tgSettings::spawner;
-    
+    bool playerIsHoldingToolgun = false;
+
     //spawner specific vars
     bool createOrigionalSpawnObject = true;
     spawner::LoadedSpawnableObject currentSpawngunObject;
@@ -37,11 +38,23 @@ namespace toolgun {
     std::vector<fadeShapeOutline> clickedObjects = {};
     
     //testing specific items
+    bool testingFireOnce = false;
+    TDShape* targetShape = 0;
+    TDBody* targetBody = 0;
+    int stage = 0;
+
+    //debug specific items
+    targetDbgInfo dbgObject = { 0, 0 };
+
     int particalID = 0;
+    bool fireConst = false;
+    bool fireOnceActive = true;
 
     //cutter specific items
-    float maxRange = 10.f;
-    float holeSize = 0.25f;
+    float maxRange = 100.f;
+    float holeSize = 5.f;
+
+
 
     void handleToolgun() {
 
@@ -51,10 +64,11 @@ namespace toolgun {
         }
 
         bool clearClickedObjects = true;
+
         if (clickedObjects.size() > 0) {
             for (fadeShapeOutline& fso : clickedObjects) {
-                td::Color tmp = { 1.f, 1.f, 1.f, (float)(fso.alpha / 255.f) };
-                glb::oOutlineshape(glb::renderer, fso.shape, &tmp);
+                td::Color red{ 1.f, 0.f, 0.f, 1.f };
+                glb::oOutlineShape(glb::renderer, fso.shape, &red, (float)(fso.alpha / 255.f));
                 if (fso.alpha > 0) {
                     fso.alpha -= 4;
                     clearClickedObjects = false;
@@ -66,10 +80,11 @@ namespace toolgun {
                 clearClickedObjects = false;
             }
         }
-       
 
 
         if (memcmp(glb::player->heldItemName, tgName, 8) == 0) {
+            playerIsHoldingToolgun = true;
+
             if (currentsetting == tgSettings::spawner) { //handle spawning objects with the toolgun
                 raycaster::rayData rd = raycaster::castRayPlayer();
                 td::Vec3 target = rd.worldPos;
@@ -77,11 +92,13 @@ namespace toolgun {
 
                 spawner::objectSpawnerParams osp{};
                 osp.attributes = currentSpawngunObject.attributes;
+                osp.animate = true;
+                osp.parentBody = targetBody;
 
                 if (glb::player->isAttacking) {
                     if (spawnOnce) {
                         spawnOnce = false;
-                        spawnObjectProxy(currentSpawngunObject.voxPath, osp);
+                        spawner::KMSpawnedObject last = spawnObjectProxy(currentSpawngunObject.voxPath, osp);
                     }
                 }
                 else {
@@ -174,26 +191,37 @@ namespace toolgun {
                 }
             }
         
-            if (currentsetting == tgSettings::testing) {
+            if (currentsetting == tgSettings::destroyer) {
+
+                if (fireConst) {
+                    fireOnceActive = true;
+                }
+
                 td::Color green{ 0.f, 1.f, 0.f, 1.f };
                 td::Color red{ 1.f, 0.f, 0.f, 1.f };
                 raycaster::rayData rayDat = raycaster::castRayPlayer();
                 if (rayDat.distance <= maxRange) {
                     drawCube({ rayDat.worldPos.x, rayDat.worldPos.y, rayDat.worldPos.z }, 0.05, green);
                     if (glb::player->isAttacking == true) {
-                        glb::oWrappedDamage(glb::scene, &rayDat.worldPos, holeSize, holeSize, 0, 0);
+                        if (fireOnceActive) {
+                            fireOnceActive = false;
+                            glb::oWrappedDamage(glb::scene, &rayDat.worldPos, holeSize, holeSize, 0, 0);
+                        }
+                    }
+                    else {
+                        fireOnceActive = true;
                     }
                 }
                 else {
                     drawCube({ rayDat.worldPos.x, rayDat.worldPos.y, rayDat.worldPos.z }, 0.05, red);
-                }  
+                }
             }
 
             if (currentsetting == tgSettings::remover) {
                 raycaster::rayData rd = raycaster::castRayPlayer();
                 if (rd.hitShape != (TDShape*)0xCCCCCCCCCCCCCCCC) {
-                    td::Color red = { 1, 0, 0, 1 };
-                    glb::oOutlineshape(glb::renderer, rd.hitShape, &red);
+                    td::Color red = { 1, 1, 1, 1 };
+                    glb::oHighlightShape(glb::renderer, rd.hitShape, 1.f);
                     if (glb::player->isAttacking) {
                         if (spawnOnce) {
                             spawnOnce = false;
@@ -224,6 +252,69 @@ namespace toolgun {
                     spawnOnce = true;
                 }
             }
+
+            if (currentsetting == tgSettings::debugObject) {
+                td::Color green{ 0.f, 1.f, 0.f, 1.f };
+                td::Color blue{ 0.f, 0.f, 1.f, 1.f };
+
+                raycaster::rayData rayDat = raycaster::castRayPlayer();
+                if (rayDat.hitShape != (TDShape*)0xCCCCCCCCCCCCCCCC) {
+                    glb::oOutlineShape(glb::renderer, rayDat.hitShape, &green, 1.f);
+                    dbgObject.tShape = rayDat.hitShape;
+                    dbgObject.tBody = rayDat.hitShape->getParentBody();
+                }
+            }
+
+
+            if (currentsetting == tgSettings::testing) {
+                if (glb::player->isAttacking == true) {
+                    td::Color green{ 0.f, 1.f, 0.f, 1.f };
+
+                    if (testingFireOnce == true) {
+                        testingFireOnce = false;
+
+                        raycaster::rayData rayDat = raycaster::castRayPlayer();
+                        if (rayDat.hitShape != (TDShape*)0xCCCCCCCCCCCCCCCC) {
+
+                            glb::oOutlineShape(glb::renderer, rayDat.hitShape, &green, 1.f);
+                            TDBody* TmpTargetBody = rayDat.hitShape->getParentBody();
+                            glb::oUpdateShapes((uintptr_t)(TmpTargetBody));
+
+                            /*if (stage == 0) {
+                                glb::oOutlineShape(glb::renderer, rayDat.hitShape, &green, 1.f);
+                                targetShape = rayDat.hitShape;
+
+                                std::cout << "SET TARGET SHAPE: " << targetShape << std::endl;
+
+                                stage = 1;
+                            }
+                            else if (stage == 1) {
+                                glb::oOutlineShape(glb::renderer, rayDat.hitShape, &green, 1.f);
+                                targetBody = rayDat.hitShape->getParentBody();
+
+                                std::cout << "SET TARGET BODY: " << targetBody << std::endl;
+
+                                glb::oSetShapeParentBody(targetShape, *(byte*)((uintptr_t)(targetShape + 8)), targetBody);
+                                glb::oSetDynamic((uintptr_t)targetBody, true);
+                                glb::oUpdateShapes((uintptr_t)targetBody);
+
+                                targetShape = 0;
+                                targetBody = 0;
+                                stage = 0;
+                            }*/
+
+
+                        }
+
+                    }
+                }
+                else {
+                    testingFireOnce = true;
+                }
+            }
+        }
+        else {
+            playerIsHoldingToolgun = false;
         }
     }
 }

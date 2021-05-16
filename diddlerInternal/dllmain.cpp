@@ -26,7 +26,7 @@
 
 FILE* makeConsole() {
     AllocConsole();
-    std::wstring strW = L"Gek";
+    std::wstring strW = L"DEBUG";
     SetConsoleTitle(strW.c_str());
     HWND console = GetConsoleWindow();
     DeleteMenu(GetSystemMenu(console, false), SC_CLOSE, MF_BYCOMMAND);
@@ -48,6 +48,8 @@ DWORD WINAPI main(HMODULE hModule)
     std::cout << "|  |/  |    |  |    ___|     \\|   |   |       |     \\ " << std::endl;
     std::cout << "|     <|       |    ___|  --  |       |   -   |  --  |" << std::endl;
     std::cout << "|__|\\__|__|____|_______|_____/|__|_|__|_______|_____/ " << std::endl;
+    std::cout << "For teardown MAIN BRANCH version 0.7.2" << std::endl;
+    std::cout << "KnedMod is C to Knedit and is released under the GNU public license" << std::endl;
     std::cout << "" << std::endl;
     std::cout << "" << std::endl;
 
@@ -55,9 +57,9 @@ DWORD WINAPI main(HMODULE hModule)
     HANDLE mainHandleDebug = GetModuleHandle(L"teardownsteamless.exe");
     HANDLE mainHandleSteam = GetModuleHandle(L"teardown.exe");
 
-    std::cout << "GWND: " << glb::gWnd << std::endl;
-    std::cout << "mainHandleDebug: " << mainHandleDebug << std::endl;
-    std::cout << "mainHandleSteam: " << mainHandleSteam << std::endl;
+    std::cout << "[I] GWND           : " << glb::gWnd << std::endl;
+    std::cout << "[I] mainHandleDebug: " << mainHandleDebug << std::endl;
+    std::cout << "[I] mainHandleSteam: " << mainHandleSteam << std::endl;
 
     if (mainHandleSteam != 0) {
         glb::moduleBase = (uintptr_t)mainHandleSteam;
@@ -68,15 +70,15 @@ DWORD WINAPI main(HMODULE hModule)
 
     initSwapBuffersHook();
 
-    std::cout << "Hooked swapBuffers" << std::endl;
+    std::cout << "[I] Hooked swapBuffers" << std::endl;
 
     initHIDsHook();
 
-    std::cout << "Hooked WNDPROC" << std::endl;
+    std::cout << "[I] Hooked WNDPROC" << std::endl;
 
     sigscanItems();
 
-    std::cout << "Completed sigscanning" << std::endl;
+    std::cout << "[I] Completed sigscanning" << std::endl;
 
     initTestHook();
     initGodmodeHook();

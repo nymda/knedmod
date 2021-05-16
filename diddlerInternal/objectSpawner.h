@@ -22,6 +22,7 @@ namespace spawner {
 	};
 
 	struct objectSpawnerParams {
+		TDBody* parentBody = 0;
 		objectSpawnType spawnType = objectSpawnType::placed;
 		std::vector<objectAttribute> attributes;
 		td::Vec3 startVelocity = { 0, 0, 0 };
@@ -31,6 +32,7 @@ namespace spawner {
 		bool unbreakable = false;
 		bool nocull = false;
 		bool pushSpawnList = true;
+		bool animate = false;
 	};
 
 	struct KMSpawnedObject {

@@ -33,9 +33,13 @@ struct RaycastFilter
 typedef void(__fastcall* environmentUpdate)(uintptr_t env);
 typedef void(__fastcall* rayCast)(TDScene* scene, td::Vec3* pos, td::Vec3* rot, float dist, RaycastFilter* filter, float* outDist, td::Vec3* out, uintptr_t* out_shape, uintptr_t* out_palette);
 typedef void(__fastcall* frameDrawLine)(TDRenderer* renderer, const td::Vec3& p1, const td::Vec3& p2, const td::Color& c1, const td::Color& c2, bool use_depth);
-typedef void(__fastcall* outlineShape)(TDRenderer* renderer, TDShape* shape, td::Color* color);
+typedef void(__fastcall* highlightShape)(TDRenderer* renderer, TDShape* shape, float opacity);
+typedef void(__fastcall* outlineShape)(TDRenderer* renderer, TDShape* shape, td::Color* colour, float opacity);
+typedef void(__fastcall* outlineBody)(TDRenderer* renderer, TDBody* body, float opacity);
 typedef void(__fastcall* wrappedDoDamage)(TDScene* scene, td::Vec3* position, float damageA, float damageB, int unkn1, int* unkn2);
 typedef void(__fastcall* setBodySomething)(uintptr_t body, __int8 a1, __int8 a2);
+typedef void(__fastcall* handleBombObjs)(uintptr_t a1);
+typedef void(__fastcall* setShapeParentBody)(TDShape* shape, byte unkn, TDBody* body);
 
 //creation
 typedef uintptr_t(__fastcall* tSpawnVox) (td::small_string* path, td::small_string* subpath, float scale);
@@ -52,6 +56,10 @@ typedef void(__fastcall* B_Constructor) (uintptr_t ptr, uintptr_t parent);
 typedef uintptr_t(__fastcall* S_Constructor) (uintptr_t ptr, uintptr_t parent);
 typedef void(__fastcall* SetDynamic) (uintptr_t ptr, bool dynamic);
 typedef void(__fastcall* SetObjectAttribute) (TDShape* shape, td::small_string* attribute, td::small_string* attribute2);
+typedef void(__fastcall* SetObjectAttributeSingle) (TDShape* shape, td::small_string* attribute);
+typedef void(__fastcall* ConstructJoint) (uintptr_t joint);
+typedef void(__fastcall* AttachJoint) (void* a1, void* a2, void* a3, void* a4, void* a5);
+typedef int(__fastcall* ReadSubobjectsFromVox) (td::small_string* path, int* out);
 
 //joints
 typedef void(__fastcall* joinConstructor)(TDJoint* joint, Entity* parent);
@@ -78,12 +86,15 @@ typedef void(__fastcall* damagePlayer) (TDPlayer* player, float damage);
 typedef uintptr_t(__fastcall* TMalloc)(size_t);
 typedef void(__fastcall* TFree)(uintptr_t mem);
 typedef void(__fastcall* spreadFire)(__int64 a1, float v2);
+typedef void(__fastcall* addContextItem)(char* a1, int a2, int a3, float* a4);
 
 //td maths
 typedef __int64(__fastcall* apiQuatEuler)(float* a1, float* a2);
 
 //SEE TDFUNCS.CPP FOR SIGSCANNING
 namespace glb {
+    void setObjectAttribute(TDShape* shape, const char* a1, const char* a2);
+
     extern TDObjectList* TDOL;
     extern TDPlayer* player;
     extern TDGame* game;
@@ -92,9 +103,16 @@ namespace glb {
     extern tdMain oTDmain;
     extern wrappedDoDamage oWrappedDamage;
     extern setBodySomething oSetBody;
+    extern ConstructJoint oConstructJoint;
+    extern AttachJoint oAttachJoint;
+    extern handleBombObjs oHandleBombObjs;
+    extern setShapeParentBody oSetShapeParentBody;
 
-    extern outlineShape oOutlineshape;
+    extern highlightShape oHighlightShape;
+    extern outlineShape oOutlineShape;
+    extern outlineBody oOutlineBody;
     extern SetObjectAttribute oSOA;
+    extern SetObjectAttributeSingle oSOAS;
     extern spreadFire oSpreadFire;
     extern environmentUpdate oEnvUpdate;
     extern createLight oCreateLight;
@@ -124,6 +142,7 @@ namespace glb {
     extern spawnParticle TDspawnParticle;
     extern createExplosionWrapped TDcreateExplosionWrapped;
     extern spawnParticleWrapped TDspawnParticleWrapped;
+    extern ReadSubobjectsFromVox TDreadSubobjects;
 
     extern uintptr_t moduleBase;
     extern twglSwapBuffers owglSwapBuffers;
@@ -133,6 +152,7 @@ namespace glb {
     extern HMODULE hMdl;
 
     extern apiQuatEuler oQuatEul;
+    extern addContextItem oAddCItem;
 
     extern uintptr_t plankPatchFunction;
 }

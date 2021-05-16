@@ -10,6 +10,7 @@
 #include "stb_image.h"
 #include "maths.h"
 #include <glm/gtc/quaternion.hpp>
+#include "toolgun.h"
 
 namespace fs = std::filesystem;
 
@@ -60,6 +61,7 @@ bool LoadTextureFromFile(const char* filename, GLuint* out_texture, int* out_wid
 //DONT FUCKING TOUCH IT
 namespace spawner {
 
+    std::vector<toolgun::fadeShapeOutline> spawnedObjects = {};
     std::vector<KMSpawnedObject> spawnList = {};
     KMSpawnedObject lastSpawnedObject{};
     td::Color white{ 1.f, 1.f, 1.f, 1.f };
@@ -74,10 +76,17 @@ namespace spawner {
         }
 
         for (objectAttribute att : params.attributes) {
-            std::cout << "Run oSOA" << std::endl;
+            //std::cout << "Run oSOA" << std::endl;
             glb::oSOA(lsp.shape, &att.attribute, &att.level);
         }
         
+        if (params.animate) {
+            toolgun::fadeShapeOutline tmp;
+            tmp.shape = lsp.shape;
+            tmp.alpha = 255;
+            spawnedObjects.push_back(tmp);
+        }
+
         return lsp;
     }
 
@@ -88,16 +97,33 @@ namespace spawner {
 
     void processMostRecentObject() {
 
+        bool clearSpawnedObjects = true;
+        if (spawnedObjects.size() > 0) {
+            for (toolgun::fadeShapeOutline& fso : spawnedObjects) {
+                glb::oHighlightShape(glb::renderer, fso.shape, (float)(fso.alpha / 255.f));
+                if (fso.alpha > 0) {
+                    fso.alpha -= 4;
+                    clearSpawnedObjects = false;
+                }
+            }
+
+            if (clearSpawnedObjects) {
+                spawnedObjects.clear();
+                clearSpawnedObjects = false;
+            }
+        }
+
         if (glb::game) {
             if (glb::game->State == gameState::menu) {
                 if (spawnList.size() > 0) {
-                    std::cout << "Cleaning spawned objects" << std::endl;
+                    std::cout << "[I] Cleaning spawned objects" << std::endl;
                     cleanup();
                 }
             }
         }
 
         if (lastSpawnedObject.body != 0 && lastSpawnedObject.shape != 0 && lastSpawnedObject.isInitByGame == false) {
+
             if (lastSpawnedObject.shape->posMin.x == 0 && lastSpawnedObject.shape->posMax.x == 0) {
                 return;
             }
@@ -134,6 +160,11 @@ namespace spawner {
                     lastSpawnedObject.body->Rotation = lastSpawnedObject.params.customRotation;
                     lastSpawnedObject.body->Velocity = lastSpawnedObject.params.startVelocity;
                     lastSpawnedObject.body->Position = { spawnPosx,  spawnPosy, spawnPosz };
+
+
+
+                    //uintptr_t tmpJoint = glb::oTMalloc(208);
+                    //glb::oConstructJoint(tmpJoint);
                 }
                 else {
                     lastSpawnedObject.body->Position = { (target.x - (objectSize.x / 2)), target.y, (target.z - (objectSize.z / 2)) };
@@ -177,11 +208,11 @@ namespace spawner {
         std::vector<spawnerCatagory> returnObj = {};
         for (const auto& file : fs::directory_iterator("vox"))
         {
+            int voxCount = 0;
+
             // /\ iterate over each folder within [VOX]
             std::string path = file.path().string();
             std::string catig = path.substr(4, path.size() - 4);
-            std::cout << catig << std::endl;
-
             spawnerCatagory current;
             current.name = catig;
 
@@ -223,12 +254,14 @@ namespace spawner {
 
                         int imgSize = 255;
                         LoadTextureFromFile(lso.imagePath.c_str(), &lso.imageTexture, &imgSize, &imgSize);
-
+                        voxCount++;
                         current.objects.push_back(lso);
                     }
 
                 }
             }
+
+            std::cout << "[I] Loaded " << std::to_string(voxCount) << " vox files from: " << catig << std::endl;
 
             returnObj.push_back(current);
         }
@@ -258,69 +291,92 @@ namespace spawner {
     //}
 
     void deleteLastObject() {
-        if (spawnList.size() > 0) {
-            spawnList.back().shape->Destroy(spawnList.back().shape, true);
-            spawnList.back().body->Destroy(spawnList.back().body, true);
-            spawnList.pop_back();
+        if (glb::game->State == gameState::ingame) {
+            if (spawnList.size() > 0) {
+                spawnList.back().shape->Destroy(spawnList.back().shape, true);
+                spawnList.back().body->Destroy(spawnList.back().body, true);
+                spawnList.pop_back();
+            }
         }
     }
 
     KMSpawnedObject spawnEntity(std::string filepath, objectSpawnerParams osp) {
         if (!exists(filepath)) {
-            std::cout << "no file" << std::endl;
+            std::cout << "[E] no file" << std::endl;
             return { defaultParams, false, 0, 0 };
         }
 
         std::cout << "======================================" << std::endl;
 
-        td::small_string file_path((char*)(filepath).c_str());
-        td::small_string sub_path("");
+        uintptr_t BODY = 0;
 
-        uintptr_t BODY = glb::oTMalloc(0x232u);
-        glb::oB_Constructor((uintptr_t)BODY, (uintptr_t)nullptr);
+        if (osp.parentBody) {
+            BODY = (uintptr_t)osp.parentBody;
+        }
+        else {
+            BODY = glb::oTMalloc(0x232u);
+            glb::oB_Constructor((uintptr_t)BODY, (uintptr_t)nullptr);
+        }
+
         glb::oSetDynamic((uintptr_t)BODY, true);
         std::cout << "Body address:  0x" << std::hex << BODY << std::endl;
 
-        uintptr_t SHAPE = glb::oTMalloc(0x176u);
-        glb::oS_Constructor((uintptr_t)SHAPE, (uintptr_t)BODY);
-        std::cout << "Shape address: 0x" << std::hex << SHAPE << std::endl;
+        td::small_string file_path((char*)(filepath).c_str());
 
-        //std::cout << "make spawnVox work, o magic man" << std::endl;
+        uintptr_t names2 = glb::oTMalloc(1024);
+        td::small_vector<td::small_string> nameOut = {};
+        glb::TDreadSubobjects(&file_path, (int*)&nameOut);
 
-        uintptr_t vox = glb::oSpawnVox(&file_path, &sub_path, 1.f);
-        std::cout << "Vox address:   0x" << std::hex << vox << std::endl;
+        uintptr_t SHAPE = 0;
+        uintptr_t vox = 0;
 
-        if (vox == 0x00) {
-            std::cout << "Created vox was null" << std::endl;
-            return { defaultParams, false, 0, 0 };
+        if (nameOut.size() == 0) {
+            nameOut.push_back(td::small_string(""));
         }
 
-        glb::oCreateTexture(vox);
-        glb::oCreatePhysics(vox);
+        for (td::small_string sub_path : nameOut) {
+            SHAPE = glb::oTMalloc(0x176u);
+            glb::oS_Constructor((uintptr_t)SHAPE, (uintptr_t)BODY);
 
-        *(uintptr_t*)(SHAPE + 0x90) = vox;
+            vox = glb::oSpawnVox(&file_path, &sub_path, 1.f);
 
-        if (osp.nocull) {
-            *(byte*)(SHAPE + 9) |= 16;
-        }
-        if (osp.unbreakable) {
-            *(byte*)(SHAPE + 9) |= 4;
+            if (strcmp(sub_path.c_str(), "") == 0) {
+                std::cout << "Subobject: [none] | Shape: " << std::hex << SHAPE << " | Vox: " << std::hex << vox << std::endl;
+            }
+            else {
+                std::cout << "Subobject: " << sub_path.c_str() << " | Shape: " << std::hex << SHAPE << " | Vox: " << std::hex << vox << std::endl;
+            }
+
+            if (vox == 0x00) {
+                std::cout << "[E] Created vox was null" << std::endl;
+                return { defaultParams, false, 0, 0 };
+            }
+
+            glb::oCreateTexture(vox);
+            glb::oCreatePhysics(vox);
+
+            *(uintptr_t*)(SHAPE + 0x90) = vox;
+
+            if (osp.nocull) {
+                *(byte*)(SHAPE + 9) |= 16;
+            }
+            if (osp.unbreakable) {
+                *(byte*)(SHAPE + 9) |= 4;
+            }
         }
 
         glb::oUpdateShapes((uintptr_t)BODY);
-
-        float voxX = *(float*)(vox + 0x0044 + 4);
-        float voxY = *(float*)(vox + 0x0044 + 8);
-        float voxZ = *(float*)(vox + 0x0044 + 12);
-
-        float bodyX = ((voxX / 10.f) / 2.f);
-        float bodyY = ((voxY / 10.f) / 2.f);
-        float bodyZ = ((voxZ / 10.f) / 2.f);
 
         raycaster::rayData rd = raycaster::castRayPlayer();
         td::Vec3 target = rd.worldPos;
         td::Vec4 newRot = { -0.5, -0.5, -0.5, 0.5 };
 
+        td::Vec3 aVec = rd.angle;
+        float angle = atan2(aVec.x, aVec.z);
+        float qx = aVec.x * sin(angle / 2);
+        float qy = aVec.y * sin(angle / 2);
+        float qz = aVec.z * sin(angle / 2);
+        float qw = cos(angle / 2);
 
         *(float*)(BODY + 0x28) = 0;
         *(float*)(BODY + 0x28 + 4) = 0;
