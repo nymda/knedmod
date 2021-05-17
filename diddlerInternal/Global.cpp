@@ -22,6 +22,7 @@ namespace glb {
 	AttachJoint oAttachJoint;
 	handleBombObjs oHandleBombObjs;
 	setShapeParentBody oSetShapeParentBody;
+	unknReadVoxData oIUnReadVox;
 
 	highlightShape oHighlightShape;
 	outlineShape oOutlineShape;

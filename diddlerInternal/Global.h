@@ -60,7 +60,7 @@ typedef void(__fastcall* SetObjectAttributeSingle) (TDShape* shape, td::small_st
 typedef void(__fastcall* ConstructJoint) (uintptr_t joint);
 typedef void(__fastcall* AttachJoint) (void* a1, void* a2, void* a3, void* a4, void* a5);
 typedef int(__fastcall* ReadSubobjectsFromVox) (td::small_string* path, int* out);
-
+typedef void*(__fastcall* unknReadVoxData) (void* a1, void* a2);
 //joints
 typedef void(__fastcall* joinConstructor)(TDJoint* joint, Entity* parent);
 typedef void(__fastcall* initBall)(TDJoint* joint, td::Vec3* transform, float size, float strengh, float springiness, bool collide);
@@ -107,6 +107,7 @@ namespace glb {
     extern AttachJoint oAttachJoint;
     extern handleBombObjs oHandleBombObjs;
     extern setShapeParentBody oSetShapeParentBody;
+    extern unknReadVoxData oIUnReadVox;
 
     extern highlightShape oHighlightShape;
     extern outlineShape oOutlineShape;
@@ -137,7 +138,7 @@ namespace glb {
     extern rayCast oRC;
     extern spawnFire oSpawnFire;
     extern createProjectile oPewpew;
-
+    
     extern createExplosion TDcreateExplosion;
     extern spawnParticle TDspawnParticle;
     extern createExplosionWrapped TDcreateExplosionWrapped;

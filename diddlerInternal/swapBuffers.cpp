@@ -26,6 +26,7 @@ bool displayInfoLabel = true;
 bool showBounds = false;
 bool showBodes = false;
 bool showShapes = false;
+static int selectedToolgunTool = 0;
 
 LRESULT APIENTRY hWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -212,6 +213,8 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 						}
 
 						if (ImGui::Button("Spawn w/ spawngun")) {
+							toolgun::currentsetting = toolgun::tgSettings::spawner;
+							selectedToolgunTool = 0;
 							toolgun::currentSpawngunObject = lso;
 						}
 
@@ -236,10 +239,9 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 		if (ImGui::CollapsingHeader("toolgun")) {
 			const char* items[] = { "Spawner", "Minigun", "Explosions", "Flamethrower", "Remover", "Set attribute", "Destroyer", "DebugObject", "Testing" };
 			const char* bulletTypes[] = { "Bullet", "Shotgun", "Missile", "???" };
-			static int item_current = 0;
 			static int bullet_current = 0;
-			ImGui::Combo("Current tool", &item_current, items, IM_ARRAYSIZE(items));
-			toolgun::currentsetting = (toolgun::tgSettings)item_current;
+			ImGui::Combo("Current tool", &selectedToolgunTool, items, IM_ARRAYSIZE(items));
+			toolgun::currentsetting = (toolgun::tgSettings)selectedToolgunTool;
 
 			if (toolgun::currentsetting == toolgun::tgSettings::minigun) {
 				ImGui::Combo("Bullet type", &bullet_current, bulletTypes, IM_ARRAYSIZE(bulletTypes));

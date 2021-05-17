@@ -43,6 +43,7 @@ void sigscanItems() {
     glb::oSetShapeParentBody = (setShapeParentBody)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x48\x8D\x05\x93\x51\x24\x00\x88\x51\x08", "xxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::oAddCItem = (addContextItem)mem::FindPattern((PBYTE)"\x44\x89\x44\x24\x18\x88\x54\x24\x10\x55\x56\x57\x41\x56\x48\x8D\x6C\x24\xF8\x48\x81\xEC\x08\x01\x00\x00\x4C\x8B\x15\x5F\xE5\x3B", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::TDreadSubobjects = (ReadSubobjectsFromVox)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x57\x41\x56\x48\x8D\x68\xA1\x48\x81\xEC\xB0\x00\x00\x00\x48\xC7\x45\x3F\xFE\xFF\xFF\xFF\x48\x89\x58\x10\x48\x89", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    glb::oIUnReadVox = (unknReadVoxData)mem::FindPattern((PBYTE)"\x48\x89\x4C\x24\x08\x55\x53\x56\x57\x41\x54\x41\x55\x41\x56\x41\x57\x48\x8D\xAC\x24\x88\xD9\xFF\xFF\xB8\x78\x27\x00\x00\xE8\x6D", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     //sadly cant sigscan for this, yet
     //0x0041CB00 requires further investigation - looks like a table of pointers for various game functions
 
@@ -95,6 +96,7 @@ void sigscanItems() {
     std::cout << "set shape body       : " << std::hex << glb::oSetShapeParentBody << std::endl;
     std::cout << "Add context item     : " << std::hex << glb::oAddCItem << std::endl;
     std::cout << "Read subobjects      : " << std::hex << glb::TDreadSubobjects << std::endl;
+    std::cout << "oIUnReadVox          : " << std::hex << glb::oIUnReadVox << std::endl;
 
     std::cout << std::endl;
     std::cout << "[Object Addresses:         ]" << std::endl;

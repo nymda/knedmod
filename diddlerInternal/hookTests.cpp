@@ -310,16 +310,23 @@ void hkContextItem(char* a1, int a2, int a3, float* a4) {
     return glb::oAddCItem(a1, a2, a3, a4);
 }
 
+void* hkreadVoxInfo(void* a1, void* a2) {
+
+    std::cout << "A1: " << a1 << " Path: " << ((td::small_string*)(a2))->c_str() << std::endl;
+
+    return glb::oIUnReadVox(a1, a2);
+}
+
 void initTestHook() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    DetourAttach(&(PVOID&)glb::oAttachJoint, hkAttachJoint);
+    DetourAttach(&(PVOID&)glb::oSOA, hkSetAttribute);
     DetourTransactionCommit();
 }
 
 void terminateTestHook() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    DetourDetach(&(PVOID&)glb::oAttachJoint, hkAttachJoint);
+    DetourDetach(&(PVOID&)glb::oSOA, hkSetAttribute);
     DetourTransactionCommit();
 }
