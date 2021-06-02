@@ -2,13 +2,16 @@
 #include "types.h"
 #include "maths.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+
 const long pi = 3.1415926535;
 
 td::Vec3 quat2euler(td::Vec4 quat, int rot = 0, bool invert = false) {
     if (rot == 0) {
-        float vecX = (2 * (quat.x * quat.z + quat.w * quat.y));
-        float vecY = (2 * (quat.y * quat.z - quat.w * quat.x));
-        float vecZ = (1 - 2 * (quat.x * quat.x + quat.y * quat.y));
+        float vecX = (2 * (quat.w * quat.y + quat.z * quat.x));
+        float vecY = (2 * (quat.x * quat.y - quat.z * quat.w));
+        float vecZ = (1 - 2 * (quat.w * quat.w + quat.x * quat.x));
         if (invert) {
             return { -vecX, -vecY, -vecZ };
         }
@@ -17,10 +20,9 @@ td::Vec3 quat2euler(td::Vec4 quat, int rot = 0, bool invert = false) {
         }
     }
     if (rot == 1) {
-
-        float vecX = (1 - 2 * (quat.y * quat.y + quat.z * quat.z));
-        float vecY = (    2 * (quat.x * quat.y + quat.w * quat.z));
-        float vecZ = (    2 * (quat.x * quat.z - quat.w * quat.y));
+        float vecX = (1 - 2 * (quat.x * quat.x + quat.y * quat.y));
+        float vecY = (2 * (quat.w * quat.x + quat.z * quat.y));
+        float vecZ = (2 * (quat.w * quat.y - quat.z * quat.x));
 
         if (invert) {
             return { -vecX, -vecY, -vecZ };
@@ -55,19 +57,20 @@ td::Vec3 quat2euler(td::Vec4 quat, int rot = 0, bool invert = false) {
 
 td::Vec4 radianToQuaternion(double yaw, double pitch, double roll) // yaw (Z), pitch (Y), roll (X)
 {
-    double cy = cos(yaw * 0.5);
-    double sy = sin(yaw * 0.5);
-    double cp = cos(pitch * 0.5);
-    double sp = sin(pitch * 0.5);
-    double cr = cos(roll * 0.5);
-    double sr = sin(roll * 0.5);
+    float cy = cos(yaw * 0.5);
+    float sy = sin(yaw * 0.5);
+    float cp = cos(pitch * 0.5);
+    float sp = sin(pitch * 0.5);
+    float cr = cos(roll * 0.5);
+    float sr = sin(roll * 0.5);
 
-    float w = cy * cp * cr + sy * sp * sr;
-    float x = cy * cp * sr - sy * sp * cr;
-    float y = sy * cp * sr + cy * sp * cr;
-    float z = sy * cp * cr - cy * sp * sr;
+    td::Vec4 q;
+    q.w = cr * cp * cy + sr * sp * sy;
+    q.x = sr * cp * cy - cr * sp * sy;
+    q.y = cr * sp * cy + sr * cp * sy;
+    q.z = cr * cp * sy - sr * sp * cy;
 
-    return { x, y, z, w };
+    return q;
 }
 
 td::Vec4 euler2quat(float x, float y, float z) {
@@ -78,3 +81,11 @@ td::Vec4 euler2quat(float x, float y, float z) {
     return radianToQuaternion(yaw, pitch, roll);
 }
 
+td::Vec3 euler2otherEuler(td::Vec3 rot) {
+    float xzLen = cos(rot.x);
+    float x = xzLen * cos(rot.y);
+    float y = sin(rot.x);
+    float z = xzLen * sin(-rot.y);
+
+    return { x, y, z };
+}

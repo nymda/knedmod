@@ -162,6 +162,12 @@
     <ClInclude Include="glm\trigonometric.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="focusHook.h">
+      <Filter>Header Files\Mods</Filter>
+    </ClInclude>
+    <ClInclude Include="lidar.h">
+      <Filter>Header Files\Mods</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -265,6 +271,12 @@
     </ClCompile>
     <ClCompile Include="memhandler.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="focusHook.cpp">
+      <Filter>Source Files\Mods</Filter>
+    </ClCompile>
+    <ClCompile Include="lidar.cpp">
+      <Filter>Source Files\Mods</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

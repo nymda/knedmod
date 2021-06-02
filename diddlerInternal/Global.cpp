@@ -10,6 +10,14 @@ namespace glb {
 		glb::oSOA(shape, &p1, &p2);
 	}
 
+	loadTDBIN oLtDBin;
+	S140152540 o_S140152540;
+	S1400C4F70 o_S1400C4F70;
+	S140152740 o_S140152740;
+	validateFileExistance oValidate;
+	doQuicksave oDoQuicksave;
+	doQuickload oDoQuickload;
+	
 	TDObjectList* TDOL;
 	TDPlayer* player;
 	TDGame* game;
@@ -23,6 +31,7 @@ namespace glb {
 	handleBombObjs oHandleBombObjs;
 	setShapeParentBody oSetShapeParentBody;
 	unknReadVoxData oIUnReadVox;
+	isActiveWindow oIsActive;
 
 	highlightShape oHighlightShape;
 	outlineShape oOutlineShape;

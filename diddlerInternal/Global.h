@@ -35,7 +35,7 @@ typedef void(__fastcall* rayCast)(TDScene* scene, td::Vec3* pos, td::Vec3* rot, 
 typedef void(__fastcall* frameDrawLine)(TDRenderer* renderer, const td::Vec3& p1, const td::Vec3& p2, const td::Color& c1, const td::Color& c2, bool use_depth);
 typedef void(__fastcall* highlightShape)(TDRenderer* renderer, TDShape* shape, float opacity);
 typedef void(__fastcall* outlineShape)(TDRenderer* renderer, TDShape* shape, td::Color* colour, float opacity);
-typedef void(__fastcall* outlineBody)(TDRenderer* renderer, TDBody* body, float opacity);
+typedef void(__fastcall* outlineBody)(TDRenderer* renderer, TDBody* shape, td::Color* colour, float opacity);
 typedef void(__fastcall* wrappedDoDamage)(TDScene* scene, td::Vec3* position, float damageA, float damageB, int unkn1, int* unkn2);
 typedef void(__fastcall* setBodySomething)(uintptr_t body, __int8 a1, __int8 a2);
 typedef void(__fastcall* handleBombObjs)(uintptr_t a1);
@@ -87,13 +87,30 @@ typedef uintptr_t(__fastcall* TMalloc)(size_t);
 typedef void(__fastcall* TFree)(uintptr_t mem);
 typedef void(__fastcall* spreadFire)(__int64 a1, float v2);
 typedef void(__fastcall* addContextItem)(char* a1, int a2, int a3, float* a4);
-
+typedef bool(__fastcall* isActiveWindow)(void* a1);
 //td maths
 typedef __int64(__fastcall* apiQuatEuler)(float* a1, float* a2);
+
+//TD files
+typedef bool(__fastcall* doQuicksave)(TDScene* a1);
+typedef bool(__fastcall* doQuickload)(TDScene* a1);
+typedef void* (__fastcall* validateFileExistance)(__int64 a1, void* a2, td::small_string* path);
+typedef char(__fastcall* loadTDBIN)(__int64 a1, td::small_string* a2);
+typedef __int64(__fastcall* S140152540)(__int64 a1, __int64 a2, __int64 a3);
+typedef __int64(__fastcall* S1400C4F70)(__int64 a1, __int64 a2);
+typedef void*(__fastcall* S140152740)(void* a1);
 
 //SEE TDFUNCS.CPP FOR SIGSCANNING
 namespace glb {
     void setObjectAttribute(TDShape* shape, const char* a1, const char* a2);
+
+    extern loadTDBIN oLtDBin;
+    extern S140152540 o_S140152540;
+    extern S1400C4F70 o_S1400C4F70;
+    extern S140152740 o_S140152740;
+    extern validateFileExistance oValidate;
+    extern doQuicksave oDoQuicksave;
+    extern doQuickload oDoQuickload;
 
     extern TDObjectList* TDOL;
     extern TDPlayer* player;
@@ -108,6 +125,7 @@ namespace glb {
     extern handleBombObjs oHandleBombObjs;
     extern setShapeParentBody oSetShapeParentBody;
     extern unknReadVoxData oIUnReadVox;
+    extern isActiveWindow oIsActive;
 
     extern highlightShape oHighlightShape;
     extern outlineShape oOutlineShape;

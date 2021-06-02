@@ -477,8 +477,10 @@ LONG WINAPI DetourTransactionCommitEx(_Out_opt_ PVOID **pppFailedPointer);
 
 LONG WINAPI DetourUpdateThread(_In_ HANDLE hThread);
 
-LONG WINAPI DetourAttach(_Inout_ PVOID *ppPointer,
+LONG WINAPI DetourDetach(_Inout_ PVOID *ppPointer,
                          _In_ PVOID pDetour);
+
+LONG WINAPI DetourAttach(_Inout_ PVOID* ppPointer, _In_ PVOID pDetour);
 
 LONG WINAPI DetourAttachEx(_Inout_ PVOID *ppPointer,
                            _In_ PVOID pDetour,

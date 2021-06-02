@@ -19,10 +19,10 @@ namespace td {
 	};
 
 	struct Vec4 {
+		float w;
 		float x;
 		float y;
 		float z;
-		float w;
 	};
 
 	struct Color {

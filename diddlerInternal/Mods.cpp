@@ -19,6 +19,8 @@ namespace mods {
 	bool godmode = true;
 	bool c4_global_detonation = false;
 	bool removeWalls = false;
+	bool dontLockWhenOutOfFocus = false;
+	bool isGameFocused = false;
 
 	void execMods() {
 		spawner::processMostRecentObject();
@@ -37,11 +39,11 @@ namespace mods {
 			
 			int count = 0;
 
-			if (*(byte*)&(glb::scene->Boundaries) != 0x00) {
-				for (td::Vec2* pt : glb::scene->Boundaries) {
+			if (*(byte*)&(glb::scene->m_Boundaries) != 0x00) {
+				for (td::Vec2* pt : glb::scene->m_Boundaries) {
 					count++;
 				}
-				mem::Null((byte*)&(glb::scene->Boundaries), 8 * count);
+				mem::Null((byte*)&(glb::scene->m_Boundaries), 8 * count);
 			}
 		}
 

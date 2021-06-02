@@ -23,6 +23,7 @@
 #include "Mods.h"
 #include "mainHook.h"
 #include "movementLoop.h"
+#include "focusHook.h"
 
 FILE* makeConsole() {
     AllocConsole();
@@ -82,6 +83,8 @@ DWORD WINAPI main(HMODULE hModule)
 
     initTestHook();
     initGodmodeHook();
+    focusHook::initFocusHook();
+
     //initMovementHook();
 
     while (true) {
@@ -96,6 +99,7 @@ DWORD WINAPI main(HMODULE hModule)
                 terminateHIDsHook();
                 terminateTestHook();
                 terminateGodmodeHook();
+                focusHook::terminateFocusHook();
 
                 //sleep
                 Sleep(250);

@@ -16,6 +16,18 @@ namespace fs = std::filesystem;
 
 spawner::objectSpawnerParams defaultParams = {};
 
+std::string getObjectName(std::string path) {
+
+    int tmpOffset = 0;
+    int finalOffset = 0;
+
+    while ((tmpOffset = path.find("\\", tmpOffset + 1)) != std::string::npos) {
+        finalOffset = tmpOffset;
+    }
+
+    return path.substr(finalOffset + 1, path.length() - finalOffset);
+}
+
 inline bool exists(const std::string& name) {
     struct stat buffer;
     return (stat(name.c_str(), &buffer) == 0);
@@ -133,10 +145,10 @@ namespace spawner {
                 td::Vec3 objectMin = lastSpawnedObject.shape->posMin;
                 td::Vec3 objectMax = lastSpawnedObject.shape->posMax;
                 td::Vec3 centerBottom = { objectMax.x - ((objectMax.x - objectMin.x) / 2), objectMin.y, objectMax.z - ((objectMax.z - objectMin.z) / 2) };
-                drawCube(objectMin, 0.25, white);
-                drawCube(objectMax, 0.25, white);
-                drawCube(centerBottom, 0.10, white);
-                drawCube(lastSpawnedObject.body->Position, 0.10, white);
+                //drawCube(objectMin, 0.25, white);
+                //drawCube(objectMax, 0.25, white);
+                //drawCube(centerBottom, 0.10, white);
+                //drawCube(lastSpawnedObject.body->Position, 0.10, white);
 
                 td::Vec3 objectSize = { (objectMax.x - objectMin.x), (objectMax.y - objectMin.y), (objectMax.z - objectMin.z) };
                
@@ -247,6 +259,7 @@ namespace spawner {
                         lso.basePath = catagoryFolder.path().string();
                         lso.imagePath = lso.basePath + "\\object.png";
                         lso.voxPath = lso.basePath + "\\object.vox";
+                        lso.objectName = getObjectName(lso.basePath);
 
                         if (foundAttrib) {
                             lso.attributes = enumAttributes(lso.basePath + "\\attri.txt");
@@ -365,11 +378,14 @@ namespace spawner {
             }
         }
 
+        ((TDShape*)SHAPE)->Texture = 3;
+        ((TDShape*)SHAPE)->TextureIntensity = 1.f;
+
         glb::oUpdateShapes((uintptr_t)BODY);
 
         raycaster::rayData rd = raycaster::castRayPlayer();
         td::Vec3 target = rd.worldPos;
-        td::Vec4 newRot = { -0.5, -0.5, -0.5, 0.5 };
+        td::Vec4 newRot = { 0.5, -0.5, -0.5, -0.5 };
 
         td::Vec3 aVec = rd.angle;
         float angle = atan2(aVec.x, aVec.z);

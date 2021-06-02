@@ -1,5 +1,11 @@
 #pragma once
 namespace toolgun {
+
+    enum class spawngunMethod : int {
+        placed = 0,
+        thrown = 1
+    };
+
     enum class tgSettings : int {
         spawner = 0,
         minigun = 1,
@@ -9,7 +15,8 @@ namespace toolgun {
         setAtttibute = 5,
         destroyer = 6,
         debugObject = 7,
-        testing = 8,
+        leafblower = 8,
+        testing = 9,
     };
 
     struct targetDbgInfo {
@@ -22,11 +29,19 @@ namespace toolgun {
         int alpha = 255;
     };
 
+    enum class leafblowerModes : int {
+        blow = 0,
+        succ = 1,
+        del = 2
+    };
+
     extern targetDbgInfo dbgObject;
     extern char setAttributeFirst[128];
     extern char setAttributeSecond[128];
     extern bool playerIsHoldingToolgun;
-
+    extern bool constSpawn;
+    extern spawngunMethod method;
+    extern float thrownObjectVelocityMultiplier;
     extern float spreadVal;
     extern int bulletsPerFrame;
     extern float EXspreadVal;
@@ -39,6 +54,10 @@ namespace toolgun {
     extern float maxRange;
     extern float holeSize;
     extern bool fireConst;
+    extern leafblowerModes LBMode;
+    extern int leafBlowerRayCount;
+    extern float leafBlowerFOV;
+    extern bool showRayHitPos;
 
     extern spawner::LoadedSpawnableObject currentSpawngunObject;
     extern tgSettings currentsetting;

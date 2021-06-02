@@ -74,34 +74,37 @@ public:
 class Environment
 {
 public:
-	const char* skyboxpath;
+	char* m_Skybox; //0x0000
 	char pad_0008[8]; //0x0008
-	td::Vec3 sunColor; //0x0010
-	char pad_001C[4]; //0x001C
-	float skyboxrot; //0x0020
+	td::Vec3 m_SkyboxTint; //0x0010
+	float m_SkyboxBrightness; //0x001C
+	float m_SkyboxRot; //0x0020
 	char pad_0024[12]; //0x0024
-	td::Vec3 sunColorTint; //0x0030
+	td::Vec3 m_SunColorTint; //0x0030
 	char pad_003C[16]; //0x003C
-	float sunBrightness; //0x004C
-	float sunSpread; //0x0050
-	float sunLength; //0x0054
-	float sunFogScale; //0x0058
-	float sunGlare; //0x005C
+	float m_SunBrightness; //0x004C
+	float m_SunSpread; //0x0050
+	float m_SunLength; //0x0054
+	char pad_0058[4]; //0x0058
+	float m_SunGlare; //0x005C
 	char pad_0060[4]; //0x0060
-	float ambient; //0x0064
-	td::Vec2 exposure; //0x0068
-	float brightness;
-	td::Vec3 fogColor; //0x0074
-	char pad_0080[4]; //0x0080
-	td::Vec4 fogParams; //0x0084
-	float wetness; //0x0094
-	float puddleamount; //0x0098
-	float puddlesize; //0x009C
-	float rain; //0x00A0
-	bool nightlight; //0x00A4
-	char pad_00A5[83]; //0x00A5
-	td::small_string ambience; //0x00F8
-	float slippery; //0x0110
+	td::Vec4 m_Constant; //0x0064
+	float m_Ambient; //0x0074
+	float m_AmbienetExponent; //0x0078
+	td::Vec2 m_Exposure; //0x007C min, max
+	float m_Brightness; //0x0084
+	td::Vec3 m_FogColor; //0x0088
+	char pad_0094[4]; //0x0094
+	td::Vec4 m_FogParams; //0x0098
+	float m_Wetness; //0x00A8
+	float m_PuddleAmount; //0x00AC
+	float m_Puddlesize; //0x00B0
+	float m_Rain; //0x00B4
+	bool m_Nightlight; //0x00B8
+	char pad_00B9[87]; //0x00B9
+	td::small_string m_Ambience; //0x0110
+	float m_Slippery; //0x0128
+	float m_FogScale; //0x012C
 }; //Size: 0x0114
 
 class TDVox
@@ -139,8 +142,9 @@ public:
 	td::Vec3 N00006C80; //0x00CC
 	float N00002F17; //0x00D8
 	bool Dynamic; //0x00DC
-	char pad_00DD[8]; //0x00DD
-	bool Colliding; //0x00E5
+	char pad_00DD[7]; //0x00DD
+	char countDown;
+	bool isAwake; //0x00E5
 	char pad_00E6[2]; //0x00E6
 }; //Size: 0xE8
 
@@ -183,11 +187,6 @@ public:
 	uintptr_t objs[128];
 };
 
-class TDGame {
-public:
-	char pad_0000[8]; 
-	gameState State;
-};
 
 class TDPlayer {
 public:
@@ -197,20 +196,24 @@ public:
 	byte paddingB[0x36];		//0x04A - 0x07C
 	td::Vec3 cameraPosition;	//0x07C - 0x088
 	td::Vec4 cameraQuat;		//0x088 - 0x098
-	byte paddingC[0x32];		//0x098 - 0x0CE
+	byte paddingC[0x2C];		//0x098 - 0x0CE
+	float camPitch;
+	float camYaw;
+	//byte paddingD[0x2];
 	float FMove;				//0x0CE - 0x0D2
 	float SMove;				//0x0D2 - 0x0D6
-	byte paddingD[0xD];			//0x0D6 - 0x0EA
+	byte paddingE[0xD];			//0x0D6 - 0x0EA
 	byte isAttacking;			//0x0EA - 0x0EB
-	byte paddingE[0x70];		//0x0EB - 0x154
+	byte paddingF[0x70];		//0x0EB - 0x154
 	float health;				//0x15C - 0x160
-	byte paddingF[0x268];		//0x160 - 0x3CB
+	byte paddingG[0x268];		//0x160 - 0x3CB
 	char heldItemName[13];		//0x3CB - 0x3D8
 
 	td::Vec3 cameraEuler() {
-		float vecX = -(2 * (cameraQuat.x * cameraQuat.z + cameraQuat.w * cameraQuat.y));
-		float vecY = -(2 * (cameraQuat.y * cameraQuat.z - cameraQuat.w * cameraQuat.x));
-		float vecZ = -(1 - 2 * (cameraQuat.x * cameraQuat.x + cameraQuat.y * cameraQuat.y));
+		float vecX =     -(2 * (cameraQuat.w * cameraQuat.y + cameraQuat.z * cameraQuat.x));
+		float vecY =     -(2 * (cameraQuat.x * cameraQuat.y - cameraQuat.z * cameraQuat.w));
+		float vecZ = -(1 - 2 * (cameraQuat.w * cameraQuat.w + cameraQuat.x * cameraQuat.x));
+
 		return { vecX, vecY, vecZ };
 	}
 };
@@ -282,46 +285,54 @@ public:
 	uint32_t dword1354;
 };
 
+class Water : public Entity
+{
+public:
+	char pad_0028[28];	//0x0028
+	float m_Depth;		//0x0044
+	char pad_0048[792]; //0x0048
+	float m_Wave;		//0x0360
+	float m_Ripple;		//0x0364
+	float m_Motion;		//0x0368
+	float m_Foam;		//0x036C
+}; //Size: 0x370
+
 class TDScene {
 public:
-	char pad_0008[8]; //0x0008
-	class ppScene* ppScene; //0x0010
-	char pad_0018[88]; //0x0018
-	void* pParticleSystem; //0x0070
-	char pad_0078[40]; //0x0078
-	Environment* pEnvironment; //0x00A0
-	class fireSystem* pFireSystem; //0x00A8
-	td::small_vector<void*> projectileList;
-	uintptr_t* unkn; //0x00C0
-	td::Vec3 spawnPos; //0x00C8
-	char pad_00D4[20]; //0x00D4
-	TDLight* pFlashlight; //0x00E8
-	char pad_00F0[48]; //0x00F0
-	class Vehicle* pCurrentVehicle; //0x0120
-	class Screen* pCurrentScreen; //0x0128
-	char pad_0130[248]; //0x0130
-	td::small_vector<Entity*> entityList; //0x0228
-	td::small_vector<TDBody*>* pBodyList; //0x0238
-	td::small_vector<TDShape*>* pShapeList; //0x0240
-	td::small_vector<TDLight*>* pLightList; //0x0248
-	td::small_vector<void*>* pLocationList; //0x0250
-	td::small_vector<void*>* pWaterList; //0x0258
-	td::small_vector<void*>* pEnemyList; //0x0260
-	td::small_vector<void*>* pJointList; //0x0268
-	td::small_vector<Vehicle*>* pVehicleList; //0x0270
-	td::small_vector<void*>* pWheelList; //0x0278
-	td::small_vector<void*>* pScreenList; //0x0280
-	td::small_vector<void*>* pTriggerList; //0x0288
-	td::small_vector<void*>* pScriptList; //0x0290
-	char pad_0298[48]; //0x0298
-	float distanceToBoundary; //0x02C8
-	char pad_02CC[612]; //0x02CC
-	td::small_vector<td::Vec2*> Boundaries; //0x0530
-	char pad_0540[864]; //0x0540
-	td::small_vector<Entity*> entityList2; //0x08A0
-	char pad_08B0[8624]; //0x08B0
-	void* (*pSomethingArray)[150]; //0x2A60
-	char pad_2A68[1792]; //0x2A68
+	char pad_0008[136];									//0x0008
+	td::small_vector<void*> m_Projectiles;					//0x0090
+	Environment* pEnvironment;						//0x00A0
+	td::Vec3 m_SpawnPos;								//0x00A8
+	char pad_00D4[20];									//0x00B4
+	TDLight* m_Flashlight;								//0x00C8
+	char pad_00D0[56];									//0x00D0
+	void* m_CurrentVehicle;								//0x0108
+	void* m_CurrentScreen;								//0x0110
+	td::Vec3 m_ShadowVolumeSize;						//0x0118
+	char pad_0124[252];									//0x0124
+	td::small_vector<TDBody*>* m_Bodies;						//0x0220
+	td::small_vector<TDShape*>* m_Shapes;						//0x0228
+	td::small_vector<TDLight*>* m_Lights;						//0x0230
+	td::small_vector<void*>* m_Locations;					//0x0238
+	td::small_vector<Water*>* m_Waters;						//0x0240
+	td::small_vector<void*>* m_Enemies;						//0x0248
+	td::small_vector<void*>* m_Joints;						//0x0250
+	td::small_vector<void*>* m_Vehicles;					//0x0258
+	td::small_vector<void*>* m_Wheels;						//0x0260
+	td::small_vector<void*>* m_Screens;						//0x0268
+	td::small_vector<void*>* m_Triggers;					//0x0270
+	td::small_vector<void*>* m_Scripts;					//0x0278
+	char pad_0280[664];									//0x0280
+	td::small_vector<td::Vec2*> m_Boundaries;				//0x0530
+	char pad_0528[864];									//0x0528
+	td::small_vector<Entity*> m_Entities;					//0x0888
+	char pad_0898[8];									//0x0898
+	td::Vec4 m_ColorBalance; 							//0x08A0
+	float m_Saturation; 								//0x08B0
+	float m_Gamma; 										//0x08B4
+	float m_Bloom; 										//0x08B8
+	char pad_08BC[4]; 									//0x08BC
+
 
 	virtual void Function0();
 	virtual void Function1();
@@ -333,4 +344,71 @@ public:
 	virtual void Function7();
 	virtual void Function8();
 	virtual void Function9();
+};
+
+class CGameSettings
+{
+public:
+	int m_RenderScale;		//0x0000
+	int m_RenderQuality;	//0x0004
+	int m_GammaCorrection;	//0x0008
+	int m_FOV;				//0x000C
+	int m_MotionBlur;		//0x0010
+	int m_BarrelDist;		//0x0014
+	int m_DOF;				//0x0018
+	int m_VSync;			//0x001C
+	int m_SoundVol;			//0x0020
+	int m_AmbienceVol;		//0x0024 (Unused?)
+	int m_MusicVol;			//0x0028
+	int m_MouseSmoothing;	//0x002C
+	int m_MouseSensitivity; //0x0030
+	int m_InvertLook;		//0x0034
+	int m_HeadBob;			//0x0038
+}; //Size: 0x003C
+
+class TDGame {
+public:
+	int32_t m_ResX;					//0x0000
+	int32_t m_ResY;					//0x0004
+	gameState State;
+	int32_t m_TargetState;			//0x000C
+	float m_LoadingEffect;			//0x000D
+	bool m_Playing;					//0x0014
+	char pad_0015[3];				//0x0015
+	float m_LoadingEffect2;			//0x0018
+	bool m_MapOpen;					//0x001C
+	char pad_001D[43];				//0x001D
+	TDScene* m_Scene;				//0x0048
+	char pad_0058[40];				//0x0058
+	void* m_MenuScript;				//0x0080
+	char pad_0088[24];				//0x0088
+	TDPlayer* m_Player;				//0x00A0
+	void* m_PathMgr;				//0x00A8
+	char pad_00A8[48];				//0x00B0
+	void* m_SteamInterface;			//0x00E0 - To be used for mod sync
+	char pad_00E8[48];				//0x00E8
+	bool m_Paused;					//0x0118
+	char pad_0119[3];				//0x0119
+	int32_t m_iElapsedTime;			//0x011C
+	int32_t m_iPlayedTime;			//0x0120
+	float m_SoundTimeScale;			//0x0124
+	float m_Timescale;				//0x0128
+	float m_TimeStep;				//0x012C
+	float m_TimeDelta;				//0x0130
+	float m_fElapsedTime;			//0x0134
+	float m_fPlayedTime;			//0x0138
+	float m_TimeDelta2;				//0x013C
+	char pad_0140[28];				//0x0140
+	char pad_matrix_1[128];			//0x015C
+	char pad_matrix_2[128];			//0x01DC	
+	char pad_025C[36];				//0x025C
+	CGameSettings m_GameSettings;	//0x0280
+	char pad_02BC[4];				//0x02BC
+	td::small_string m_LevelId;			//0x02C0
+	td::small_string m_LevelLayer;		//0x02D8
+	char pad_02F0[56];				//0x02F0
+	td::small_string m_LevelId2;		//0x0328
+	td::small_string m_LevelLayer2;		//0x0340
+	char pad_0358[80];				//0x0358
+	td::small_string m_TempPath;	//0x03A8
 };

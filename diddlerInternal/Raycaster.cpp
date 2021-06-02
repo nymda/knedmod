@@ -6,25 +6,29 @@ namespace raycaster {
 
     rayData castRayManual(td::Vec3 position, td::Vec3 rotation, RaycastFilter* filterCus) {
 
+        rayData rdp = {};
+
         td::Vec3 pCopy = position;
         td::Vec3 rCopy = rotation;
 
         filterCus->m_Mask = -1;
         td::Vec3 output{};
         uintptr_t oShape;
+        uintptr_t oPal;
         float outDist = 0.f;
         glb::oRC(glb::scene, &pCopy, &rCopy, 250.f, filterCus, &outDist, &output, &oShape, nullptr);
         if (outDist == 0) {
             outDist = 1000.f;
         }
 
-        td::Vec4 worldPos = { pCopy.x + (rCopy.x * outDist),  pCopy.y + (rCopy.y * outDist),  pCopy.z + (rCopy.z * outDist), outDist };
+        td::Vec4 worldPos = { outDist, pCopy.x + (rCopy.x * outDist),  pCopy.y + (rCopy.y * outDist),  pCopy.z + (rCopy.z * outDist) };
         td::Vec3 worldPosV3 = { worldPos.x, worldPos.y, worldPos.z };
-        rayData rdp;
+
         rdp.distance = outDist;
         rdp.worldPos = worldPosV3;
         rdp.angle = output;
         rdp.hitShape = (TDShape*)oShape;
+        rdp.palette = nullptr;
         return rdp;
     }
 
@@ -42,7 +46,7 @@ namespace raycaster {
             outDist = 1000.f;
         }
 
-        td::Vec4 worldPos = { camPos.x + (euler.x * outDist),  camPos.y + (euler.y * outDist),  camPos.z + (euler.z * outDist), outDist };
+        td::Vec4 worldPos = { outDist, camPos.x + (euler.x * outDist),  camPos.y + (euler.y * outDist),  camPos.z + (euler.z * outDist) };
         td::Vec3 worldPosV3 = { worldPos.x, worldPos.y, worldPos.z };
         rayData rdp;
         rdp.distance = outDist;

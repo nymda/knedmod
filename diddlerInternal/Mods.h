@@ -12,6 +12,8 @@ namespace mods {
 	extern bool godmode;
 	extern bool c4_global_detonation;
 	extern bool removeWalls;
+	extern bool dontLockWhenOutOfFocus;
+	extern bool isGameFocused;
 
 	void execMods();
 }

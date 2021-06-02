@@ -139,8 +139,42 @@ namespace c4 {
                     const char* currentPath = "vox\\Default\\Cracker\\object.vox";
                     impNade = spawner::spawnObjectProxy(currentPath, osp);
 
+                    glb::setObjectAttribute(impNade.shape, "unbreakable", "");
                     glb::setObjectAttribute(impNade.shape, "bombstrength", std::to_string(firecrackerExplosionSize).c_str());
                     glb::setObjectAttribute(impNade.shape, "bomb", "1.5");
+                    //glb::setObjectAttribute(impNade.shape, "smoke", "");
+                }
+            }
+            else {
+                frameCount = 0;
+                runOnceImp = true;
+            }
+        }
+
+        const char* hhgName = "HolyHandGrenade";
+        if (memcmp(glb::player->heldItemName, hhgName, 13) == 0) {
+            if (glb::player->isAttacking == true) {
+                if (runOnceImp) {
+                    runOnceImp = false;
+
+                    raycaster::rayData rd = raycaster::castRayPlayer();
+                    td::Vec3 target = rd.worldPos;
+
+                    td::Vec3 cameraDirection = glb::player->cameraEuler();
+                    spawner::objectSpawnerParams osp;
+                    osp.spawnType = spawner::objectSpawnType::thrown;
+                    osp.startVelocity = { cameraDirection.x * 40, cameraDirection.y * 40, cameraDirection.z * 40 };
+                    osp.rotateFacePlayer = true;
+                    osp.unbreakable = false;
+                    osp.nocull = true;
+                    osp.pushSpawnList = false;
+
+                    const char* currentPath = "vox\\Default\\holy_hand_grenade\\object.vox";
+                    impNade = spawner::spawnObjectProxy(currentPath, osp);
+
+                    glb::setObjectAttribute(impNade.shape, "unbreakable", "");
+                    glb::setObjectAttribute(impNade.shape, "bombstrength", "6");
+                    glb::setObjectAttribute(impNade.shape, "bomb", "2");
                     //glb::setObjectAttribute(impNade.shape, "smoke", "");
                 }
             }

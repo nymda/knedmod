@@ -171,11 +171,13 @@
     <ClInclude Include="drawCube.h" />
     <ClInclude Include="envOptions.h" />
     <ClInclude Include="Flamethrower.h" />
+    <ClInclude Include="focusHook.h" />
     <ClInclude Include="glm\trigonometric.hpp" />
     <ClInclude Include="godmode.h" />
     <ClInclude Include="hookTests.h" />
     <ClInclude Include="Jetpack.h" />
     <ClInclude Include="lantern.h" />
+    <ClInclude Include="lidar.h" />
     <ClInclude Include="mainHook.h" />
     <ClInclude Include="maths.h" />
     <ClInclude Include="memhandler.h" />
@@ -213,10 +215,12 @@
     <ClCompile Include="drawCube.cpp" />
     <ClCompile Include="envOptions.cpp" />
     <ClCompile Include="Flamethrower.cpp" />
+    <ClCompile Include="focusHook.cpp" />
     <ClCompile Include="godmode.cpp" />
     <ClCompile Include="hookTests.cpp" />
     <ClCompile Include="Jetpack.cpp" />
     <ClCompile Include="lantern.cpp" />
+    <ClCompile Include="lidar.cpp" />
     <ClCompile Include="mainHook.cpp" />
     <ClCompile Include="maths.cpp" />
     <ClCompile Include="memhandler.cpp" />

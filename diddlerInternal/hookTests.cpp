@@ -36,34 +36,8 @@ void printB4(byte obj[4]) {
 }
 
 void hkDoDamage(uintptr_t a1, uintptr_t a2, td::Vec3* a3, float a4, float a5, uintptr_t a6, uintptr_t a7, uintptr_t a8) {
-  
-    //uintptr_t sceneSpecial = mem::FindDMAAddy(((uintptr_t)glb::scene + 0xA8), { 0x16 });
 
-    uintptr_t sceneSpecial = *(uintptr_t*)((uintptr_t)glb::scene + 16);
-
-    //std::cout << a1 << " : " << sceneSpecial << std::endl;
-    //std::cout << a2  << std::endl;
-
-    float damageP1 = 10.f;
-    float damageP2 = 10.f;
-
-    std::cout << "A1 " << a1 << " : " << sceneSpecial << std::endl;
-    std::cout << "A2 " << a2 << std::endl;
-    std::cout << "A3 " << a3 << std::endl;
-    std::cout << "A4 " << a4 << std::endl;
-    std::cout << "A5 " << a5 << std::endl;
-    std::cout << "A6 " << a6 << std::endl;
-    std::cout << "A7 " << a7 << std::endl;
-    std::cout << "A8 " << a8 << std::endl;
-    std::cout << "=========" << std::endl;
-
-    //arg 1 : special pointer derived from scene.
-    //arg 2 : unknwon pointer, can be null. may be parent object?
-    //arg 3 : vec3 pointer, position
-    //arg 4 : damage to SOFT objects
-    //arg 5 : unknown float, may be related to power
-
-    return glb::oDamageObject(sceneSpecial, a2, a3, damageP1, damageP2, a6, a7, a8);
+    return glb::oDamageObject(a1, a2, a3, a4, a5, a6, a7, a8);
 }
 
 uintptr_t structContainer;
@@ -279,7 +253,9 @@ uintptr_t hkSpawnVox(td::small_string* path, td::small_string* subpath, float sc
     std::cout << "SPath: " << subpath->c_str() << std::endl;
     std::cout << "==========" << std::endl;
 
-    return glb::oSpawnVox(path, subpath, scale);
+    td::small_string cube = ("vox\\Default\\dbgcube_glassBig\\object.vox");
+
+    return glb::oSpawnVox(&cube, subpath, scale);
 }
 
 void hkSetAttribute(TDShape* object, td::small_string* a1, td::small_string* a2) {
@@ -317,16 +293,81 @@ void* hkreadVoxInfo(void* a1, void* a2) {
     return glb::oIUnReadVox(a1, a2);
 }
 
+__int64 hk_S140152540(__int64 a1, __int64 a2, __int64 a3) { //decompress TDBin file
+
+    std::cout << "DECOMPRESSION:" << std::endl;
+    std::cout << "a1:" << std::hex << a1 << std::endl;
+    std::cout << "a2:" << std::hex << a2 << std::endl;
+    std::cout << "a3:" << std::hex << a3 << std::endl;
+
+
+    return glb::o_S140152540(a1, a2, a3);
+}
+
+__int64 hk_S1400C4F70(__int64 a1, __int64 a2) { //decode TDBin
+
+    std::cout << "DECODE:" << std::endl;
+    std::cout << "a1:" << std::hex << a1 << std::endl;
+    std::cout << "a2:" << std::hex << a2 << std::endl;
+
+    return glb::o_S1400C4F70(a1, a2);
+}
+
+void* hk_S140152740(void* a1) {
+
+    return glb::o_S140152740(a1);
+}
+
+
+char hkLoadTDBIN(__int64 a1, td::small_string* a2) {
+
+
+    return glb::oLtDBin(a1, a2);
+}
+
+void* hkValidateFileExistance(__int64 a1, void* a2, td::small_string* path) {
+    
+    std::cout << "Validate: " << path->c_str() << std::endl;
+
+    if (strcmp(path->c_str(), "quicksave.bin") == 0) {
+        td::small_string testPath = "CustomQuicksave.bin";
+
+        std::cout << "Saving custom: " << testPath.c_str() << std::endl;
+
+
+        return glb::oValidate(a1, a2, &testPath);
+    }
+
+    return glb::oValidate(a1, a2, path);
+}
+
+bool hkDoQuicksave(TDScene* a1) {
+
+    std::cout << "Quicksave called : " << std::hex << a1 << std::endl;
+
+    return glb::oDoQuicksave(a1);
+}
+
+bool hkDoQuickload(TDScene* a1) {
+
+    std::cout << "Quickload called : " << std::hex << a1 << std::endl;
+
+    return glb::oDoQuickload(a1);
+}
+
+
 void initTestHook() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    DetourAttach(&(PVOID&)glb::oSOA, hkSetAttribute);
+    //DetourAttach(&(PVOID&)glb::oSpawnVox, hkSpawnVox);
+    //DetourAttach(&(PVOID&)glb::oDoQuicksave, hkDoQuicksave);
     DetourTransactionCommit();
 }
 
 void terminateTestHook() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    DetourDetach(&(PVOID&)glb::oSOA, hkSetAttribute);
+    //DetourDetach(&(PVOID&)glb::oSpawnVox, hkSpawnVox);
+    //DetourDetach(&(PVOID&)glb::oDoQuicksave, hkDoQuicksave);
     DetourTransactionCommit();
 }

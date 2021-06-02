@@ -4,17 +4,28 @@
 #include "objectSpawner.h"
 #include "toolgun.h"
 #include "lantern.h"
+#include "maths.h"
+
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include "lidar.h"
+
 
 namespace toolgun {
     bool spawnOnce = false;
     const char* tgName = "toolgun";
     td::Color white{ 1.f, 1.f, 1.f, 1.f };
+    td::Color red{ 1.f, 0.f, 0.f, 1.f };
     tgSettings currentsetting = tgSettings::spawner;
     bool playerIsHoldingToolgun = false;
+    const float pi = 3.1415926535f;
 
     //spawner specific vars
+    spawngunMethod method = spawngunMethod::placed;
+    float thrownObjectVelocityMultiplier = 10.f;
     bool createOrigionalSpawnObject = true;
     spawner::LoadedSpawnableObject currentSpawngunObject;
+    bool constSpawn = false;
 
     //minigun specific vars
     int minigunBulletType = 0;
@@ -43,6 +54,12 @@ namespace toolgun {
     TDBody* targetBody = 0;
     int stage = 0;
 
+    //leafblower specific items
+    leafblowerModes LBMode = leafblowerModes::blow;
+    int leafBlowerRayCount = 50;
+    float leafBlowerFOV = 0.2f;
+    bool showRayHitPos = false;
+
     //debug specific items
     targetDbgInfo dbgObject = { 0, 0 };
 
@@ -54,12 +71,12 @@ namespace toolgun {
     float maxRange = 100.f;
     float holeSize = 5.f;
 
-
+    //push specific items
 
     void handleToolgun() {
 
         if (createOrigionalSpawnObject) {
-            currentSpawngunObject.voxPath = "vox\\cube_kned\\object.vox";
+            currentSpawngunObject.voxPath = "vox\\Default\\dbgcube_metal\\object.vox";
             createOrigionalSpawnObject = false;
         }
 
@@ -67,7 +84,6 @@ namespace toolgun {
 
         if (clickedObjects.size() > 0) {
             for (fadeShapeOutline& fso : clickedObjects) {
-                td::Color red{ 1.f, 0.f, 0.f, 1.f };
                 glb::oOutlineShape(glb::renderer, fso.shape, &red, (float)(fso.alpha / 255.f));
                 if (fso.alpha > 0) {
                     fso.alpha -= 4;
@@ -83,7 +99,7 @@ namespace toolgun {
 
 
         if (memcmp(glb::player->heldItemName, tgName, 8) == 0) {
-            playerIsHoldingToolgun = true;
+            playerIsHoldingToolgun = true;      
 
             if (currentsetting == tgSettings::spawner) { //handle spawning objects with the toolgun
                 raycaster::rayData rd = raycaster::castRayPlayer();
@@ -93,9 +109,21 @@ namespace toolgun {
                 spawner::objectSpawnerParams osp{};
                 osp.attributes = currentSpawngunObject.attributes;
                 osp.animate = true;
-                osp.parentBody = targetBody;
+
+                if (method == spawngunMethod::placed) {
+                    osp.spawnType = spawner::objectSpawnType::placed;
+                }
+                else if (method == spawngunMethod::thrown) {
+                    osp.spawnType = spawner::objectSpawnType::thrown;
+                    td::Vec3 camEul = glb::player->cameraEuler();
+                    osp.rotateFacePlayer = true;
+                    osp.startVelocity = { glb::player->velocity.x + (camEul.x * thrownObjectVelocityMultiplier), glb::player->velocity.y + (camEul.y * thrownObjectVelocityMultiplier) ,glb::player->velocity.z + (camEul.z * thrownObjectVelocityMultiplier) };
+                }
 
                 if (glb::player->isAttacking) {
+                    if (constSpawn) {
+                        spawnOnce = true;
+                    }
                     if (spawnOnce) {
                         spawnOnce = false;
                         spawner::KMSpawnedObject last = spawnObjectProxy(currentSpawngunObject.voxPath, osp);
@@ -105,9 +133,8 @@ namespace toolgun {
                     spawnOnce = true;
                 }
             }
-
-            if (currentsetting == tgSettings::minigun) {
-                if (glb::player->isAttacking) {
+            else if (currentsetting == tgSettings::minigun) {
+                 if (glb::player->isAttacking) {
                     float noiseX = 0;
                     float noiseY = 0;
                     float noiseZ = 0;
@@ -128,8 +155,7 @@ namespace toolgun {
                     }
                 }
             }
-
-            if (currentsetting == tgSettings::explosion) {
+            else if (currentsetting == tgSettings::explosion) {
                 if (glb::player->isAttacking) {
                     float noiseX = 0;
                     float noiseY = 0;
@@ -155,14 +181,12 @@ namespace toolgun {
                     }
                 }
             }
-
-            if (currentsetting == tgSettings::flamethrower) {
+            else if (currentsetting == tgSettings::flamethrower) {
                 if (glb::player->isAttacking == true) {
 
                     //std::cout << std::to_string(glb::scene->fireSystem->m_Instances.size()) << "@" << &glb::scene->fireSystem << std::endl;
 
                     raycaster::rayData rayDat = raycaster::castRayPlayer();
-                    td::Color red{ 1.f, 0.f, 0.f, 1.f };
                     drawCube({ rayDat.worldPos.x, rayDat.worldPos.y, rayDat.worldPos.z }, flRadius, red);
 
                     for (float ty = (rayDat.worldPos.y - flRadius); ty < (rayDat.worldPos.y + flRadius); ty += 0.1f) {
@@ -190,15 +214,13 @@ namespace toolgun {
                     drawCube({ rayDat.worldPos.x, rayDat.worldPos.y, rayDat.worldPos.z }, flRadius, green);
                 }
             }
-        
-            if (currentsetting == tgSettings::destroyer) {
+            else if (currentsetting == tgSettings::destroyer) {
 
                 if (fireConst) {
                     fireOnceActive = true;
                 }
 
                 td::Color green{ 0.f, 1.f, 0.f, 1.f };
-                td::Color red{ 1.f, 0.f, 0.f, 1.f };
                 raycaster::rayData rayDat = raycaster::castRayPlayer();
                 if (rayDat.distance <= maxRange) {
                     drawCube({ rayDat.worldPos.x, rayDat.worldPos.y, rayDat.worldPos.z }, 0.05, green);
@@ -216,11 +238,9 @@ namespace toolgun {
                     drawCube({ rayDat.worldPos.x, rayDat.worldPos.y, rayDat.worldPos.z }, 0.05, red);
                 }
             }
-
-            if (currentsetting == tgSettings::remover) {
+            else if (currentsetting == tgSettings::remover) {
                 raycaster::rayData rd = raycaster::castRayPlayer();
                 if (rd.hitShape != (TDShape*)0xCCCCCCCCCCCCCCCC) {
-                    td::Color red = { 1, 1, 1, 1 };
                     glb::oHighlightShape(glb::renderer, rd.hitShape, 1.f);
                     if (glb::player->isAttacking) {
                         if (spawnOnce) {
@@ -235,8 +255,7 @@ namespace toolgun {
                     }
                 }
             }
-
-            if (currentsetting == tgSettings::setAtttibute) {
+            else if (currentsetting == tgSettings::setAtttibute) {
                 if (glb::player->isAttacking) {
                     if (spawnOnce) {
                         spawnOnce = false;
@@ -252,8 +271,7 @@ namespace toolgun {
                     spawnOnce = true;
                 }
             }
-
-            if (currentsetting == tgSettings::debugObject) {
+            else if (currentsetting == tgSettings::debugObject) {
                 td::Color green{ 0.f, 1.f, 0.f, 1.f };
                 td::Color blue{ 0.f, 0.f, 1.f, 1.f };
 
@@ -264,54 +282,102 @@ namespace toolgun {
                     dbgObject.tBody = rayDat.hitShape->getParentBody();
                 }
             }
-
-
-            if (currentsetting == tgSettings::testing) {
+            else if (currentsetting == tgSettings::leafblower) {
                 if (glb::player->isAttacking == true) {
-                    td::Color green{ 0.f, 1.f, 0.f, 1.f };
+                    float noiseX = 0;
+                    float noiseY = 0;
+                    float noiseZ = 0;
+                    RaycastFilter filter{ 0 };
+                    filter.m_Mask = -1;
 
-                    if (testingFireOnce == true) {
-                        testingFireOnce = false;
+                    td::Vec3 playerCameraVec3 = glb::player->cameraEuler();
+                    std::vector<TDBody*> hitBodies = {};
+                    std::vector<TDShape*> hitShapes = {};
 
-                        raycaster::rayData rayDat = raycaster::castRayPlayer();
-                        if (rayDat.hitShape != (TDShape*)0xCCCCCCCCCCCCCCCC) {
-
-                            glb::oOutlineShape(glb::renderer, rayDat.hitShape, &green, 1.f);
-                            TDBody* TmpTargetBody = rayDat.hitShape->getParentBody();
-                            glb::oUpdateShapes((uintptr_t)(TmpTargetBody));
-
-                            /*if (stage == 0) {
-                                glb::oOutlineShape(glb::renderer, rayDat.hitShape, &green, 1.f);
-                                targetShape = rayDat.hitShape;
-
-                                std::cout << "SET TARGET SHAPE: " << targetShape << std::endl;
-
-                                stage = 1;
-                            }
-                            else if (stage == 1) {
-                                glb::oOutlineShape(glb::renderer, rayDat.hitShape, &green, 1.f);
-                                targetBody = rayDat.hitShape->getParentBody();
-
-                                std::cout << "SET TARGET BODY: " << targetBody << std::endl;
-
-                                glb::oSetShapeParentBody(targetShape, *(byte*)((uintptr_t)(targetShape + 8)), targetBody);
-                                glb::oSetDynamic((uintptr_t)targetBody, true);
-                                glb::oUpdateShapes((uintptr_t)targetBody);
-
-                                targetShape = 0;
-                                targetBody = 0;
-                                stage = 0;
-                            }*/
-
-
+                    for (int i = 0; i < leafBlowerRayCount; i++) {
+                        //std::uniform_real_distribution<> noise(-0.3, 0.3);
+                        noiseX = -leafBlowerFOV + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (leafBlowerFOV - -leafBlowerFOV)));
+                        noiseY = -leafBlowerFOV + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (leafBlowerFOV - -leafBlowerFOV)));
+                        noiseZ = -leafBlowerFOV + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (leafBlowerFOV - -leafBlowerFOV)));
+                        td::Vec3 blowVec3 = { playerCameraVec3.x + noiseX, playerCameraVec3.y + noiseY, playerCameraVec3.z + noiseZ };
+                        raycaster::rayData rayDat = raycaster::castRayManual(glb::player->cameraPosition, blowVec3, &filter);
+                        if (showRayHitPos) {
+                            drawCube(rayDat.worldPos, 0.02f, red);
                         }
 
+                        if (rayDat.hitShape != (TDShape*)0xCCCCCCCCCCCCCCCC) {
+                            TDBody* hitBody = rayDat.hitShape->getParentBody();
+                            TDShape* hitShape = rayDat.hitShape;
+
+                            if (hitBody->Dynamic && rayDat.distance < 100.f) {
+                                if ((int)LBMode == 0 || (int)LBMode == 1) {
+                                    if (!(std::find(hitBodies.begin(), hitBodies.end(), hitBody) != hitBodies.end())) {
+                                        hitBodies.push_back(hitBody);
+                                    }
+                                }
+                                else {
+                                    if (!(std::find(hitShapes.begin(), hitShapes.end(), hitShape) != hitShapes.end())) {
+                                        hitShapes.push_back(hitShape);
+                                    }
+                                }
+                            }
+                        }
+                    } 
+
+                    td::Vec3 dir = glb::player->cameraEuler();
+
+                    if ((int)LBMode == 0 || (int)LBMode == 1) {
+                        for (TDBody* current : hitBodies) {
+                            current->countDown = 0x3c;
+                            current->isAwake = true;
+                            td::Vec3 oVec = current->Velocity;
+                            td::Vec3 playerEuler = glb::player->cameraEuler();
+
+                            td::Vec3 addVec = { dir.x * 50, dir.y * 50, dir.z * 50 };
+
+                            switch (LBMode) {
+                            case leafblowerModes::blow:
+                                current->Velocity = { oVec.x + addVec.x, oVec.y + addVec.y, oVec.z + addVec.z };
+                                break;
+
+                            case leafblowerModes::succ:
+                                current->Velocity = { oVec.x + -addVec.x, oVec.y + -addVec.y, oVec.z + -addVec.z };
+                                break;
+                            }
+                        }
+                    }
+                    else {
+                        for (TDShape* current : hitShapes) {
+                            current->Destroy(current, false);
+                        }
+                    }
+
+
+                    hitBodies.clear();
+                }
+                
+            }
+
+            else if (currentsetting == tgSettings::testing) {
+
+                float currentOffset = 0.f;
+                int resolution = 250;
+
+                if (glb::player->isAttacking) {
+                    for (int i = 0; i < resolution; i++) {
+                        RaycastFilter filter{ 0 };
+                        filter.m_Mask = -1;
+                        glm::quat camera_rotation_tl = glm::quat(glm::vec3(0, (currentOffset + glb::player->camYaw), 0));
+                        glm::vec3 raycast_dir_tl = camera_rotation_tl * glm::vec3(0, 0, -1);
+                        raycaster::rayData rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_tl.x, raycast_dir_tl.y, raycast_dir_tl.z }, &filter);
+                        glb::oWrappedDamage(glb::scene, &rd.worldPos, 0.2f, 0.2f, 0, 0);
+                        drawCube(rd.worldPos, 0.05f, red);
+                        td::Vec3 target = rd.worldPos;
+                        currentOffset += ((pi * 2) / resolution);
                     }
                 }
-                else {
-                    testingFireOnce = true;
-                }
             }
+
         }
         else {
             playerIsHoldingToolgun = false;

@@ -48,6 +48,7 @@ namespace spawner {
 		std::string basePath;
 		std::string voxPath;
 		std::string imagePath;
+		std::string objectName;
 		GLuint imageTexture = 0;
 		std::vector<objectAttribute> attributes;
 	};
