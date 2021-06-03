@@ -1,6 +1,6 @@
 #pragma once
 
 namespace camera {
-	void showBounds();
-	void takeSnapshot();
+	void updateCameraFrame(float* pixels, int resolution, float min, float max);
+	void drawCameraWindow();
 }

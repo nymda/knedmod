@@ -4,88 +4,79 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include "drawCube.h"
+#include "toolgun.h"
+
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_opengl3.h"
+#include "imgui/imgui_impl_win32.h"
 
 namespace camera {
+    GLuint image_texture;
+    bool isinit = false;
 
-	int resolution = 32;
-	td::Color red{ 1.f, 0.f, 0.f, 1.f };
-	td::Color green{ 0.f, 1.f, 0.f, 1.f };
-	td::Color blue{ 0.f, 0.f, 1.f, 1.f };
-	td::Color white{ 1.f, 1.f, 1.f, 1.f };
-
-	void showBounds() {
-		RaycastFilter filter{ 0 };
-		filter.m_Mask = -1;
-
-		float pitchMin = glb::player->camPitch - 0.10f;
-		float pitchMax = glb::player->camPitch + 0.10f;
-		float yawMin = glb::player->camYaw - 0.10f;
-		float yawMax = glb::player->camYaw + 0.10f;
-
-		glm::quat camera(glm::vec3(glb::player->camPitch, glb::player->camYaw, 0));
-		glm::vec3 forward = camera * glm::vec3(0, 0, -1);
-		glm::quat horizontal(glm::vec3(0.25, 0, 0));
-		glm::quat vertical(glm::vec3(0, 0.25, 0));
-
-		glm::vec3 raycast_dir_tl = -horizontal * -vertical * forward;
-		glm::vec3 raycast_dir_bl = -horizontal * vertical * forward;
-		glm::vec3 raycast_dir_tr = horizontal * -vertical * forward;
-		glm::vec3 raycast_dir_br = horizontal * vertical * forward;
-
-		//glm::quat camera_rotation_tl = glm::quat(glm::vec3(pitchMax, yawMax, 0));
-		//glm::vec3 raycast_dir_tl = camera_rotation_tl * glm::vec3(0, 0, -1);
-
-		//glm::quat camera_rotation_tr = glm::quat(glm::vec3(pitchMax, yawMin, 0));
-		//glm::vec3 raycast_dir_tr = camera_rotation_tr * glm::vec3(0, 0, -1);
-
-		//glm::quat camera_rotation_bl = glm::quat(glm::vec3(pitchMin, yawMin, 0));
-		//glm::vec3 raycast_dir_bl = camera_rotation_bl * glm::vec3(0, 0, -1);
-
-		//glm::quat camera_rotation_br = glm::quat(glm::vec3(pitchMin, yawMax, 0));
-		//glm::vec3 raycast_dir_br = camera_rotation_br * glm::vec3(0, 0, -1);
+    void initTexture() {
+        glGenTextures(1, &image_texture);
+        glBindTexture(GL_TEXTURE_2D, image_texture);
+    }
 
 
-		raycaster::rayData rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_tl.x, raycast_dir_tl.y, raycast_dir_tl.z }, &filter);
-		td::Vec3 target = rd.worldPos;
-		drawCube({ target.x, target.y, target.z }, 0.05, red);
+	void updateCameraFrame(float* pixels, int resolution, float min, float max) {
 
-		rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_tr.x, raycast_dir_tr.y, raycast_dir_tr.z }, &filter);
-		target = rd.worldPos;
-		drawCube({ target.x, target.y, target.z }, 0.05, white);
+        if (!pixels) {
+            return;
+        }
 
-		rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_bl.x, raycast_dir_bl.y, raycast_dir_bl.z }, &filter);
-		target = rd.worldPos;
-		drawCube({ target.x, target.y, target.z }, 0.05, green);
+        byte* pixelData = new byte[(resolution * resolution) * 3];
+        int pixelPtr = 0;
 
-		rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_br.x, raycast_dir_br.y, raycast_dir_br.z }, &filter);
-		target = rd.worldPos;
-		drawCube({ target.x, target.y, target.z }, 0.05, blue);
+        for (int pxOffset = 0; pxOffset < (resolution * resolution); pxOffset++) {
+            float thisPxFloat = pixels[pxOffset];
+
+            if (thisPxFloat > 0.f) {
+                float diff2 = thisPxFloat / max;
+                int pxVal = 255 -  (diff2 * 255);
+                pixelData[pixelPtr] = (byte)pxVal;
+                pixelData[pixelPtr + 1] = (byte)pxVal;
+                pixelData[pixelPtr + 2] = (byte)pxVal;
+            }
+            else {
+                pixelData[pixelPtr] = 0x00;
+                pixelData[pixelPtr + 1] = 0x00;
+                pixelData[pixelPtr + 2] = 0x00;
+            }
+            pixelPtr += 3;
+        }
+
+        if (!isinit) {
+            initTexture();
+        }
+
+        // Setup filtering parameters for display
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // This is required on WebGL for non power-of-two textures
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // Same
+
+        // Upload pixels into texture
+        #if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+        #endif
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, resolution, resolution, 0, GL_RGB, GL_UNSIGNED_BYTE, (void*)pixelData);
+
+        free(pixelData);
+
+
 
 	}
 
-	void takeSnapshot() {
-		float pitchMin = glb::player->camPitch - 0.5;
-		float pitchMax = glb::player->camPitch + 0.5;
-		float yawMin = glb::player->camYaw - 0.5;
-		float yawMax = glb::player->camYaw + 0.5;
-		float step = 1.0 / resolution;
+    void drawCameraWindow() {
+        ImGui::Begin("Camera");
 
-		float currentPitch = pitchMin;
-		float currentYaw = yawMin;
+        ImGui::Image((void*)image_texture, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowHeight() - 80));
+        ImGui::SliderInt("Resolution", &toolgun::cameraResolution, 32, 512);
 
-		for (int x = 0; x < resolution; x++) {
-			currentPitch += step;
-			for (int y = 0; y < resolution; y++) {
-				currentYaw += step;
-				glm::quat camera_rotation = glm::quat(glm::vec3(currentPitch, currentYaw, 0));
-				glm::vec3 raycast_dir = camera_rotation * glm::vec3(0, 0, -1);
 
-				RaycastFilter filter{ 0 };
-				filter.m_Mask = -1;
-				raycaster::rayData rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir.x, raycast_dir.y, raycast_dir.z }, &filter);
-				td::Vec3 target = rd.worldPos;
-				drawCube({ target.x, target.y, target.z }, 0.05, white);
-			}
-		}
-	}
+        ImGui::End();
+    }
 }

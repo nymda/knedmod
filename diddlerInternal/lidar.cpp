@@ -61,17 +61,17 @@ namespace lidar {
 			raycaster::rayData rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_tl.x, raycast_dir_tl.y, raycast_dir_tl.z }, &filter);
 			td::Vec3 target = rd.worldPos;
 
-
 			float step = ((pi * 2) / resolution);
 
 			currentOffset += step;
 
 			ImVec2 endPoint = getPoint(midpoint, (1.5 * pi) - (step * i), 0.f, rd.distance * zoom);
 			 
-			drawList->AddCircleFilled(endPoint, 2, white32);
+			drawList->AddCircleFilled(endPoint, 1.5f, white32);
 		}
 
-		drawList->AddRectFilled({ midpoint.x - 1, midpoint.y - 1 }, { midpoint.x + 2, midpoint.y + 2 }, white32);
+		drawList->AddCircleFilled(midpoint, 3.f, red32);
+		drawList->AddLine({ midpoint.x - 0.5f, midpoint.y }, { midpoint.x - 0.5f, midpoint.y - 10.f }, red32, 2.f);
 
 		ImGui::SliderFloat("Zoom", &zoom, 1.f, 100.f, "%2.f");
 

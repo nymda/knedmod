@@ -16,7 +16,8 @@ namespace toolgun {
         destroyer = 6,
         debugObject = 7,
         leafblower = 8,
-        testing = 9,
+        slicer = 9,
+        testing = 10
     };
 
     struct targetDbgInfo {
@@ -35,6 +36,7 @@ namespace toolgun {
         del = 2
     };
 
+    extern int cameraResolution;
     extern targetDbgInfo dbgObject;
     extern char setAttributeFirst[128];
     extern char setAttributeSecond[128];
@@ -58,7 +60,8 @@ namespace toolgun {
     extern int leafBlowerRayCount;
     extern float leafBlowerFOV;
     extern bool showRayHitPos;
-
+    extern float slicer_maxDist;
+    extern int slicer_resolution;
     extern spawner::LoadedSpawnableObject currentSpawngunObject;
     extern tgSettings currentsetting;
     void handleToolgun();

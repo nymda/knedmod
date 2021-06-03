@@ -290,7 +290,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 		}
 
 		if (ImGui::CollapsingHeader("toolgun")) {
-			const char* items[] = { "Spawner", "Minigun", "Explosions", "Flamethrower", "Remover", "Set attribute", "Destroyer", "DebugObject", "Leafblower", "Testing" };
+			const char* items[] = { "Spawner", "Minigun", "Explosions", "Flamethrower", "Remover", "Set attribute", "Destroyer", "DebugObject", "Leafblower", "Slicer", "Testing" };
 			const char* bulletTypes[] = { "Bullet", "Shotgun", "Missile", "???" };
 			const char* leafBlowerModes[] = { "Blow", "Succ", "Delete" };
 			const char* spawnModesCh[] = { "Placed", "Thrown" };
@@ -342,6 +342,10 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::Checkbox("Show rays", &toolgun::showRayHitPos);
 				ImGui::SliderInt("Rays", &toolgun::leafBlowerRayCount, 0, 500);
 				ImGui::SliderFloat("FOV", &toolgun::leafBlowerFOV, 0.01f, 0.5f, "%.2f");
+			}
+			if (toolgun::currentsetting == toolgun::tgSettings::slicer) {
+				ImGui::SliderInt("Resolution", &toolgun::slicer_resolution, 64, 1024);
+				ImGui::SliderFloat("maxDist", &toolgun::slicer_maxDist, 1.f, 1000.f, "%.2f");
 			}
 		}
 
