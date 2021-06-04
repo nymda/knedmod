@@ -14,6 +14,7 @@
 #include "envOptions.h"
 #include "miscPatches.h"
 #include "lidar.h"
+#include "physCamera.h"
 
 #pragma comment(lib, "glew32s.lib")
 
@@ -290,7 +291,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 		}
 
 		if (ImGui::CollapsingHeader("toolgun")) {
-			const char* items[] = { "Spawner", "Minigun", "Explosions", "Flamethrower", "Remover", "Set attribute", "Destroyer", "DebugObject", "Leafblower", "Slicer", "Testing" };
+			const char* items[] = { "Spawner", "Minigun", "Explosions", "Flamethrower", "Remover", "Set attribute", "Destroyer", "DebugObject", "Leafblower", "Slicer", "Camera", "Testing" };
 			const char* bulletTypes[] = { "Bullet", "Shotgun", "Missile", "???" };
 			const char* leafBlowerModes[] = { "Blow", "Succ", "Delete" };
 			const char* spawnModesCh[] = { "Placed", "Thrown" };
@@ -381,6 +382,10 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::SliderFloat("B", &lantern::lightB, 0.1f, 255.f, "%.2f");
 			}
 			ImGui::SliderFloat("Cracker power", &c4::firecrackerExplosionSize, 0.f, 5.f, "%.1f");
+
+			if (ImGui::Button("Spawn physCamera")) {
+				physCamera::spawnCameraObject();
+			}
 		}
 
 		if (ImGui::CollapsingHeader("c4")) {
@@ -545,16 +550,10 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 
 		displayInfoLabelSizeY = { 250.f, ImGui::GetWindowHeight() };
 
-		char healthTx[256] = {};
-		char positionTx[256] = {};
-		char dbgShapeTxt[256] = {};
-		char dbgBodyTxt[256] = {};
+		ImGui::Text("X: %.2f, Y: %.2f, Z: %.2f", (glb::player->cameraPosition.x), (glb::player->cameraPosition.y), (glb::player->cameraPosition.z));
+		ImGui::Text("Pitch: %.2f Yaw: %.2f", glb::player->camPitch, glb::player->camYaw);
+		ImGui::Text("Health: %i", (int)(glb::player->health * 100));
 
-		sprintf_s(positionTx, 256, "X: %.2f, Y: %.2f, Z: %.2f", (glb::player->cameraPosition.x), (glb::player->cameraPosition.y), (glb::player->cameraPosition.z));
-		sprintf_s(healthTx, 256, "Health : %i", (int)(glb::player->health * 100));
-
-		ImGui::Text(positionTx);
-		ImGui::Text(healthTx);
 		switch (glb::game->State)
 		{
 		case gameState::ingame:
@@ -579,10 +578,8 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 
 		if (toolgun::currentsetting == toolgun::tgSettings::debugObject && toolgun::playerIsHoldingToolgun) {
 			ImGui::Separator();
-			sprintf_s(dbgShapeTxt, 256, "Shape : %p", toolgun::dbgObject.tShape);
-			sprintf_s(dbgBodyTxt, 256, "Body   : %p", toolgun::dbgObject.tBody);
-			ImGui::Text(dbgShapeTxt);
-			ImGui::Text(dbgBodyTxt);
+			ImGui::Text("Shape : %p", toolgun::dbgObject.tShape);
+			ImGui::Text("Body   : %p", toolgun::dbgObject.tBody);
 		}
 
 		ImGui::End();

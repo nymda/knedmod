@@ -17,7 +17,8 @@ namespace toolgun {
         debugObject = 7,
         leafblower = 8,
         slicer = 9,
-        testing = 10
+        camera = 10,
+        testing = 11
     };
 
     struct targetDbgInfo {
@@ -36,6 +37,7 @@ namespace toolgun {
         del = 2
     };
 
+    extern bool takeSnapshot;
     extern int cameraResolution;
     extern targetDbgInfo dbgObject;
     extern char setAttributeFirst[128];

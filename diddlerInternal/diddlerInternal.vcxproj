@@ -187,6 +187,7 @@
     <ClInclude Include="movementLoop.h" />
     <ClInclude Include="noclip.h" />
     <ClInclude Include="objectSpawner.h" />
+    <ClInclude Include="physCamera.h" />
     <ClInclude Include="Raycaster.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stb_image.h" />
@@ -230,6 +231,7 @@
     <ClCompile Include="movementLoop.cpp" />
     <ClCompile Include="noclip.cpp" />
     <ClCompile Include="objectSpawner.cpp" />
+    <ClCompile Include="physCamera.cpp" />
     <ClCompile Include="Raycaster.cpp" />
     <ClCompile Include="TDFuncs.cpp" />
     <ClCompile Include="Global.cpp" />

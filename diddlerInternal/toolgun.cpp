@@ -81,11 +81,12 @@ namespace toolgun {
 
     //camera specific items
     bool frameOnce = false;
+    bool takeSnapshot = false;
     float* pixels = nullptr;
     float minDist = 1000.f;
     float maxDist = 0.f;
-    int cameraResolution = 32;
-    int commit_resolution = 32;
+    int cameraResolution = 64;
+    int commit_resolution = 64;
 
     void handleToolgun() {
 
@@ -397,12 +398,11 @@ namespace toolgun {
                 }
                 
             }
-
-
-			else if (currentsetting == tgSettings::testing) {
+			else if (currentsetting == tgSettings::camera) {
                
 			    RaycastFilter filter{ 0 };
 			    filter.m_Mask = -1;
+                filter.m_RejectTransparent = true;
 
 			    float pitchMin = glb::player->camPitch - 0.40f;
 			    float pitchMax = glb::player->camPitch + 0.40f;
@@ -421,10 +421,9 @@ namespace toolgun {
 			    glm::quat camera_rotation_br = glm::quat(glm::vec3(pitchMin, yawMax, 0));
 			    glm::vec3 raycast_dir_br = camera_rotation_br * glm::vec3(0, 0, -1);
 
-
 			    raycaster::rayData rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_tl.x, raycast_dir_tl.y, raycast_dir_tl.z }, &filter);
 			    td::Vec3 target = rd.worldPos;
-			    drawCube({ target.x, target.y, target.z }, 0.05, red);
+			    drawCube({ target.x, target.y, target.z }, 0.05, white);
 
 			    rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_tr.x, raycast_dir_tr.y, raycast_dir_tr.z }, &filter);
 			    target = rd.worldPos;
@@ -432,11 +431,11 @@ namespace toolgun {
 
 			    rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_bl.x, raycast_dir_bl.y, raycast_dir_bl.z }, &filter);
 			    target = rd.worldPos;
-			    drawCube({ target.x, target.y, target.z }, 0.05, green);
+			    drawCube({ target.x, target.y, target.z }, 0.05, white);
 
 			    rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_br.x, raycast_dir_br.y, raycast_dir_br.z }, &filter);
 			    target = rd.worldPos;
-			    drawCube({ target.x, target.y, target.z }, 0.05, blue);
+			    drawCube({ target.x, target.y, target.z }, 0.05, white);
 
                 int pixelOffset = 0;
 
@@ -486,18 +485,18 @@ namespace toolgun {
                             }
                         }
 
-                        camera::updateCameraFrame(pixels, commit_resolution, minDist, maxDist);
+                        camera::updateCameraFrame(pixels, commit_resolution, minDist, maxDist, takeSnapshot);
 
                     }
                 }
                 else {
                     frameOnce = true;
-                }
-                
-                
+                }                           
                 camera::drawCameraWindow();
-
 			}
+            else if (currentsetting == tgSettings::testing) {
+
+            }
 
         }
         else {

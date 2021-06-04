@@ -9,6 +9,7 @@
 #include "toolgun.h"
 #include "lantern.h"
 #include "missileLauncher.h"
+#include "physCamera.h"
 
 namespace mods {
 	char jetpackKey = VK_SPACE;
@@ -46,6 +47,8 @@ namespace mods {
 				mem::Null((byte*)&(glb::scene->m_Boundaries), 8 * count);
 			}
 		}
+
+		physCamera::updateCamera();
 
 		//if (flamethrower) {
 		//	flamethrower::execFlamethrower();

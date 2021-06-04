@@ -1,6 +1,6 @@
 #pragma once
 
 namespace camera {
-	void updateCameraFrame(float* pixels, int resolution, float min, float max);
+	void updateCameraFrame(float* pixels, int resolution, float min, float max, bool saveSnapshot);
 	void drawCameraWindow();
 }
