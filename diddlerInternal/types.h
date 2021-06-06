@@ -6,6 +6,7 @@
 #include <cstring>
 #include "memhandler.h"
 
+
 namespace td {
 	struct Vec2 {
 		float x;

@@ -347,6 +347,12 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			if (toolgun::currentsetting == toolgun::tgSettings::slicer) {
 				ImGui::SliderInt("Resolution", &toolgun::slicer_resolution, 64, 1024);
 				ImGui::SliderFloat("maxDist", &toolgun::slicer_maxDist, 1.f, 1000.f, "%.2f");
+				if (ImGui::RadioButton("Horizontal", toolgun::slicerHorizontal)) {
+					toolgun::slicerHorizontal = !toolgun::slicerHorizontal;
+				}
+				if (ImGui::RadioButton("Vertical", !toolgun::slicerHorizontal)) {
+					toolgun::slicerHorizontal = !toolgun::slicerHorizontal;
+				}
 			}
 		}
 

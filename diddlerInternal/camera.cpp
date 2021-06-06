@@ -117,4 +117,172 @@ namespace camera {
 
         ImGui::End();
     }
+
+    float* pixels = nullptr;
+    float minDist = 1000.f;
+    float maxDist = 0.f;
+
+    glm::vec3 getSingleScreenVector(float x, float y, glm::mat4x4& vMatrix, glm::mat4x4& pMatrix) {
+        glm::vec2 ray_nds = glm::vec2(x, y);
+        glm::vec4 ray_clip = glm::vec4(ray_nds.x, ray_nds.y, -1.0f, 1.0f);
+        glm::mat4 invProjMat = glm::inverse(pMatrix);
+        glm::vec4 eyeCoords = invProjMat * ray_clip;
+        eyeCoords = glm::vec4(eyeCoords.x, eyeCoords.y, -1.0f, 0.0f);
+        glm::mat4 invViewMat = glm::inverse(vMatrix);
+        glm::vec4 rayWorld = invViewMat * eyeCoords;
+        return glm::normalize(glm::vec3(rayWorld));
+    }
+
+    void quatCameraOutline(int resolution) {
+
+        int res = resolution;
+        float fov = 12.f;
+        minDist = 1000.f;
+        maxDist = 0.f;
+
+        free(pixels);
+        pixels = new float[res * res];
+
+        td::Color red{ 1.f, 0.f, 0.f, 1.f };
+        td::Color green{ 0.f, 1.f, 0.f, 1.f };
+        td::Color blue{ 0.f, 0.f, 1.f, 1.f };
+        td::Color white{ 1.f, 1.f, 1.f, 1.f };
+
+        glm::vec2 directions[] = { glm::vec2(2, 2), glm::vec2(-2, 2), glm::vec2(2, -2), glm::vec2(-2, -2), };
+
+        RaycastFilter filter{ 0 };
+        filter.m_Mask = -1;
+        filter.m_RejectTransparent = true;
+
+        glm::quat camera_rotation_bl = *(glm::quat*)(&glb::player->cameraQuat);
+        glm::vec3 raycast_dir_bl = camera_rotation_bl * glm::vec3(0, 0, -1);
+        raycaster::rayData rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_bl.x, raycast_dir_bl.y, raycast_dir_bl.z }, &filter);
+
+        glm::vec3 glCameraPos = glm::vec3(glb::player->cameraPosition.x, glb::player->cameraPosition.y, glb::player->cameraPosition.z);
+        glm::vec3 glTarget = glm::vec3(rd.worldPos.x, rd.worldPos.y, rd.worldPos.z);
+        glm::mat4x4 vmatrix = glm::lookAt(glCameraPos, glTarget, glm::vec3(0, 1, 0 ));
+        glm::mat4x4 pmatrix = glm::perspective(50.f, 1.f, 1.f, 150.f);
+
+        int pixelOffset = 0;
+
+        //glm::vec3 vecTL = getSingleScreenVector((fov / 2.f), -(fov / 2.f), vmatrix, pmatrix);
+        //glm::vec3 vecTR = getSingleScreenVector(-(fov / 2.f), -(fov / 2.f), vmatrix, pmatrix);
+        //glm::vec3 vecBL = getSingleScreenVector((fov / 2.f), (fov / 2.f), vmatrix, pmatrix);
+        //glm::vec3 vecBR = getSingleScreenVector(-(fov / 2.f), (fov / 2.f), vmatrix, pmatrix);
+        //
+        //rd = raycaster::castRayManual(glb::player->cameraPosition, { vecTL.x, vecTL.y, vecTL.z }, &filter);
+        //drawCube(rd.worldPos, 0.05f, white);
+        //
+        //rd = raycaster::castRayManual(glb::player->cameraPosition, { vecTR.x, vecTR.y, vecTR.z }, &filter);
+        //drawCube(rd.worldPos, 0.05f, white);
+        //
+        //glm::vec3 vHalf = glm::normalize((vecTL + vecTR) * 0.5f);
+        //
+        //rd = raycaster::castRayManual(glb::player->cameraPosition, { vHalf.x, vHalf.y, vHalf.z }, &filter);
+        //drawCube(rd.worldPos, 0.05f, green);
+        //
+        //rd = raycaster::castRayManual(glb::player->cameraPosition, { vecBL.x, vecBL.y, vecBL.z }, &filter);
+        //drawCube(rd.worldPos, 0.05f, white);
+        //
+        //rd = raycaster::castRayManual(glb::player->cameraPosition, { vecBR.x, vecBR.y, vecBR.z }, &filter);
+        //drawCube(rd.worldPos, 0.05f, white);
+        //
+        //glm::vec3 vHalf2 = glm::normalize((vecTL + vecBL) * 0.5f);
+        //
+        //rd = raycaster::castRayManual(glb::player->cameraPosition, { vHalf2.x, vHalf2.y, vHalf2.z }, &filter);
+        //drawCube(rd.worldPos, 0.05f, green);
+
+        float fovSplit = 1.f / res;
+
+        //for (int y = 0; y < res; y++) {
+        //    float chunkY = y * fovSplit;
+        //    glm::vec3 vPointVert1 = glm::normalize(vecBL - vecTL);
+        //    glm::vec3 vPointVert2 = glm::normalize(vecBR - vecTR);
+        //    glm::vec3 offsetPointY1 = glm::normalize(vecTL + (chunkY * vPointVert1));
+        //    glm::vec3 offsetPointY2 = glm::normalize(vecTR + (chunkY * vPointVert2));
+        //
+        //    for (int x = 0; x < res; x++) {
+        //
+        //        float chunkX = x * fovSplit;
+        //
+        //        //std::cout << chunk << std::endl;
+        //
+        //        glm::vec3 vPointHoriz = glm::normalize(offsetPointY1 - offsetPointY2);
+        //        glm::vec3 offsetPointX = glm::normalize(offsetPointY1 - (chunkX * vPointHoriz));
+        //        
+        //
+        //        rd = raycaster::castRayManual(glb::player->cameraPosition, { offsetPointY1.x, offsetPointY1.y, offsetPointY1.z }, &filter);
+        //        drawCube(rd.worldPos, 0.05f, green);
+        //
+        //        rd = raycaster::castRayManual(glb::player->cameraPosition, { offsetPointY2.x, offsetPointY2.y, offsetPointY2.z }, &filter);
+        //        drawCube(rd.worldPos, 0.05f, green);
+        //
+        //        rd = raycaster::castRayManual(glb::player->cameraPosition, { offsetPointX.x, offsetPointX.y, offsetPointX.z }, &filter);
+        //        drawCube(rd.worldPos, 0.05f, white);
+        //
+        //        float thisDist = rd.distance;
+        //
+        //        //drawCube(rd.worldPos, 0.2f, red);
+        //
+        //        if (thisDist < minDist) {
+        //            minDist = thisDist;
+        //        }
+        //        if (thisDist > maxDist && thisDist < 1000.f) {
+        //            maxDist = thisDist;
+        //        }
+        //
+        //        if (thisDist < 1000.f) {
+        //            pixels[pixelOffset] = thisDist;
+        //        }
+        //        else {
+        //            pixels[pixelOffset] = -1.f;
+        //        }
+        //
+        //        pixelOffset++;
+        //
+        //    }
+        //}
+
+        for (int y = res; y > 0; y--) {
+            for (int x = 0; x < res; x++) {
+
+                float comX = (fov / 2.f) - (x * (fov / res));
+                float comY = (fov / 2.f) - (y * (fov / res));
+
+                glm::vec2 ray_nds = glm::vec2(comX, comY);
+                glm::vec4 ray_clip = glm::vec4(ray_nds.x, ray_nds.y, -1.0f, 1.0f);
+                glm::mat4 invProjMat = glm::inverse(pmatrix);
+                glm::vec4 eyeCoords = invProjMat * ray_clip;
+                eyeCoords = glm::vec4(eyeCoords.x, eyeCoords.y, -1.0f, 0.0f);
+                glm::mat4 invViewMat = glm::inverse(vmatrix);
+                glm::vec4 rayWorld = invViewMat * eyeCoords;
+                glm::vec3 rayDirection = glm::normalize(glm::vec3(rayWorld));
+
+                rd = raycaster::castRayManual(glb::player->cameraPosition, { rayDirection.x, rayDirection.y, rayDirection.z }, &filter);
+                drawCube(rd.worldPos, 0.05f, white);
+
+                float thisDist = rd.distance;
+
+                //drawCube(rd.worldPos, 0.2f, red);
+
+                if (thisDist < minDist) {
+                    minDist = thisDist;
+                }
+                if (thisDist > maxDist && thisDist < 1000.f) {
+                    maxDist = thisDist;
+                }
+
+                if (thisDist < 1000.f) {
+                    pixels[pixelOffset] = thisDist;
+                }
+                else {
+                    pixels[pixelOffset] = -1.f;
+                }
+
+                pixelOffset++;
+            }
+        }
+
+        camera::updateCameraFrame(pixels, res, minDist, maxDist, false);
+    }
 }

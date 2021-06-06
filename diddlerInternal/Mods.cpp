@@ -49,6 +49,7 @@ namespace mods {
 		}
 
 		physCamera::updateCamera();
+		//camera::quatCameraOutline();
 
 		//if (flamethrower) {
 		//	flamethrower::execFlamethrower();

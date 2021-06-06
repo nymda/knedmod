@@ -78,6 +78,7 @@ namespace toolgun {
     //slicer specific items
     float slicer_maxDist = 10.f;
     int slicer_resolution = 500;
+    bool slicerHorizontal = true;
 
     //camera specific items
     bool frameOnce = false;
@@ -380,7 +381,15 @@ namespace toolgun {
                 for (int i = 0; i < slicer_resolution; i++) {
                     RaycastFilter filter{ 0 };
                     filter.m_Mask = -1;
-                    glm::quat camera_rotation_tl = glm::quat(glm::vec3(0, (currentOffset + glb::player->camYaw), 0));
+                    glm::quat camera_rotation_tl = {};
+
+                    if (slicerHorizontal) {
+                        camera_rotation_tl = glm::quat(glm::vec3(0, (currentOffset + glb::player->camYaw), 0));
+                    }
+                    else {
+                        camera_rotation_tl = glm::quat(glm::vec3((currentOffset + glb::player->camPitch), glb::player->camYaw, 0));
+                    }
+
                     glm::vec3 raycast_dir_tl = camera_rotation_tl * glm::vec3(0, 0, -1);
                     raycaster::rayData rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_tl.x, raycast_dir_tl.y, raycast_dir_tl.z }, &filter);
                     if (rd.distance <= slicer_maxDist) {
@@ -400,92 +409,95 @@ namespace toolgun {
             }
 			else if (currentsetting == tgSettings::camera) {
                
-			    RaycastFilter filter{ 0 };
-			    filter.m_Mask = -1;
-                filter.m_RejectTransparent = true;
+			    //RaycastFilter filter{ 0 };
+			    //filter.m_Mask = -1;
+       //         filter.m_RejectTransparent = true;
 
-			    float pitchMin = glb::player->camPitch - 0.40f;
-			    float pitchMax = glb::player->camPitch + 0.40f;
-			    float yawMin = glb::player->camYaw - 0.40f;
-			    float yawMax = glb::player->camYaw + 0.40f;
+			    //float pitchMin = glb::player->camPitch - 0.40f;
+			    //float pitchMax = glb::player->camPitch + 0.40f;
+			    //float yawMin = glb::player->camYaw - 0.40f;
+			    //float yawMax = glb::player->camYaw + 0.40f;
 
-			    glm::quat camera_rotation_tl = glm::quat(glm::vec3(pitchMax, yawMax, 0));
-			    glm::vec3 raycast_dir_tl = camera_rotation_tl * glm::vec3(0, 0, -1);
+			    //glm::quat camera_rotation_tl = glm::quat(glm::vec3(pitchMax, yawMax, 0));
+			    //glm::vec3 raycast_dir_tl = camera_rotation_tl * glm::vec3(0, 0, -1);
 
-			    glm::quat camera_rotation_tr = glm::quat(glm::vec3(pitchMax, yawMin, 0));
-			    glm::vec3 raycast_dir_tr = camera_rotation_tr * glm::vec3(0, 0, -1);
+			    //glm::quat camera_rotation_tr = glm::quat(glm::vec3(pitchMax, yawMin, 0));
+			    //glm::vec3 raycast_dir_tr = camera_rotation_tr * glm::vec3(0, 0, -1);
 
-			    glm::quat camera_rotation_bl = glm::quat(glm::vec3(pitchMin, yawMin, 0));
-			    glm::vec3 raycast_dir_bl = camera_rotation_bl * glm::vec3(0, 0, -1);
+			    //glm::quat camera_rotation_bl = glm::quat(glm::vec3(pitchMin, yawMin, 0));
+			    //glm::vec3 raycast_dir_bl = camera_rotation_bl * glm::vec3(0, 0, -1);
 
-			    glm::quat camera_rotation_br = glm::quat(glm::vec3(pitchMin, yawMax, 0));
-			    glm::vec3 raycast_dir_br = camera_rotation_br * glm::vec3(0, 0, -1);
+			    //glm::quat camera_rotation_br = glm::quat(glm::vec3(pitchMin, yawMax, 0));
+			    //glm::vec3 raycast_dir_br = camera_rotation_br * glm::vec3(0, 0, -1);
 
-			    raycaster::rayData rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_tl.x, raycast_dir_tl.y, raycast_dir_tl.z }, &filter);
-			    td::Vec3 target = rd.worldPos;
-			    drawCube({ target.x, target.y, target.z }, 0.05, white);
+			    //raycaster::rayData rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_tl.x, raycast_dir_tl.y, raycast_dir_tl.z }, &filter);
+			    //td::Vec3 target = rd.worldPos;
+			    //drawCube({ target.x, target.y, target.z }, 0.05, white);
 
-			    rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_tr.x, raycast_dir_tr.y, raycast_dir_tr.z }, &filter);
-			    target = rd.worldPos;
-			    drawCube({ target.x, target.y, target.z }, 0.05, white);
+			    //rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_tr.x, raycast_dir_tr.y, raycast_dir_tr.z }, &filter);
+			    //target = rd.worldPos;
+			    //drawCube({ target.x, target.y, target.z }, 0.05, white);
 
-			    rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_bl.x, raycast_dir_bl.y, raycast_dir_bl.z }, &filter);
-			    target = rd.worldPos;
-			    drawCube({ target.x, target.y, target.z }, 0.05, white);
+			    //rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_bl.x, raycast_dir_bl.y, raycast_dir_bl.z }, &filter);
+			    //target = rd.worldPos;
+			    //drawCube({ target.x, target.y, target.z }, 0.05, white);
 
-			    rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_br.x, raycast_dir_br.y, raycast_dir_br.z }, &filter);
-			    target = rd.worldPos;
-			    drawCube({ target.x, target.y, target.z }, 0.05, white);
+			    //rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_br.x, raycast_dir_br.y, raycast_dir_br.z }, &filter);
+			    //target = rd.worldPos;
+			    //drawCube({ target.x, target.y, target.z }, 0.05, white);
 
                 int pixelOffset = 0;
 
                 if (glb::player->isAttacking == true && !glb::displayMenu) {
                     if (frameOnce) {
-                        minDist = 1000.f;
-                        maxDist = 0.f;
 
-                        commit_resolution = cameraResolution;
+                        camera::quatCameraOutline(cameraResolution);
 
-                        //frameOnce = false;
-                        free(pixels);
-                        pixels = new float[commit_resolution * commit_resolution];
+                        //minDist = 1000.f;
+                        //maxDist = 0.f;
 
-                        for (int x = commit_resolution; x > 0; x--) {
-                            for (int y = commit_resolution; y > 0; y--) {
+                        //commit_resolution = cameraResolution;
 
-                                float pitchStep = (pitchMax - pitchMin) / commit_resolution;
-                                float thisPitch = pitchMin + (x * pitchStep);
+                        ////frameOnce = false;
+                        //free(pixels);
+                        //pixels = new float[commit_resolution * commit_resolution];
 
-                                float yawStep = (yawMax - yawMin) / commit_resolution;
-                                float thisYaw = yawMin + (y * yawStep);
+                        //for (int x = commit_resolution; x > 0; x--) {
+                        //    for (int y = commit_resolution; y > 0; y--) {
 
-                                glm::quat camera_rot = glm::quat(glm::vec3(thisPitch, thisYaw, 0));
-                                glm::vec3 raycast_dir = camera_rot * glm::vec3(0, 0, -1);
+                        //        float pitchStep = (pitchMax - pitchMin) / commit_resolution;
+                        //        float thisPitch = pitchMin + (x * pitchStep);
 
-                                raycaster::rayData rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir.x, raycast_dir.y, raycast_dir.z }, &filter);
-                                float thisDist = rd.distance;
+                        //        float yawStep = (yawMax - yawMin) / commit_resolution;
+                        //        float thisYaw = yawMin + (y * yawStep);
 
-                                //drawCube(rd.worldPos, 0.2f, red);
-                                
-                                if (thisDist < minDist) {
-                                    minDist = thisDist;
-                                }
-                                if (thisDist > maxDist && thisDist < 1000.f) {
-                                    maxDist = thisDist;
-                                }
+                        //        glm::quat camera_rot = glm::quat(glm::vec3(thisPitch, thisYaw, 0));
+                        //        glm::vec3 raycast_dir = camera_rot * glm::vec3(0, 0, -1);
 
-                                if (thisDist < 1000.f) {
-                                    pixels[pixelOffset] = thisDist;
-                                }
-                                else {
-                                    pixels[pixelOffset] = -1.f;
-                                }
+                        //        raycaster::rayData rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir.x, raycast_dir.y, raycast_dir.z }, &filter);
+                        //        float thisDist = rd.distance;
 
-                                pixelOffset++;
-                            }
-                        }
+                        //        //drawCube(rd.worldPos, 0.2f, red);
+                        //        
+                        //        if (thisDist < minDist) {
+                        //            minDist = thisDist;
+                        //        }
+                        //        if (thisDist > maxDist && thisDist < 1000.f) {
+                        //            maxDist = thisDist;
+                        //        }
 
-                        camera::updateCameraFrame(pixels, commit_resolution, minDist, maxDist, takeSnapshot);
+                        //        if (thisDist < 1000.f) {
+                        //            pixels[pixelOffset] = thisDist;
+                        //        }
+                        //        else {
+                        //            pixels[pixelOffset] = -1.f;
+                        //        }
+
+                        //        pixelOffset++;
+                        //    }
+                        //}
+
+                        //camera::updateCameraFrame(pixels, commit_resolution, minDist, maxDist, takeSnapshot);
 
                     }
                 }

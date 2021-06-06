@@ -36,7 +36,8 @@ namespace toolgun {
         succ = 1,
         del = 2
     };
-
+    
+    extern bool slicerHorizontal;
     extern bool takeSnapshot;
     extern int cameraResolution;
     extern targetDbgInfo dbgObject;
