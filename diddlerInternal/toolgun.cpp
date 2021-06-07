@@ -83,11 +83,8 @@ namespace toolgun {
     //camera specific items
     bool frameOnce = false;
     bool takeSnapshot = false;
-    float* pixels = nullptr;
-    float minDist = 1000.f;
-    float maxDist = 0.f;
     int cameraResolution = 64;
-    int commit_resolution = 64;
+    float cameraFov = 8.f;
 
     void handleToolgun() {
 
@@ -191,7 +188,9 @@ namespace toolgun {
                         td::Vec3 shootPos = { camRot.x + noiseX, camRot.y + noiseY, camRot.z + noiseZ };
 
                         RaycastFilter rcf{0};
-                        raycaster::rayData rd = raycaster::castRayManual(camPos, shootPos, &rcf);
+
+                        td::VoxelsPaletteInfo palOut = {};
+                        raycaster::rayData rd = raycaster::castRayManual(camPos, shootPos, &rcf, &palOut);
                         td::Vec3 target = rd.worldPos;
                         glb::TDcreateExplosion((uintptr_t)glb::scene, &target, power);
                     }
@@ -316,7 +315,9 @@ namespace toolgun {
                         noiseY = -leafBlowerFOV + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (leafBlowerFOV - -leafBlowerFOV)));
                         noiseZ = -leafBlowerFOV + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (leafBlowerFOV - -leafBlowerFOV)));
                         td::Vec3 blowVec3 = { playerCameraVec3.x + noiseX, playerCameraVec3.y + noiseY, playerCameraVec3.z + noiseZ };
-                        raycaster::rayData rayDat = raycaster::castRayManual(glb::player->cameraPosition, blowVec3, &filter);
+
+                        td::VoxelsPaletteInfo palOut = {};
+                        raycaster::rayData rayDat = raycaster::castRayManual(glb::player->cameraPosition, blowVec3, &filter, &palOut);
                         if (showRayHitPos) {
                             drawCube(rayDat.worldPos, 0.02f, red);
                         }
@@ -391,7 +392,9 @@ namespace toolgun {
                     }
 
                     glm::vec3 raycast_dir_tl = camera_rotation_tl * glm::vec3(0, 0, -1);
-                    raycaster::rayData rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_tl.x, raycast_dir_tl.y, raycast_dir_tl.z }, &filter);
+
+                    td::VoxelsPaletteInfo palOut = {};
+                    raycaster::rayData rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_tl.x, raycast_dir_tl.y, raycast_dir_tl.z }, &filter, &palOut);
                     if (rd.distance <= slicer_maxDist) {
                         if (glb::player->isAttacking) {
                             glb::oWrappedDamage(glb::scene, &rd.worldPos, 0.2f, 0.2f, 0, 0);
@@ -451,7 +454,7 @@ namespace toolgun {
                 if (glb::player->isAttacking == true && !glb::displayMenu) {
                     if (frameOnce) {
 
-                        camera::quatCameraOutline(cameraResolution);
+                        camera::quatCameraOutline(cameraResolution, cameraFov);
 
                         //minDist = 1000.f;
                         //maxDist = 0.f;

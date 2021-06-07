@@ -4,7 +4,7 @@
 
 namespace raycaster {
 
-    rayData castRayManual(td::Vec3 position, td::Vec3 rotation, RaycastFilter* filterCus) {
+    rayData castRayManual(td::Vec3 position, td::Vec3 rotation, RaycastFilter* filterCus, td::VoxelsPaletteInfo* voxInfo) {
 
         rayData rdp = {};
 
@@ -16,7 +16,7 @@ namespace raycaster {
         uintptr_t oShape;
         uintptr_t oPal;
         float outDist = 0.f;
-        glb::oRC(glb::scene, &pCopy, &rCopy, 250.f, filterCus, &outDist, &output, &oShape, nullptr);
+        glb::oRC(glb::scene, &pCopy, &rCopy, 250.f, filterCus, &outDist, &output, &oShape, (uintptr_t*)voxInfo);
         if (outDist == 0) {
             outDist = 1000.f;
         }

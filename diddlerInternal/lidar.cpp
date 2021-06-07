@@ -57,8 +57,9 @@ namespace lidar {
 			filter.m_Mask = -1;
 			glm::quat camera_rotation_tl = glm::quat(glm::vec3(0, (currentOffset + glb::player->camYaw), 0));
 			glm::vec3 raycast_dir_tl = camera_rotation_tl * glm::vec3(0, 0, -1);
-
-			raycaster::rayData rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_tl.x, raycast_dir_tl.y, raycast_dir_tl.z }, &filter);
+			
+			td::VoxelsPaletteInfo palOut = {};
+			raycaster::rayData rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_tl.x, raycast_dir_tl.y, raycast_dir_tl.z }, &filter, &palOut);
 			td::Vec3 target = rd.worldPos;
 
 			float step = ((pi * 2) / resolution);

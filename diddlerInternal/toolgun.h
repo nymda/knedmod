@@ -37,6 +37,7 @@ namespace toolgun {
         del = 2
     };
     
+    extern float cameraFov;
     extern bool slicerHorizontal;
     extern bool takeSnapshot;
     extern int cameraResolution;

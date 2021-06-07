@@ -78,7 +78,8 @@ namespace missile {
                 td::Vec3 objectMax = missile.obj.shape->posMax;
                 td::Vec3 centerpoint = { objectMax.x - ((objectMax.x - objectMin.x) / 2), objectMax.y - ((objectMax.y - objectMin.y) / 2), objectMax.z - ((objectMax.z - objectMin.z) / 2) };
 
-                raycaster::rayData rayDat = raycaster::castRayManual(centerpoint, rotationEul, &rcf);
+                td::VoxelsPaletteInfo palOut = {};
+                raycaster::rayData rayDat = raycaster::castRayManual(centerpoint, rotationEul, &rcf, &palOut);
 
                 td::Vec3 vel = { 0.f, 0.f, 0.f };
                 td::particleInfo tdpi = { 0.f, 0.f, 0.f, 0.7f, 0.7f, 0.7f, 1.f, 0.7f, 0.7f, 0.7f, 1.f, 0.f, 0.f, 0.f, 0.2f, 0.f, 0.f, 0.f, 0.f, 0.15f, 0.25f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 1.f, 1.f, 0.f, 0.f, 0.f, 1.f, 1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f };

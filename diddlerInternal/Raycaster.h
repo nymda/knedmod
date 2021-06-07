@@ -16,7 +16,7 @@ namespace raycaster {
 		uintptr_t* palette;
 	};
 
-	rayData castRayManual(td::Vec3 position, td::Vec3 rotation, RaycastFilter* filter);
+	rayData castRayManual(td::Vec3 position, td::Vec3 rotation, RaycastFilter* filterCus, td::VoxelsPaletteInfo* voxInfo);
 	rayData castRayPlayer();
 
 }

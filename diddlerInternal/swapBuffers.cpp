@@ -354,6 +354,11 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 					toolgun::slicerHorizontal = !toolgun::slicerHorizontal;
 				}
 			}
+			if (toolgun::currentsetting == toolgun::tgSettings::camera) {
+				ImGui::SliderInt("Resolution", &toolgun::cameraResolution, 32, 512);
+				ImGui::SliderFloat("FOV", &toolgun::cameraFov, 1.f, 10.f, "%.1f");
+				ImGui::Checkbox("Save image", &toolgun::takeSnapshot);
+			}
 		}
 
 		if (ImGui::CollapsingHeader("misc")) {
@@ -391,6 +396,9 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 
 			if (ImGui::Button("Spawn physCamera")) {
 				physCamera::spawnCameraObject();
+			}
+			if (ImGui::Button("Destroy physCamera")) {
+				physCamera::destroyCamera();
 			}
 		}
 

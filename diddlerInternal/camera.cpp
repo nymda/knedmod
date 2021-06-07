@@ -30,9 +30,9 @@ namespace camera {
             for (uint x = 0; x < width; x++) {
                 const int color = data[x + (height - 1 - y) * width];
                 const int i = 54 + 3 * x + y * (3 * width + pad);
-                img[i] = (char)(color & 0xFF);
+                img[i + 2] = (char)(color & 0xFF);
                 img[i + 1] = (char)((color >> 8) & 0xFF);
-                img[i + 2] = (char)((color >> 16) & 0xFF);
+                img[i] = (char)((color >> 16) & 0xFF);
             }
             for (uint p = 0; p < pad; p++) img[54 + (3 * width + p) + y * (3 * width + pad)] = 0;
         }
@@ -108,17 +108,47 @@ namespace camera {
 
 	}
 
+    void updateCameraFrameColor(byte* pixels, int resolution, float min, float max, bool saveSnapshot) {
+
+        if (!pixels) {
+            return;
+        }
+
+        if (!isinit) {
+            initTexture();
+        }
+
+        // Setup filtering parameters for display
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // This is required on WebGL for non power-of-two textures
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // Same
+
+        // Upload pixels into texture
+#if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+#endif
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, resolution, resolution, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)pixels);
+
+        if (saveSnapshot) {
+            createBitmap((DWORD*)pixels, resolution);
+        }
+
+        //free(pixels);
+
+    }
+
     void drawCameraWindow() {
         ImGui::Begin("Camera");
 
-        ImGui::Image((void*)image_texture, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowHeight() - 80));
-        ImGui::SliderInt("Resolution", &toolgun::cameraResolution, 32, 512);
-        ImGui::Checkbox("Save image", &toolgun::takeSnapshot);
+        ImGui::Image((void*)image_texture, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowHeight() - 40));
 
         ImGui::End();
     }
 
     float* pixels = nullptr;
+    byte* pixelsColor = nullptr;
     float minDist = 1000.f;
     float maxDist = 0.f;
 
@@ -133,15 +163,15 @@ namespace camera {
         return glm::normalize(glm::vec3(rayWorld));
     }
 
-    void quatCameraOutline(int resolution) {
+    void quatCameraOutline(int resolution, float iFov){
 
         int res = resolution;
-        float fov = 12.f;
+        float fov = iFov;
         minDist = 1000.f;
         maxDist = 0.f;
 
-        free(pixels);
-        pixels = new float[res * res];
+        free(pixelsColor);
+        pixelsColor = new byte[(res * res) * 4];
 
         td::Color red{ 1.f, 0.f, 0.f, 1.f };
         td::Color green{ 0.f, 1.f, 0.f, 1.f };
@@ -156,12 +186,14 @@ namespace camera {
 
         glm::quat camera_rotation_bl = *(glm::quat*)(&glb::player->cameraQuat);
         glm::vec3 raycast_dir_bl = camera_rotation_bl * glm::vec3(0, 0, -1);
-        raycaster::rayData rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_bl.x, raycast_dir_bl.y, raycast_dir_bl.z }, &filter);
+
+        td::VoxelsPaletteInfo palOut = {};
+        raycaster::rayData rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_bl.x, raycast_dir_bl.y, raycast_dir_bl.z }, &filter, &palOut);
 
         glm::vec3 glCameraPos = glm::vec3(glb::player->cameraPosition.x, glb::player->cameraPosition.y, glb::player->cameraPosition.z);
         glm::vec3 glTarget = glm::vec3(rd.worldPos.x, rd.worldPos.y, rd.worldPos.z);
         glm::mat4x4 vmatrix = glm::lookAt(glCameraPos, glTarget, glm::vec3(0, 1, 0 ));
-        glm::mat4x4 pmatrix = glm::perspective(50.f, 1.f, 1.f, 150.f);
+        glm::mat4x4 pmatrix = glm::perspective(50.f, 1.f, 1.f, 1000.f);
 
         int pixelOffset = 0;
 
@@ -194,54 +226,8 @@ namespace camera {
 
         float fovSplit = 1.f / res;
 
-        //for (int y = 0; y < res; y++) {
-        //    float chunkY = y * fovSplit;
-        //    glm::vec3 vPointVert1 = glm::normalize(vecBL - vecTL);
-        //    glm::vec3 vPointVert2 = glm::normalize(vecBR - vecTR);
-        //    glm::vec3 offsetPointY1 = glm::normalize(vecTL + (chunkY * vPointVert1));
-        //    glm::vec3 offsetPointY2 = glm::normalize(vecTR + (chunkY * vPointVert2));
-        //
-        //    for (int x = 0; x < res; x++) {
-        //
-        //        float chunkX = x * fovSplit;
-        //
-        //        //std::cout << chunk << std::endl;
-        //
-        //        glm::vec3 vPointHoriz = glm::normalize(offsetPointY1 - offsetPointY2);
-        //        glm::vec3 offsetPointX = glm::normalize(offsetPointY1 - (chunkX * vPointHoriz));
-        //        
-        //
-        //        rd = raycaster::castRayManual(glb::player->cameraPosition, { offsetPointY1.x, offsetPointY1.y, offsetPointY1.z }, &filter);
-        //        drawCube(rd.worldPos, 0.05f, green);
-        //
-        //        rd = raycaster::castRayManual(glb::player->cameraPosition, { offsetPointY2.x, offsetPointY2.y, offsetPointY2.z }, &filter);
-        //        drawCube(rd.worldPos, 0.05f, green);
-        //
-        //        rd = raycaster::castRayManual(glb::player->cameraPosition, { offsetPointX.x, offsetPointX.y, offsetPointX.z }, &filter);
-        //        drawCube(rd.worldPos, 0.05f, white);
-        //
-        //        float thisDist = rd.distance;
-        //
-        //        //drawCube(rd.worldPos, 0.2f, red);
-        //
-        //        if (thisDist < minDist) {
-        //            minDist = thisDist;
-        //        }
-        //        if (thisDist > maxDist && thisDist < 1000.f) {
-        //            maxDist = thisDist;
-        //        }
-        //
-        //        if (thisDist < 1000.f) {
-        //            pixels[pixelOffset] = thisDist;
-        //        }
-        //        else {
-        //            pixels[pixelOffset] = -1.f;
-        //        }
-        //
-        //        pixelOffset++;
-        //
-        //    }
-        //}
+        glm::mat4 invProjMat = glm::inverse(pmatrix);
+        glm::mat4 invViewMat = glm::inverse(vmatrix);
 
         for (int y = res; y > 0; y--) {
             for (int x = 0; x < res; x++) {
@@ -251,38 +237,39 @@ namespace camera {
 
                 glm::vec2 ray_nds = glm::vec2(comX, comY);
                 glm::vec4 ray_clip = glm::vec4(ray_nds.x, ray_nds.y, -1.0f, 1.0f);
-                glm::mat4 invProjMat = glm::inverse(pmatrix);
+
                 glm::vec4 eyeCoords = invProjMat * ray_clip;
                 eyeCoords = glm::vec4(eyeCoords.x, eyeCoords.y, -1.0f, 0.0f);
-                glm::mat4 invViewMat = glm::inverse(vmatrix);
+
                 glm::vec4 rayWorld = invViewMat * eyeCoords;
                 glm::vec3 rayDirection = glm::normalize(glm::vec3(rayWorld));
 
-                rd = raycaster::castRayManual(glb::player->cameraPosition, { rayDirection.x, rayDirection.y, rayDirection.z }, &filter);
-                drawCube(rd.worldPos, 0.05f, white);
+                td::VoxelsPaletteInfo palOut = {};
+                rd = raycaster::castRayManual(glb::player->cameraPosition, { rayDirection.x, rayDirection.y, rayDirection.z }, &filter, &palOut);
+
+                if (res <= 512) {
+                    drawCube(rd.worldPos, 0.05f, white);
+                }
+
 
                 float thisDist = rd.distance;
 
-                //drawCube(rd.worldPos, 0.2f, red);
-
-                if (thisDist < minDist) {
-                    minDist = thisDist;
-                }
-                if (thisDist > maxDist && thisDist < 1000.f) {
-                    maxDist = thisDist;
-                }
-
-                if (thisDist < 1000.f) {
-                    pixels[pixelOffset] = thisDist;
+                if (thisDist >= 1000.f) {
+                    pixelsColor[pixelOffset] = (byte)(0);
+                    pixelsColor[pixelOffset + 1] = (byte)(77);
+                    pixelsColor[pixelOffset + 2] = (byte)(77);
+                    pixelsColor[pixelOffset + 3] = (byte)(255);
                 }
                 else {
-                    pixels[pixelOffset] = -1.f;
+                    pixelsColor[pixelOffset] = (byte)(palOut.m_Color.m_R * 255);
+                    pixelsColor[pixelOffset + 1] = (byte)(palOut.m_Color.m_G * 255);
+                    pixelsColor[pixelOffset + 2] = (byte)(palOut.m_Color.m_B * 255);
+                    pixelsColor[pixelOffset + 3] = (byte)(palOut.m_Color.m_A * 255);
                 }
-
-                pixelOffset++;
+                pixelOffset+=4;
             }
         }
 
-        camera::updateCameraFrame(pixels, res, minDist, maxDist, false);
+        camera::updateCameraFrameColor(pixelsColor, res, minDist, maxDist, toolgun::takeSnapshot);
     }
 }

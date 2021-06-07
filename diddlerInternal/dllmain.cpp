@@ -24,6 +24,7 @@
 #include "mainHook.h"
 #include "movementLoop.h"
 #include "focusHook.h"
+#include "noclip.h"
 
 FILE* makeConsole() {
     AllocConsole();
@@ -90,6 +91,11 @@ DWORD WINAPI main(HMODULE hModule)
     while (true) {
         if (((GetAsyncKeyState(VK_END) >> 15) & 0x0001) == 0x0001) {
             if (true) {
+
+                if (noclip::inNoclip) {
+                    noclip::ToggleNoclip();
+                }
+
                 ////undo hooks
                 fclose(cnsl);
                 FreeConsole();
