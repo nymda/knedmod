@@ -163,6 +163,10 @@ namespace camera {
         return glm::normalize(glm::vec3(rayWorld));
     }
 
+    float randFloat(float min, float max) {
+        return min + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (max - min)));
+    }
+
     void quatCameraOutline(int resolution, float iFov){
 
         int res = resolution;
@@ -183,46 +187,17 @@ namespace camera {
         RaycastFilter filter{ 0 };
         filter.m_Mask = -1;
         filter.m_RejectTransparent = true;
+        td::VoxelsPaletteInfo palOut = {};
 
         glm::quat camera_rotation_bl = *(glm::quat*)(&glb::player->cameraQuat);
         glm::vec3 raycast_dir_bl = camera_rotation_bl * glm::vec3(0, 0, -1);
-
-        td::VoxelsPaletteInfo palOut = {};
         raycaster::rayData rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_bl.x, raycast_dir_bl.y, raycast_dir_bl.z }, &filter, &palOut);
-
         glm::vec3 glCameraPos = glm::vec3(glb::player->cameraPosition.x, glb::player->cameraPosition.y, glb::player->cameraPosition.z);
         glm::vec3 glTarget = glm::vec3(rd.worldPos.x, rd.worldPos.y, rd.worldPos.z);
         glm::mat4x4 vmatrix = glm::lookAt(glCameraPos, glTarget, glm::vec3(0, 1, 0 ));
         glm::mat4x4 pmatrix = glm::perspective(50.f, 1.f, 1.f, 1000.f);
 
         int pixelOffset = 0;
-
-        //glm::vec3 vecTL = getSingleScreenVector((fov / 2.f), -(fov / 2.f), vmatrix, pmatrix);
-        //glm::vec3 vecTR = getSingleScreenVector(-(fov / 2.f), -(fov / 2.f), vmatrix, pmatrix);
-        //glm::vec3 vecBL = getSingleScreenVector((fov / 2.f), (fov / 2.f), vmatrix, pmatrix);
-        //glm::vec3 vecBR = getSingleScreenVector(-(fov / 2.f), (fov / 2.f), vmatrix, pmatrix);
-        //
-        //rd = raycaster::castRayManual(glb::player->cameraPosition, { vecTL.x, vecTL.y, vecTL.z }, &filter);
-        //drawCube(rd.worldPos, 0.05f, white);
-        //
-        //rd = raycaster::castRayManual(glb::player->cameraPosition, { vecTR.x, vecTR.y, vecTR.z }, &filter);
-        //drawCube(rd.worldPos, 0.05f, white);
-        //
-        //glm::vec3 vHalf = glm::normalize((vecTL + vecTR) * 0.5f);
-        //
-        //rd = raycaster::castRayManual(glb::player->cameraPosition, { vHalf.x, vHalf.y, vHalf.z }, &filter);
-        //drawCube(rd.worldPos, 0.05f, green);
-        //
-        //rd = raycaster::castRayManual(glb::player->cameraPosition, { vecBL.x, vecBL.y, vecBL.z }, &filter);
-        //drawCube(rd.worldPos, 0.05f, white);
-        //
-        //rd = raycaster::castRayManual(glb::player->cameraPosition, { vecBR.x, vecBR.y, vecBR.z }, &filter);
-        //drawCube(rd.worldPos, 0.05f, white);
-        //
-        //glm::vec3 vHalf2 = glm::normalize((vecTL + vecBL) * 0.5f);
-        //
-        //rd = raycaster::castRayManual(glb::player->cameraPosition, { vHalf2.x, vHalf2.y, vHalf2.z }, &filter);
-        //drawCube(rd.worldPos, 0.05f, green);
 
         float fovSplit = 1.f / res;
 
@@ -231,9 +206,9 @@ namespace camera {
 
         for (int y = res; y > 0; y--) {
             for (int x = 0; x < res; x++) {
-
-                float comX = (fov / 2.f) - (x * (fov / res));
-                float comY = (fov / 2.f) - (y * (fov / res));
+                float pxSize = (fov / res);
+                float comX = (fov / 2.f) - (x * pxSize) + randFloat(-(pxSize / 3.f), (pxSize / 3.f));
+                float comY = (fov / 2.f) - (y * pxSize) + randFloat(-(pxSize / 3.f), (pxSize / 3.f));
 
                 glm::vec2 ray_nds = glm::vec2(comX, comY);
                 glm::vec4 ray_clip = glm::vec4(ray_nds.x, ray_nds.y, -1.0f, 1.0f);

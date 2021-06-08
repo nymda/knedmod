@@ -41,6 +41,10 @@ namespace physCamera {
         camera = {};
     }
 
+    float randFloat(float min, float max) {
+        return min + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (max - min)));
+    }
+
     byte* pixelsColor = nullptr;
 	void updateCamera() {
         int res = toolgun::cameraResolution;
@@ -118,8 +122,9 @@ namespace physCamera {
 
         for (int y = res; y > 0; y--) {
             for (int x = 0; x < res; x++) {
-                float comX = (fov / 2.f) - (x * (fov / res));
-                float comY = (fov / 2.f) - (y * (fov / res));
+                float pxSize = (fov / res);
+                float comX = (fov / 2.f) - (x * pxSize) + randFloat(-(pxSize / 3.f), (pxSize / 3.f));
+                float comY = (fov / 2.f) - (y * pxSize) + randFloat(-(pxSize / 3.f), (pxSize / 3.f));
 
                 glm::vec2 ray_nds = glm::vec2(comX, comY);
                 glm::vec4 ray_clip = glm::vec4(ray_nds.x, ray_nds.y, -1.0f, 1.0f);
