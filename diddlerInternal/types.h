@@ -9,30 +9,6 @@
 
 namespace td {
 
-	struct VoxelMaterial
-	{
-		float m_Reflectivity;
-		float m_Roughness;
-		float m_Metallic;
-		float m_Emission;
-	};
-
-	struct VoxelColor
-	{
-		float m_R;
-		float m_G;
-		float m_B;
-		float m_A;
-	};
-
-	struct VoxelsPaletteInfo
-	{
-		uint32_t m_Type;
-		VoxelColor m_Color;
-		VoxelMaterial m_Material;
-		uint32_t m_Pad20;
-	};
-
 	struct Vec2 {
 		float x;
 		float y;

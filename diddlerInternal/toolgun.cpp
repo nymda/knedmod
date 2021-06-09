@@ -10,6 +10,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include "lidar.h"
+#include "dotProjector.h"
 
 
 namespace toolgun {
@@ -189,44 +190,35 @@ namespace toolgun {
 
                         RaycastFilter rcf{0};
 
-                        td::VoxelsPaletteInfo palOut = {};
-                        raycaster::rayData rd = raycaster::castRayManual(camPos, shootPos, &rcf, &palOut);
+                        raycaster::rayData rd = raycaster::castRayManual(camPos, shootPos, &rcf);
                         td::Vec3 target = rd.worldPos;
                         glb::TDcreateExplosion((uintptr_t)glb::scene, &target, power);
                     }
                 }
             }
             else if (currentsetting == tgSettings::flamethrower) {
+                RaycastFilter rcf = {};
+
                 if (glb::player->isAttacking == true) {
-
-                    //std::cout << std::to_string(glb::scene->fireSystem->m_Instances.size()) << "@" << &glb::scene->fireSystem << std::endl;
-
-                    raycaster::rayData rayDat = raycaster::castRayPlayer();
-                    drawCube({ rayDat.worldPos.x, rayDat.worldPos.y, rayDat.worldPos.z }, flRadius, red);
-
-                    for (float ty = (rayDat.worldPos.y - flRadius); ty < (rayDat.worldPos.y + flRadius); ty += 0.1f) {
-                        for (float tx = (rayDat.worldPos.x - flRadius); tx < (rayDat.worldPos.x + flRadius); tx += 0.1f) {
-                            for (float tz = (rayDat.worldPos.z - flRadius); tz < (rayDat.worldPos.z + flRadius); tz += 0.1f) {
-                                uintptr_t sceneSpecial = *(uintptr_t*)((uintptr_t)glb::scene + 0x88);
-
-                                if (chance == 100) {
-                                    td::Vec3 firepos = { tx, ty, tz };
-                                    glb::oSpawnFire(sceneSpecial, &firepos);
-                                }
-                                else if ((rand() % (100 - chance)) == 0) {
-                                    td::Vec3 firepos = { tx, ty, tz };
-                                    glb::oSpawnFire(sceneSpecial, &firepos);
-                                }
-
-                                //std::cout << "Most recent fire: " << glb::scene->fireSystem->m_Instances.end() << " Lifetime: " << (((FireSystem::Fire*)((uintptr_t)(glb::scene->fireSystem->m_Instances.end())))->m_TimeRemaining) << std::endl;
-                            }
+                    uintptr_t sceneSpecial = *(uintptr_t*)((uintptr_t)glb::scene + 0x88);
+                    dotProjector::pixelResponse* pixelResponse = dotProjector::projectDotMatrix(16, flRadius, 1.f, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
+                    for (int i = 0; i < pixelResponse->size; i++) {
+                        td::Vec3 firepos = pixelResponse->data[i].worldPos;
+                        if (chance == 100) {
+                            glb::oSpawnFire(sceneSpecial, &firepos);
                         }
+                        else if ((rand() % (100 - chance)) == 0) {
+                            glb::oSpawnFire(sceneSpecial, &firepos);
+                        }
+                        drawCube(firepos, 0.1, red);
                     }
                 }
                 else {
-                    raycaster::rayData rayDat = raycaster::castRayPlayer();
-                    td::Color green{ 0.f, 1.f, 0.f, 1.f };
-                    drawCube({ rayDat.worldPos.x, rayDat.worldPos.y, rayDat.worldPos.z }, flRadius, green);
+                    uintptr_t sceneSpecial = *(uintptr_t*)((uintptr_t)glb::scene + 0x88);
+                    dotProjector::pixelResponse* pixelResponse = dotProjector::projectDotMatrix(16, flRadius, 1.f, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
+                    for (int i = 0; i < pixelResponse->size; i++) {
+                        drawCube(pixelResponse->data[i].worldPos, 0.1, green);
+                    }
                 }
             }
             else if (currentsetting == tgSettings::destroyer) {
@@ -316,8 +308,7 @@ namespace toolgun {
                         noiseZ = -leafBlowerFOV + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (leafBlowerFOV - -leafBlowerFOV)));
                         td::Vec3 blowVec3 = { playerCameraVec3.x + noiseX, playerCameraVec3.y + noiseY, playerCameraVec3.z + noiseZ };
 
-                        td::VoxelsPaletteInfo palOut = {};
-                        raycaster::rayData rayDat = raycaster::castRayManual(glb::player->cameraPosition, blowVec3, &filter, &palOut);
+                        raycaster::rayData rayDat = raycaster::castRayManual(glb::player->cameraPosition, blowVec3, &filter);
                         if (showRayHitPos) {
                             drawCube(rayDat.worldPos, 0.02f, red);
                         }
@@ -393,8 +384,7 @@ namespace toolgun {
 
                     glm::vec3 raycast_dir_tl = camera_rotation_tl * glm::vec3(0, 0, -1);
 
-                    td::VoxelsPaletteInfo palOut = {};
-                    raycaster::rayData rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_tl.x, raycast_dir_tl.y, raycast_dir_tl.z }, &filter, &palOut);
+                    raycaster::rayData rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_tl.x, raycast_dir_tl.y, raycast_dir_tl.z }, &filter);
                     if (rd.distance <= slicer_maxDist) {
                         if (glb::player->isAttacking) {
                             glb::oWrappedDamage(glb::scene, &rd.worldPos, 0.2f, 0.2f, 0, 0);
@@ -410,102 +400,9 @@ namespace toolgun {
                 }
                 
             }
-			else if (currentsetting == tgSettings::camera) {
-               
-			    //RaycastFilter filter{ 0 };
-			    //filter.m_Mask = -1;
-       //         filter.m_RejectTransparent = true;
-
-			    //float pitchMin = glb::player->camPitch - 0.40f;
-			    //float pitchMax = glb::player->camPitch + 0.40f;
-			    //float yawMin = glb::player->camYaw - 0.40f;
-			    //float yawMax = glb::player->camYaw + 0.40f;
-
-			    //glm::quat camera_rotation_tl = glm::quat(glm::vec3(pitchMax, yawMax, 0));
-			    //glm::vec3 raycast_dir_tl = camera_rotation_tl * glm::vec3(0, 0, -1);
-
-			    //glm::quat camera_rotation_tr = glm::quat(glm::vec3(pitchMax, yawMin, 0));
-			    //glm::vec3 raycast_dir_tr = camera_rotation_tr * glm::vec3(0, 0, -1);
-
-			    //glm::quat camera_rotation_bl = glm::quat(glm::vec3(pitchMin, yawMin, 0));
-			    //glm::vec3 raycast_dir_bl = camera_rotation_bl * glm::vec3(0, 0, -1);
-
-			    //glm::quat camera_rotation_br = glm::quat(glm::vec3(pitchMin, yawMax, 0));
-			    //glm::vec3 raycast_dir_br = camera_rotation_br * glm::vec3(0, 0, -1);
-
-			    //raycaster::rayData rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_tl.x, raycast_dir_tl.y, raycast_dir_tl.z }, &filter);
-			    //td::Vec3 target = rd.worldPos;
-			    //drawCube({ target.x, target.y, target.z }, 0.05, white);
-
-			    //rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_tr.x, raycast_dir_tr.y, raycast_dir_tr.z }, &filter);
-			    //target = rd.worldPos;
-			    //drawCube({ target.x, target.y, target.z }, 0.05, white);
-
-			    //rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_bl.x, raycast_dir_bl.y, raycast_dir_bl.z }, &filter);
-			    //target = rd.worldPos;
-			    //drawCube({ target.x, target.y, target.z }, 0.05, white);
-
-			    //rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_br.x, raycast_dir_br.y, raycast_dir_br.z }, &filter);
-			    //target = rd.worldPos;
-			    //drawCube({ target.x, target.y, target.z }, 0.05, white);
-
-                int pixelOffset = 0;
-
+			else if (currentsetting == tgSettings::camera) {            
                 if (glb::player->isAttacking == true && !glb::displayMenu) {
-                    if (frameOnce) {
-
-                        camera::quatCameraOutline(cameraResolution, cameraFov);
-
-                        //minDist = 1000.f;
-                        //maxDist = 0.f;
-
-                        //commit_resolution = cameraResolution;
-
-                        ////frameOnce = false;
-                        //free(pixels);
-                        //pixels = new float[commit_resolution * commit_resolution];
-
-                        //for (int x = commit_resolution; x > 0; x--) {
-                        //    for (int y = commit_resolution; y > 0; y--) {
-
-                        //        float pitchStep = (pitchMax - pitchMin) / commit_resolution;
-                        //        float thisPitch = pitchMin + (x * pitchStep);
-
-                        //        float yawStep = (yawMax - yawMin) / commit_resolution;
-                        //        float thisYaw = yawMin + (y * yawStep);
-
-                        //        glm::quat camera_rot = glm::quat(glm::vec3(thisPitch, thisYaw, 0));
-                        //        glm::vec3 raycast_dir = camera_rot * glm::vec3(0, 0, -1);
-
-                        //        raycaster::rayData rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir.x, raycast_dir.y, raycast_dir.z }, &filter);
-                        //        float thisDist = rd.distance;
-
-                        //        //drawCube(rd.worldPos, 0.2f, red);
-                        //        
-                        //        if (thisDist < minDist) {
-                        //            minDist = thisDist;
-                        //        }
-                        //        if (thisDist > maxDist && thisDist < 1000.f) {
-                        //            maxDist = thisDist;
-                        //        }
-
-                        //        if (thisDist < 1000.f) {
-                        //            pixels[pixelOffset] = thisDist;
-                        //        }
-                        //        else {
-                        //            pixels[pixelOffset] = -1.f;
-                        //        }
-
-                        //        pixelOffset++;
-                        //    }
-                        //}
-
-                        //camera::updateCameraFrame(pixels, commit_resolution, minDist, maxDist, takeSnapshot);
-
-                    }
-                }
-                else {
-                    frameOnce = true;
+                    camera::updateImageColour(cameraResolution, cameraFov);
                 }                           
                 camera::drawCameraWindow();
 			}

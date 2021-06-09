@@ -1,8 +1,14 @@
 #pragma once
+#include "dotProjector.h"
 
 namespace camera {
-	void updateCameraFrame(float* pixels, int resolution, float min, float max, bool saveSnapshot);
+	extern bool colourMode;
+
+	//void updateCameraFrame(float* pixels, int resolution, float min, float max, bool saveSnapshot);
 	void drawCameraWindow();
-	void quatCameraOutline(int resolution, float iFov);
-	void updateCameraFrameColor(byte* pixels, int resolution, float min, float max, bool saveSnapshot);
+	void constructDistanceFrame(dotProjector::pixelResponse* pixelResponse, int resolution, float min, float max);
+	void constructColourFrame(dotProjector::pixelResponse* pixelResponse, int resolution, bool enableDistanceFog);
+	void updateImageColour(int resolution, float fov);
+	void constructFrameManual(byte* pixels, int resolution, bool saveSnapshot);
+
 }

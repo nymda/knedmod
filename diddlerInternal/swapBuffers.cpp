@@ -15,6 +15,7 @@
 #include "miscPatches.h"
 #include "lidar.h"
 #include "physCamera.h"
+#include "Harop.h"
 
 #pragma comment(lib, "glew32s.lib")
 
@@ -358,6 +359,12 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::SliderInt("Resolution", &toolgun::cameraResolution, 32, 512);
 				ImGui::SliderFloat("FOV", &toolgun::cameraFov, 1.f, 10.f, "%.1f");
 				ImGui::Checkbox("Save image", &toolgun::takeSnapshot);
+				if (ImGui::RadioButton("Colour mode", camera::colourMode)) {
+					camera::colourMode = !camera::colourMode;
+				}
+				if (ImGui::RadioButton("Distance mode", !camera::colourMode)) {
+					camera::colourMode = !camera::colourMode;
+				}
 			}
 		}
 
@@ -399,6 +406,12 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			}
 			if (ImGui::Button("Destroy physCamera")) {
 				physCamera::destroyCamera();
+			}
+		}
+
+		if (ImGui::CollapsingHeader("harop")) {
+			if (ImGui::Button("Spawn harop")) {
+				HaropDrone::spawnHarop();
 			}
 		}
 

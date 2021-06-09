@@ -5,11 +5,13 @@
 #include <glm/gtc/quaternion.hpp>
 #include "drawCube.h"
 #include "toolgun.h"
+#include "camera.h"
 
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_opengl3.h"
 #include "imgui/imgui_impl_win32.h"
 #include "camera.h"
+#include "dotProjector.h"
 
 namespace physCamera {
 
@@ -71,7 +73,7 @@ namespace physCamera {
                         pixelOffset += 4;
                     }
                 }
-                camera::updateCameraFrameColor(pixelsColor, res, 0, 0, false);
+                camera::constructFrameManual(pixelsColor, res, false);
                 camera::drawCameraWindow();
                 deadCameraframes--;
             }
@@ -87,70 +89,18 @@ namespace physCamera {
 		td::Vec3 centerpoint = { objectMax.x - ((objectMax.x - objectMin.x) / 2), objectMax.y - ((objectMax.y - objectMin.y) / 2), objectMax.z - ((objectMax.z - objectMin.z) / 2) };
         deadCameraframes = 30;
 
-        minDist = 1000.f;
-        maxDist = 0.f;
+        glm::quat cameraQuat = *(glm::quat*)(&camera.body->Rotation);
+        glm::vec3 cameraUp = cameraQuat * glm::vec3(0, 0, 1);;
 
-        free(pixelsColor);
-        pixelsColor = new byte[(res * res) * 4];
+        rcf.m_RejectTransparent = true;
+        dotProjector::pixelResponse* response = dotProjector::projectDotMatrix(toolgun::cameraResolution, toolgun::cameraFov, 1.f, (glm::quat*)&camera.body->Rotation, centerpoint, { -1, 0, 0 }, { cameraUp.x, cameraUp.y, cameraUp.z }, & rcf);
+        if (camera::colourMode) {
+            camera::constructColourFrame(response, toolgun::cameraResolution, false);
+        }
+        else {
+            camera::constructDistanceFrame(response, toolgun::cameraResolution, response->minDist, response->maxDist);
+        }
 
         camera::drawCameraWindow();
-
-        td::Color red{ 1.f, 0.f, 0.f, 1.f };
-        td::Color green{ 0.f, 1.f, 0.f, 1.f };
-        td::Color blue{ 0.f, 0.f, 1.f, 1.f };
-        td::Color white{ 1.f, 1.f, 1.f, 1.f };
-
-        RaycastFilter filter{ 0 };
-        filter.m_Mask = -1;
-        filter.m_RejectTransparent = true;
-        filter.m_IgnoredBodies.push_back(camera.body);
-
-        glm::quat camera_rotation_bl = *(glm::quat*)(&camera.body->Rotation);
-        glm::vec3 raycast_dir_bl = camera_rotation_bl * glm::vec3(-1, 0, 0);
-        glm::vec3 raycasterUp = camera_rotation_bl * glm::vec3(0, 0, 1);
-        td::VoxelsPaletteInfo palOut = {};
-
-        raycaster::rayData rd = raycaster::castRayManual(centerpoint, { raycast_dir_bl.x, raycast_dir_bl.y, raycast_dir_bl.z }, &filter, &palOut);
-
-        glm::vec3 glCameraPos = glm::vec3(centerpoint.x, centerpoint.y, centerpoint.z);
-        glm::vec3 glTarget = glm::vec3(rd.worldPos.x, rd.worldPos.y, rd.worldPos.z);
-        glm::mat4x4 vmatrix = glm::lookAt(glCameraPos, glTarget, raycasterUp);
-        glm::mat4x4 pmatrix = glm::perspective(50.f, 1.f, 1.f, 150.f);
-
-        glm::mat4 invProjMat = glm::inverse(pmatrix);
-        glm::mat4 invViewMat = glm::inverse(vmatrix);
-
-        for (int y = res; y > 0; y--) {
-            for (int x = 0; x < res; x++) {
-                float pxSize = (fov / res);
-                float comX = (fov / 2.f) - (x * pxSize) + randFloat(-(pxSize / 3.f), (pxSize / 3.f));
-                float comY = (fov / 2.f) - (y * pxSize) + randFloat(-(pxSize / 3.f), (pxSize / 3.f));
-
-                glm::vec2 ray_nds = glm::vec2(comX, comY);
-                glm::vec4 ray_clip = glm::vec4(ray_nds.x, ray_nds.y, -1.0f, 1.0f);
-                glm::vec4 eyeCoords = invProjMat * ray_clip;
-                eyeCoords = glm::vec4(eyeCoords.x, eyeCoords.y, -1.0f, 0.0f);
-                glm::vec4 rayWorld = invViewMat * eyeCoords;
-                glm::vec3 rayDirection = glm::normalize(glm::vec3(rayWorld));
-                td::VoxelsPaletteInfo palOut = {};
-                rd = raycaster::castRayManual(centerpoint, { rayDirection.x, rayDirection.y, rayDirection.z }, &filter, &palOut);
-
-                float thisDist = rd.distance;
-                if (thisDist >= 1000.f) {
-                    pixelsColor[pixelOffset] = (byte)(0);
-                    pixelsColor[pixelOffset + 1] = (byte)(77);
-                    pixelsColor[pixelOffset + 2] = (byte)(77);
-                    pixelsColor[pixelOffset + 3] = (byte)(255);
-                }
-                else {
-                    pixelsColor[pixelOffset] = (byte)(palOut.m_Color.m_R * 255);
-                    pixelsColor[pixelOffset + 1] = (byte)(palOut.m_Color.m_G * 255);
-                    pixelsColor[pixelOffset + 2] = (byte)(palOut.m_Color.m_B * 255);
-                    pixelsColor[pixelOffset + 3] = (byte)(palOut.m_Color.m_A * 255);
-                }
-                pixelOffset += 4;
-            }
-        }
-        camera::updateCameraFrameColor(pixelsColor, res, minDist, maxDist, toolgun::takeSnapshot);
 	}
 }

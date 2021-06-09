@@ -19,7 +19,7 @@
 
 struct RaycastFilter
 {
-    int32_t m_Mask;
+    int32_t m_Mask = -1;
     int32_t m_Allowed;
     int32_t m_Ignored;
     bool m_RejectTransparent;

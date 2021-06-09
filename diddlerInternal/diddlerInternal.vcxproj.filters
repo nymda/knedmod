@@ -171,6 +171,12 @@
     <ClInclude Include="physCamera.h">
       <Filter>Header Files\Mods</Filter>
     </ClInclude>
+    <ClInclude Include="Harop.h">
+      <Filter>Header Files\Mods</Filter>
+    </ClInclude>
+    <ClInclude Include="dotProjector.h">
+      <Filter>Header Files\TDAPI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -283,6 +289,12 @@
     </ClCompile>
     <ClCompile Include="physCamera.cpp">
       <Filter>Source Files\Mods</Filter>
+    </ClCompile>
+    <ClCompile Include="Harop.cpp">
+      <Filter>Source Files\Mods</Filter>
+    </ClCompile>
+    <ClCompile Include="dotProjector.cpp">
+      <Filter>Source Files\TDAPI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

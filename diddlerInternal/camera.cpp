@@ -9,12 +9,18 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_opengl3.h"
 #include "imgui/imgui_impl_win32.h"
+#include "dotProjector.h"
 
 typedef unsigned int uint;
 
 namespace camera {
     GLuint image_texture;
     bool isinit = false;
+    bool colourMode = true;
+
+    size_t currentFramebufferSize = 0;
+    byte* frameBuffer = nullptr;
+    RaycastFilter rcf = { };
 
     void write_bmp(const std::string path, const uint width, const uint height, const int* const data) {
         const uint pad = (4 - (3 * width) % 4) % 4, filesize = 54 + (3 * width + pad) * height; // horizontal line must be a multiple of 4 bytes long, header is 54 bytes
@@ -42,6 +48,10 @@ namespace camera {
         delete[] img;
     }
 
+    float randFloat(float min, float max) {
+        return min + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (max - min)));
+    }
+
     std::string createBitmap(DWORD* frameBuffer, int resolution) {
         auto p1 = std::chrono::system_clock::now();
         std::string filename = "lidar/LIDARCAM_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(p1.time_since_epoch()).count()) + ".bmp";
@@ -54,33 +64,99 @@ namespace camera {
         glBindTexture(GL_TEXTURE_2D, image_texture);
     }
 
-	void updateCameraFrame(float* pixels, int resolution, float min, float max, bool saveSnapshot) {
+
+    void constructDistanceFrame(dotProjector::pixelResponse* pixelResponse, int resolution, float min, float max) {
+        if (!isinit) {
+            initTexture();
+        } 
+
+        byte* frameBuffer = new byte[(resolution * resolution) * 4];
+        size_t frameBufferBytePointer = 0;
+
+        for (int i = 0; i < pixelResponse->size; i++) {
+            if (pixelResponse->data[i].dist < 1000.f) {
+                float diff2 = (pixelResponse->data[i].dist) / max;
+                int pxVal = 255 - ((diff2) * 255);
+
+                frameBuffer[frameBufferBytePointer + 0] = (byte)pxVal;
+                frameBuffer[frameBufferBytePointer + 1] = (byte)pxVal;
+                frameBuffer[frameBufferBytePointer + 2] = (byte)pxVal;
+                frameBuffer[frameBufferBytePointer + 3] = 0xFF;
+            }
+            else {
+                frameBuffer[frameBufferBytePointer + 0] = 0x00;
+                frameBuffer[frameBufferBytePointer + 1] = 0x00;
+                frameBuffer[frameBufferBytePointer + 2] = 0x00;
+                frameBuffer[frameBufferBytePointer + 3] = 0xFF;
+            }
+
+            frameBufferBytePointer += 4;
+        }
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        #if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+        #endif
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, resolution, resolution, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)frameBuffer);
+
+        free(frameBuffer);
+    }
+
+    void constructColourFrame(dotProjector::pixelResponse* pixelResponse, int resolution, bool enableDistanceFog) {
+        if (!isinit) {
+            initTexture();
+        }
+
+        byte* rgbFrameBuffer = new byte[(resolution * resolution) * 4];
+        size_t rgbFrameBufferBytePointer = 0;
+
+        for (int i = 0; i < pixelResponse->size; i++) {
+            if (pixelResponse->data[i].dist < 1000.f) {
+
+                int iThisDist = ((int)pixelResponse->data[i].dist) / 2;
+                int iColourR = (pixelResponse->data[i].color_R- iThisDist);
+                if (iColourR < 0) { iColourR = 0; }
+                int iColourG = (pixelResponse->data[i].color_G - iThisDist);
+                if (iColourG < 0) { iColourG = 0; }
+                int iColourB = (pixelResponse->data[i].color_B - iThisDist);
+                if (iColourB < 0) { iColourB = 0; }
+
+                rgbFrameBuffer[rgbFrameBufferBytePointer + 0] = (byte)iColourR;
+                rgbFrameBuffer[rgbFrameBufferBytePointer + 1] = (byte)iColourG;
+                rgbFrameBuffer[rgbFrameBufferBytePointer + 2] = (byte)iColourB;
+                rgbFrameBuffer[rgbFrameBufferBytePointer + 3] = 0xFF;
+            }
+            else {
+                rgbFrameBuffer[rgbFrameBufferBytePointer + 0] = (byte)0;
+                rgbFrameBuffer[rgbFrameBufferBytePointer + 1] = (byte)77;
+                rgbFrameBuffer[rgbFrameBufferBytePointer + 2] = (byte)77;
+                rgbFrameBuffer[rgbFrameBufferBytePointer + 3] = 0xFF;
+            }
+
+            rgbFrameBufferBytePointer += 4;
+        }
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        #if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+        #endif
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, resolution, resolution, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)rgbFrameBuffer);
+
+        free(rgbFrameBuffer);
+    }
+
+    void constructFrameManual(byte* pixels, int resolution, bool saveSnapshot) {
 
         if (!pixels) {
             return;
-        }
-
-        byte* pixelData = new byte[(resolution * resolution) * 4];
-        int pixelPtr = 0;
-
-        for (int pxOffset = 0; pxOffset < (resolution * resolution); pxOffset++) {
-            float thisPxFloat = pixels[pxOffset];
-
-            if (thisPxFloat > 0.f) {
-                float diff2 = (thisPxFloat) / max;
-                int pxVal = 255 - ((diff2) * 255);
-                pixelData[pixelPtr] = (byte)pxVal;
-                pixelData[pixelPtr + 1] = (byte)pxVal;
-                pixelData[pixelPtr + 2] = (byte)pxVal;
-                pixelData[pixelPtr + 3] = 0xff;
-            }
-            else {
-                pixelData[pixelPtr] = 0x00;
-                pixelData[pixelPtr + 1] = 0x00;
-                pixelData[pixelPtr + 2] = 0x00;
-                pixelData[pixelPtr + 3] = 0xff;
-            }
-            pixelPtr += 4;
         }
 
         if (!isinit) {
@@ -98,153 +174,28 @@ namespace camera {
         glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
         #endif
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, resolution, resolution, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)pixelData);
-
-        if (saveSnapshot) {
-            createBitmap((DWORD*)pixelData, resolution);
-        }
-
-        free(pixelData);
-
-	}
-
-    void updateCameraFrameColor(byte* pixels, int resolution, float min, float max, bool saveSnapshot) {
-
-        if (!pixels) {
-            return;
-        }
-
-        if (!isinit) {
-            initTexture();
-        }
-
-        // Setup filtering parameters for display
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // This is required on WebGL for non power-of-two textures
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // Same
-
-        // Upload pixels into texture
-#if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
-        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-#endif
-
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, resolution, resolution, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)pixels);
 
         if (saveSnapshot) {
             createBitmap((DWORD*)pixels, resolution);
         }
-
-        //free(pixels);
-
     }
 
     void drawCameraWindow() {
         ImGui::Begin("Camera");
-
-        ImGui::Image((void*)image_texture, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowHeight() - 40));
-
+        ImGui::Image((void*)image_texture, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowHeight() - 35));
         ImGui::End();
     }
+  
 
-    float* pixels = nullptr;
-    byte* pixelsColor = nullptr;
-    float minDist = 1000.f;
-    float maxDist = 0.f;
-
-    glm::vec3 getSingleScreenVector(float x, float y, glm::mat4x4& vMatrix, glm::mat4x4& pMatrix) {
-        glm::vec2 ray_nds = glm::vec2(x, y);
-        glm::vec4 ray_clip = glm::vec4(ray_nds.x, ray_nds.y, -1.0f, 1.0f);
-        glm::mat4 invProjMat = glm::inverse(pMatrix);
-        glm::vec4 eyeCoords = invProjMat * ray_clip;
-        eyeCoords = glm::vec4(eyeCoords.x, eyeCoords.y, -1.0f, 0.0f);
-        glm::mat4 invViewMat = glm::inverse(vMatrix);
-        glm::vec4 rayWorld = invViewMat * eyeCoords;
-        return glm::normalize(glm::vec3(rayWorld));
-    }
-
-    float randFloat(float min, float max) {
-        return min + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (max - min)));
-    }
-
-    void quatCameraOutline(int resolution, float iFov){
-
-        int res = resolution;
-        float fov = iFov;
-        minDist = 1000.f;
-        maxDist = 0.f;
-
-        free(pixelsColor);
-        pixelsColor = new byte[(res * res) * 4];
-
-        td::Color red{ 1.f, 0.f, 0.f, 1.f };
-        td::Color green{ 0.f, 1.f, 0.f, 1.f };
-        td::Color blue{ 0.f, 0.f, 1.f, 1.f };
-        td::Color white{ 1.f, 1.f, 1.f, 1.f };
-
-        glm::vec2 directions[] = { glm::vec2(2, 2), glm::vec2(-2, 2), glm::vec2(2, -2), glm::vec2(-2, -2), };
-
-        RaycastFilter filter{ 0 };
-        filter.m_Mask = -1;
-        filter.m_RejectTransparent = true;
-        td::VoxelsPaletteInfo palOut = {};
-
-        glm::quat camera_rotation_bl = *(glm::quat*)(&glb::player->cameraQuat);
-        glm::vec3 raycast_dir_bl = camera_rotation_bl * glm::vec3(0, 0, -1);
-        raycaster::rayData rd = raycaster::castRayManual(glb::player->cameraPosition, { raycast_dir_bl.x, raycast_dir_bl.y, raycast_dir_bl.z }, &filter, &palOut);
-        glm::vec3 glCameraPos = glm::vec3(glb::player->cameraPosition.x, glb::player->cameraPosition.y, glb::player->cameraPosition.z);
-        glm::vec3 glTarget = glm::vec3(rd.worldPos.x, rd.worldPos.y, rd.worldPos.z);
-        glm::mat4x4 vmatrix = glm::lookAt(glCameraPos, glTarget, glm::vec3(0, 1, 0 ));
-        glm::mat4x4 pmatrix = glm::perspective(50.f, 1.f, 1.f, 1000.f);
-
-        int pixelOffset = 0;
-
-        float fovSplit = 1.f / res;
-
-        glm::mat4 invProjMat = glm::inverse(pmatrix);
-        glm::mat4 invViewMat = glm::inverse(vmatrix);
-
-        for (int y = res; y > 0; y--) {
-            for (int x = 0; x < res; x++) {
-                float pxSize = (fov / res);
-                float comX = (fov / 2.f) - (x * pxSize) + randFloat(-(pxSize / 3.f), (pxSize / 3.f));
-                float comY = (fov / 2.f) - (y * pxSize) + randFloat(-(pxSize / 3.f), (pxSize / 3.f));
-
-                glm::vec2 ray_nds = glm::vec2(comX, comY);
-                glm::vec4 ray_clip = glm::vec4(ray_nds.x, ray_nds.y, -1.0f, 1.0f);
-
-                glm::vec4 eyeCoords = invProjMat * ray_clip;
-                eyeCoords = glm::vec4(eyeCoords.x, eyeCoords.y, -1.0f, 0.0f);
-
-                glm::vec4 rayWorld = invViewMat * eyeCoords;
-                glm::vec3 rayDirection = glm::normalize(glm::vec3(rayWorld));
-
-                td::VoxelsPaletteInfo palOut = {};
-                rd = raycaster::castRayManual(glb::player->cameraPosition, { rayDirection.x, rayDirection.y, rayDirection.z }, &filter, &palOut);
-
-                if (res <= 512) {
-                    drawCube(rd.worldPos, 0.05f, white);
-                }
-
-
-                float thisDist = rd.distance;
-
-                if (thisDist >= 1000.f) {
-                    pixelsColor[pixelOffset] = (byte)(0);
-                    pixelsColor[pixelOffset + 1] = (byte)(77);
-                    pixelsColor[pixelOffset + 2] = (byte)(77);
-                    pixelsColor[pixelOffset + 3] = (byte)(255);
-                }
-                else {
-                    pixelsColor[pixelOffset] = (byte)(palOut.m_Color.m_R * 255);
-                    pixelsColor[pixelOffset + 1] = (byte)(palOut.m_Color.m_G * 255);
-                    pixelsColor[pixelOffset + 2] = (byte)(palOut.m_Color.m_B * 255);
-                    pixelsColor[pixelOffset + 3] = (byte)(palOut.m_Color.m_A * 255);
-                }
-                pixelOffset+=4;
-            }
+    void updateImageColour(int resolution, float fov) {
+        rcf.m_RejectTransparent = true;
+        dotProjector::pixelResponse* response = dotProjector::projectDotMatrix(resolution, fov, 1.f, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
+        if (camera::colourMode) {
+            constructColourFrame(response, resolution, false);
         }
-
-        camera::updateCameraFrameColor(pixelsColor, res, minDist, maxDist, toolgun::takeSnapshot);
+        else {
+            constructDistanceFrame(response, resolution, response->minDist, response->maxDist);
+        }
     }
 }

@@ -151,8 +151,8 @@ namespace c4 {
             }
         }
 
-        const char* hhgName = "HolyHandGrenade";
-        if (memcmp(glb::player->heldItemName, hhgName, 13) == 0) {
+        const char* hhgName = "handBomb";
+        if (memcmp(glb::player->heldItemName, hhgName, 8) == 0) {
             if (glb::player->isAttacking == true) {
                 if (runOnceImp) {
                     runOnceImp = false;
@@ -169,7 +169,7 @@ namespace c4 {
                     osp.nocull = true;
                     osp.pushSpawnList = false;
 
-                    const char* currentPath = "vox\\Default\\holy_hand_grenade\\object.vox";
+                    const char* currentPath = "vox\\Default\\handBomb\\object.vox";
                     impNade = spawner::spawnObjectProxy(currentPath, osp);
 
                     glb::setObjectAttribute(impNade.shape, "unbreakable", "");

@@ -10,6 +10,7 @@
 #include "lantern.h"
 #include "missileLauncher.h"
 #include "physCamera.h"
+#include "Harop.h"
 
 namespace mods {
 	char jetpackKey = VK_SPACE;
@@ -49,6 +50,7 @@ namespace mods {
 		}
 
 		physCamera::updateCamera();
+		HaropDrone::updateHaropCamera();
 		//camera::quatCameraOutline();
 
 		//if (flamethrower) {
