@@ -17,9 +17,12 @@ namespace camera {
     GLuint image_texture;
     bool isinit = false;
     bool colourMode = true;
+    bool mono = false;
+    bool interlaceMode = true;
+    bool transparency = true;
 
     size_t currentFramebufferSize = 0;
-    byte* frameBuffer = nullptr;
+    //byte* frameBuffer = nullptr;
     RaycastFilter rcf = { };
 
     void write_bmp(const std::string path, const uint width, const uint height, const int* const data) {
@@ -62,6 +65,89 @@ namespace camera {
     void initTexture() {
         glGenTextures(1, &image_texture);
         glBindTexture(GL_TEXTURE_2D, image_texture);
+    }
+
+    void interlacedImage(byte* frameBuffer, int resolution, bool flip, float fov, float aspect, glm::quat* camRotation, td::Vec3 camPosition, td::Vec3 forwardVector, td::Vec3 upVector, RaycastFilter* filter) {
+        //construct a new viewMatrix and projectionMatrix
+        //could use the matrices already created by the game, if i can find them
+
+        glm::vec3 raycast_dir_bl = *camRotation * glm::vec3(forwardVector.x, forwardVector.y, forwardVector.z);
+        raycaster::rayData rd = raycaster::castRayManual(camPosition, { raycast_dir_bl.x, raycast_dir_bl.y, raycast_dir_bl.z }, filter);
+        glm::vec3 glCameraPos = glm::vec3(camPosition.x, camPosition.y, camPosition.z);
+        glm::vec3 glTarget = glm::vec3(rd.worldPos.x, rd.worldPos.y, rd.worldPos.z);
+        glm::mat4x4 vmatrix = glm::lookAt(glCameraPos, glTarget, glm::vec3(upVector.x, upVector.y, upVector.z));
+        glm::mat4x4 pmatrix = glm::perspective(50.f, aspect, 1.f, 1000.f);
+        glm::mat4 invProjMat = glm::inverse(pmatrix);
+        glm::mat4 invViewMat = glm::inverse(vmatrix);
+
+        int pixelOffset = 0;
+
+        //draw from left to right, bottom to top. This matches openGLs pixel format. 
+        for (int y = resolution; y > 0; y--) {
+            if (((y & 2) == 0) == flip) {
+                pixelOffset += resolution * 4;
+                continue;
+            }
+
+            for (int x = 0; x < resolution; x++) {
+                //slightly eh implementation of Stochastic Sampling. Thanks Josh!
+                float pxSize = (fov / resolution);
+                float comX = (fov / 2.f) - (x * pxSize) + randFloat(-(pxSize / 3.f), (pxSize / 3.f));
+                float comY = (fov / 2.f) - (y * pxSize) + randFloat(-(pxSize / 3.f), (pxSize / 3.f));
+
+                glm::vec2 ray_nds = glm::vec2(comX, comY);
+                glm::vec4 ray_clip = glm::vec4(ray_nds.x, ray_nds.y, -1.0f, 1.0f);
+                glm::vec4 eyeCoords = invProjMat * ray_clip;
+                eyeCoords = glm::vec4(eyeCoords.x, eyeCoords.y, -1.0f, 0.0f);
+
+                glm::vec4 rayWorld = invViewMat * eyeCoords;
+                glm::vec3 rayDirection = glm::normalize(glm::vec3(rayWorld));
+                rd = raycaster::castRayManual(camPosition, { rayDirection.x, rayDirection.y, rayDirection.z }, filter);
+
+                if (rd.distance < 1000.f) {
+                    int iThisDist = (rd.distance) / 2;
+
+                    if (mono) {
+                        int avg = (((rd.palette.m_Color.m_R + rd.palette.m_Color.m_G + rd.palette.m_Color.m_B) / 3.f) * 255) - iThisDist;
+                        if (avg < 0) {
+                            avg = 0;
+                        }
+                        frameBuffer[pixelOffset + 0] = (byte)(avg);
+                        frameBuffer[pixelOffset + 1] = (byte)(avg);
+                        frameBuffer[pixelOffset + 2] = (byte)(avg);
+                        frameBuffer[pixelOffset + 3] = (byte)(255);
+                    }
+                    else {
+                        int iColourR = ((rd.palette.m_Color.m_R * 255) - iThisDist);
+                        if (iColourR < 0) { iColourR = 0; }
+                        int iColourG = ((rd.palette.m_Color.m_G * 255) - iThisDist);
+                        if (iColourG < 0) { iColourG = 0; }
+                        int iColourB = ((rd.palette.m_Color.m_B * 255) - iThisDist);
+                        if (iColourB < 0) { iColourB = 0; }
+
+                        frameBuffer[pixelOffset + 0] = (byte)(iColourR);
+                        frameBuffer[pixelOffset + 1] = (byte)(iColourG);
+                        frameBuffer[pixelOffset + 2] = (byte)(iColourB);
+                        frameBuffer[pixelOffset + 3] = (byte)(255);
+                    }
+                }
+                else {
+                    if (mono) {
+                        frameBuffer[pixelOffset + 0] = (byte)(128); //0
+                        frameBuffer[pixelOffset + 1] = (byte)(128); //77
+                        frameBuffer[pixelOffset + 2] = (byte)(128); //77
+                        frameBuffer[pixelOffset + 3] = (byte)(255);
+                    }
+                    else {
+                        frameBuffer[pixelOffset + 0] = (byte)(0);
+                        frameBuffer[pixelOffset + 1] = (byte)(77);
+                        frameBuffer[pixelOffset + 2] = (byte)(77);
+                        frameBuffer[pixelOffset + 3] = (byte)(255);
+                    }
+                }
+                pixelOffset+=4;
+            }
+        }
     }
 
 
@@ -187,15 +273,35 @@ namespace camera {
         ImGui::End();
     }
   
-
+    int lastResolution = 64;
+    byte* frameBuffer;
+    bool flip = true;
     void updateImageColour(int resolution, float fov) {
-        rcf.m_RejectTransparent = true;
-        dotProjector::pixelResponse* response = dotProjector::projectDotMatrix(resolution, fov, 1.f, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
-        if (camera::colourMode) {
-            constructColourFrame(response, resolution, false);
+        if (interlaceMode) {
+            if (resolution != lastResolution || !frameBuffer) {
+                free(frameBuffer);
+                frameBuffer = new byte[(resolution * resolution) * 4];
+            }
+            lastResolution = resolution;
+            if (transparency) {
+                rcf.m_RejectTransparent = true;
+            }
+            else {
+                rcf.m_RejectTransparent = false;
+            }
+
+            flip = !flip;
+            interlacedImage(frameBuffer, resolution, flip, fov, 1.f, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
+            constructFrameManual(frameBuffer, resolution, false);
         }
         else {
-            constructDistanceFrame(response, resolution, response->minDist, response->maxDist);
+            dotProjector::pixelResponse* response = dotProjector::projectDotMatrix(resolution, fov, 1.f, true, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
+            if (camera::colourMode) {
+                constructColourFrame(response, resolution, false);
+            }
+            else {
+                constructDistanceFrame(response, resolution, response->minDist, response->maxDist);
+            }
         }
     }
 }

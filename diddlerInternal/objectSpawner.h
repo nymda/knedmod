@@ -3,6 +3,7 @@
 #include "types.h"
 #include "Global.h"
 #include "Raycaster.h"
+#include <glm/gtc/quaternion.hpp>
 
 inline bool exists(const std::string& name);
 
@@ -26,7 +27,7 @@ namespace spawner {
 		objectSpawnType spawnType = objectSpawnType::placed;
 		std::vector<objectAttribute> attributes;
 		td::Vec3 startVelocity = { 0, 0, 0 };
-		td::Vec4 customRotation = { 0, 0, 0 };
+		glm::quat customRotation = glm::quat(0, 0, 0, 0);
 		float maximumPlaceDistance = 1000.f;
 		bool rotateFacePlayer = false;
 		bool unbreakable = false;

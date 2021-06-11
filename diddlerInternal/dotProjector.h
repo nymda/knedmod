@@ -18,5 +18,5 @@ namespace dotProjector {
 		rayPixel* data;
 	};
 
-	pixelResponse* projectDotMatrix(int resolution, float fov, float aspect, glm::quat* camRotation, td::Vec3 camPosition, td::Vec3 forwardVector, td::Vec3 upVector, RaycastFilter* filter);
+	pixelResponse* projectDotMatrix(int resolution, float fov, float aspect, bool stochastic, glm::quat* camRotation, td::Vec3 camPosition, td::Vec3 forwardVector, td::Vec3 upVector, RaycastFilter* filter);
 }

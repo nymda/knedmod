@@ -21,7 +21,7 @@ namespace missile {
         spawner::objectSpawnerParams osp;
         td::Vec3 cameraDirection = glb::player->cameraEuler();
         osp.spawnType = spawner::objectSpawnType::front;
-        osp.customRotation = glb::player->cameraQuat;
+        //osp.customRotation = glb::player->cameraQuat;
         osp.rotateFacePlayer = true;
         osp.unbreakable = true;
         osp.nocull = true;

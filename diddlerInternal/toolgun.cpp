@@ -45,7 +45,7 @@ namespace toolgun {
     float power = 1.f;
 
     //flamethrower specific vars
-    float flRadius = 1.5f;
+    float flRadius = 5.f;
     int chance = 10;
 
     //setAttribute specific vars
@@ -201,7 +201,7 @@ namespace toolgun {
 
                 if (glb::player->isAttacking == true) {
                     uintptr_t sceneSpecial = *(uintptr_t*)((uintptr_t)glb::scene + 0x88);
-                    dotProjector::pixelResponse* pixelResponse = dotProjector::projectDotMatrix(16, flRadius, 1.f, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
+                    dotProjector::pixelResponse* pixelResponse = dotProjector::projectDotMatrix(16, flRadius, 1.f, true, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
                     for (int i = 0; i < pixelResponse->size; i++) {
                         td::Vec3 firepos = pixelResponse->data[i].worldPos;
                         if (chance == 100) {
@@ -215,7 +215,7 @@ namespace toolgun {
                 }
                 else {
                     uintptr_t sceneSpecial = *(uintptr_t*)((uintptr_t)glb::scene + 0x88);
-                    dotProjector::pixelResponse* pixelResponse = dotProjector::projectDotMatrix(16, flRadius, 1.f, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
+                    dotProjector::pixelResponse* pixelResponse = dotProjector::projectDotMatrix(16, flRadius, 1.f, true, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
                     for (int i = 0; i < pixelResponse->size; i++) {
                         drawCube(pixelResponse->data[i].worldPos, 0.1, green);
                     }
@@ -359,8 +359,6 @@ namespace toolgun {
                             current->Destroy(current, false);
                         }
                     }
-
-
                     hitBodies.clear();
                 }
                 
@@ -407,9 +405,19 @@ namespace toolgun {
                 camera::drawCameraWindow();
 			}
             else if (currentsetting == tgSettings::testing) {
+                RaycastFilter rcf = {};
 
+                if (glb::player->isAttacking == true) {
+                    uintptr_t sceneSpecial = *(uintptr_t*)((uintptr_t)glb::scene + 0x88);
+                    dotProjector::pixelResponse* pixelResponse = dotProjector::projectDotMatrix(16, 5.f, 1.f, false, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
+                    for (int i = 0; i < pixelResponse->size; i++) {
+
+                        glb::oWrappedDamage(glb::scene, &pixelResponse->data[i].worldPos, 0.2f, 0.2f, 0, 0);
+
+                        drawCube(pixelResponse->data[i].worldPos, 0.1, red);
+                    }
+                }
             }
-
         }
         else {
             playerIsHoldingToolgun = false;

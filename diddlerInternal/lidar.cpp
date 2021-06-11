@@ -14,7 +14,8 @@ namespace lidar {
 	int currentPtr = 0;
 	float records[125] = {};
 	float zoom = 10.f;
-
+	bool colour = false;
+	bool enabled = true;
 	const float pi = 3.1415926535f;
 
 	int resolution = 500;
@@ -26,12 +27,8 @@ namespace lidar {
 	}
 
 	void drawLidarWindow(td::Vec2 size) {
-
-		static ImVec4 white = ImVec4(1.0f, 1.0f, 1.f, 1.0f);
-		ImU32 white32 = ImColor(white);
-
-		static ImVec4 red = ImVec4(1.0f, 0.0f, 0.f, 1.0f);
-		ImU32 red32 = ImColor(red);
+		ImU32 white32 = ImColor(ImVec4(1.0f, 1.0f, 1.f, 1.0f));
+		ImU32 red32 = ImColor(ImVec4(1.0f, 0.0f, 0.f, 1.0f));
 
 		td::Color redT{ 1.f , 0.f, 0.f, 1.f };
 
@@ -67,13 +64,19 @@ namespace lidar {
 
 			ImVec2 endPoint = getPoint(midpoint, (1.5 * pi) - (step * i), 0.f, rd.distance * zoom);
 
-			drawList->AddCircleFilled(endPoint, 1.5f, white32);
+			if (colour) {
+				drawList->AddCircleFilled(endPoint, 1.5f, ImColor(ImVec4(rd.palette.m_Color.m_R, rd.palette.m_Color.m_G, rd.palette.m_Color.m_B, 1.0f)));
+			}
+			else {
+				drawList->AddCircleFilled(endPoint, 1.5f, white32);
+			}
+
 		}
 
 		drawList->AddCircleFilled(midpoint, 3.f, red32);
 		drawList->AddLine({ midpoint.x - 0.5f, midpoint.y }, { midpoint.x - 0.5f, midpoint.y - 10.f }, red32, 2.f);
 
-		ImGui::SliderFloat("Zoom", &zoom, 1.f, 100.f, "%2.f");
+
 
 		ImGui::End();
 	}

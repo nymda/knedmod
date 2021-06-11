@@ -47,6 +47,9 @@ namespace physCamera {
         return min + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (max - min)));
     }
 
+    int lastResolution = 64;
+    bool flip = true;
+    byte* frameBuffer;
     byte* pixelsColor = nullptr;
 	void updateCamera() {
         int res = toolgun::cameraResolution;
@@ -92,15 +95,33 @@ namespace physCamera {
         glm::quat cameraQuat = *(glm::quat*)(&camera.body->Rotation);
         glm::vec3 cameraUp = cameraQuat * glm::vec3(0, 0, 1);;
 
-        rcf.m_RejectTransparent = true;
-        dotProjector::pixelResponse* response = dotProjector::projectDotMatrix(toolgun::cameraResolution, toolgun::cameraFov, 1.f, (glm::quat*)&camera.body->Rotation, centerpoint, { -1, 0, 0 }, { cameraUp.x, cameraUp.y, cameraUp.z }, & rcf);
-        if (camera::colourMode) {
-            camera::constructColourFrame(response, toolgun::cameraResolution, false);
-        }
-        else {
-            camera::constructDistanceFrame(response, toolgun::cameraResolution, response->minDist, response->maxDist);
-        }
 
         camera::drawCameraWindow();
+
+        if (camera::interlaceMode) {
+            if (toolgun::cameraResolution != lastResolution || !frameBuffer) {
+                free(frameBuffer);
+                frameBuffer = new byte[(toolgun::cameraResolution * toolgun::cameraResolution) * 4];
+            }
+            lastResolution = toolgun::cameraResolution;
+            if (camera::transparency) {
+                rcf.m_RejectTransparent = true;
+            }
+            else {
+                rcf.m_RejectTransparent = false;
+            }
+            flip = !flip;
+            camera::interlacedImage(frameBuffer, toolgun::cameraResolution, flip, fov, 1.f, (glm::quat*)&camera.body->Rotation, centerpoint, { -1, 0, 0 }, { cameraUp.x, cameraUp.y, cameraUp.z }, &rcf);
+            camera::constructFrameManual(frameBuffer, toolgun::cameraResolution, false);
+        }
+        else {
+            dotProjector::pixelResponse* response = dotProjector::projectDotMatrix(toolgun::cameraResolution, fov, 1.f, true, (glm::quat*)&camera.body->Rotation, centerpoint, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
+            if (camera::colourMode) {
+                camera::constructColourFrame(response, toolgun::cameraResolution, false);
+            }
+            else {
+                camera::constructDistanceFrame(response, toolgun::cameraResolution, response->minDist, response->maxDist);
+            }
+        }
 	}
 }

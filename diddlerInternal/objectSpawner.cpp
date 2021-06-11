@@ -169,7 +169,7 @@ namespace spawner {
                     float spawnPosx = (glb::player->cameraPosition.x - (objectSize.x / 2)) + (glb::player->cameraEuler().x * 2.25f);
                     float spawnPosy = (glb::player->cameraPosition.y - (objectSize.y / 2)) + (glb::player->cameraEuler().y * 2.25f);
                     float spawnPosz = (glb::player->cameraPosition.z - (objectSize.z / 2)) + (glb::player->cameraEuler().z * 2.25f);
-                    lastSpawnedObject.body->Rotation = lastSpawnedObject.params.customRotation;
+                    *(glm::quat*)&lastSpawnedObject.body->Rotation = lastSpawnedObject.params.customRotation;
                     lastSpawnedObject.body->Velocity = lastSpawnedObject.params.startVelocity;
                     lastSpawnedObject.body->Position = { spawnPosx,  spawnPosy, spawnPosz };
 

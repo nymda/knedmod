@@ -16,6 +16,7 @@
 #include "lidar.h"
 #include "physCamera.h"
 #include "Harop.h"
+#include "objectTranslationTest.h"
 
 #pragma comment(lib, "glew32s.lib")
 
@@ -148,8 +149,10 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 	ImGuiIO* IO = &ImGui::GetIO();
 	IO->MouseDrawCursor = glb::displayMenu;
 
-	//lidar::nextFrame();
-	lidar::drawLidarWindow(displayInfoLabelSizeY);
+	if (lidar::enabled) {
+		lidar::drawLidarWindow(displayInfoLabelSizeY);
+	}
+
 
 	if (glb::displayMenu) {
 		ImGui::Begin("KnedMod");
@@ -324,7 +327,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::SliderFloat("Power", &toolgun::power, 0.25f, 25.f, "%.2f");
 			}
 			if (toolgun::currentsetting == toolgun::tgSettings::flamethrower) {
-				ImGui::SliderFloat("Radius", &toolgun::flRadius, 0.1f, 3.f, "%.2f");
+				ImGui::SliderFloat("Radius", &toolgun::flRadius, 1.f, 10.f, "%.2f");
 				ImGui::SliderInt("Chance %", &toolgun::chance, 1, 100);
 			}
 			if (toolgun::currentsetting == toolgun::tgSettings::destroyer) {
@@ -358,13 +361,29 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			if (toolgun::currentsetting == toolgun::tgSettings::camera) {
 				ImGui::SliderInt("Resolution", &toolgun::cameraResolution, 32, 512);
 				ImGui::SliderFloat("FOV", &toolgun::cameraFov, 1.f, 10.f, "%.1f");
+				ImGui::Checkbox("Monochrome", &camera::mono);
+				ImGui::Checkbox("Optimised mode", &camera::interlaceMode);
+				ImGui::Checkbox("Enable transparency", &camera::transparency);
 				ImGui::Checkbox("Save image", &toolgun::takeSnapshot);
-				if (ImGui::RadioButton("Colour mode", camera::colourMode)) {
-					camera::colourMode = !camera::colourMode;
+
+				if (!camera::interlaceMode) {
+					if (ImGui::RadioButton("Colour mode", camera::colourMode)) {
+						camera::colourMode = !camera::colourMode;
+					}
+					if (ImGui::RadioButton("Distance mode", !camera::colourMode)) {
+						camera::colourMode = !camera::colourMode;
+					}
 				}
-				if (ImGui::RadioButton("Distance mode", !camera::colourMode)) {
-					camera::colourMode = !camera::colourMode;
+				else {
+					camera::colourMode = true;
 				}
+
+			}
+		}
+
+		if (ImGui::CollapsingHeader("debug")) {
+			if (ImGui::Button("Spawn DebugCube")) {
+				objectTesting::spawnDebugObject();
 			}
 		}
 
@@ -409,10 +428,10 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			}
 		}
 
-		if (ImGui::CollapsingHeader("harop")) {
-			if (ImGui::Button("Spawn harop")) {
-				HaropDrone::spawnHarop();
-			}
+		if (ImGui::CollapsingHeader("minimap")) {
+			ImGui::Checkbox("Enabled", &lidar::enabled);
+			ImGui::SliderFloat("Zoom", &lidar::zoom, 1.f, 100.f, "%2.f");
+			ImGui::Checkbox("Colour", &lidar::colour);
 		}
 
 		if (ImGui::CollapsingHeader("c4")) {

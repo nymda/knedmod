@@ -177,6 +177,9 @@
     <ClInclude Include="dotProjector.h">
       <Filter>Header Files\TDAPI</Filter>
     </ClInclude>
+    <ClInclude Include="objectTranslationTest.h">
+      <Filter>Header Files\TDAPI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -294,6 +297,9 @@
       <Filter>Source Files\Mods</Filter>
     </ClCompile>
     <ClCompile Include="dotProjector.cpp">
+      <Filter>Source Files\TDAPI</Filter>
+    </ClCompile>
+    <ClCompile Include="objectTranslationTest.cpp">
       <Filter>Source Files\TDAPI</Filter>
     </ClCompile>
   </ItemGroup>

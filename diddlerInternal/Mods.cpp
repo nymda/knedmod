@@ -11,6 +11,7 @@
 #include "missileLauncher.h"
 #include "physCamera.h"
 #include "Harop.h"
+#include "objectTranslationTest.h"
 
 namespace mods {
 	char jetpackKey = VK_SPACE;
@@ -51,6 +52,7 @@ namespace mods {
 
 		physCamera::updateCamera();
 		HaropDrone::updateHaropCamera();
+		objectTesting::updateDebugObject();
 		//camera::quatCameraOutline();
 
 		//if (flamethrower) {

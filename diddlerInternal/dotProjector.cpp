@@ -26,7 +26,7 @@ namespace dotProjector {
     }
 
     pixelResponse responseContainer = {};
-    pixelResponse* projectDotMatrix(int resolution, float fov, float aspect, glm::quat* camRotation, td::Vec3 camPosition, td::Vec3 forwardVector, td::Vec3 upVector, RaycastFilter* filter) {
+    pixelResponse* projectDotMatrix(int resolution, float fov, float aspect, bool stochastic, glm::quat* camRotation, td::Vec3 camPosition, td::Vec3 forwardVector, td::Vec3 upVector, RaycastFilter* filter) {
         //construct a new viewMatrix and projectionMatrix
         //could use the matrices already created by the game, if i can find them
 
@@ -54,8 +54,17 @@ namespace dotProjector {
 
                 //slightly eh implementation of Stochastic Sampling. Thanks Josh!
                 float pxSize = (fov / resolution);
-                float comX = (fov / 2.f) - (x * pxSize) + randFloat(-(pxSize / 3.f), (pxSize / 3.f));
-                float comY = (fov / 2.f) - (y * pxSize) + randFloat(-(pxSize / 3.f), (pxSize / 3.f));
+                float comX = 0.f;
+                float comY = 0.f;
+
+                if (stochastic) {
+                    comX = (fov / 2.f) - (x * pxSize) + randFloat(-(pxSize / 3.f), (pxSize / 3.f));
+                    comY = (fov / 2.f) - (y * pxSize) + randFloat(-(pxSize / 3.f), (pxSize / 3.f));
+                }
+                else {
+                    comX = (fov / 2.f) - (x * pxSize);
+                    comY = (fov / 2.f) - (y * pxSize);
+                }
 
                 glm::vec2 ray_nds = glm::vec2(comX, comY);
                 glm::vec4 ray_clip = glm::vec4(ray_nds.x, ray_nds.y, -1.0f, 1.0f);
