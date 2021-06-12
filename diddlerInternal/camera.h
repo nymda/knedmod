@@ -2,10 +2,19 @@
 #include "dotProjector.h"
 
 namespace camera {
+	enum class cameraMode : int {
+		fullframe = 0,
+		interlaced = 1,
+		staged = 2,
+	};
+
+	extern cameraMode mode;
 	extern bool colourMode;
 	extern bool mono;
-	extern bool interlaceMode;
 	extern bool transparency;
+	extern bool staged_newFrame;
+	extern bool showImageProgress;
+	extern int staged_maxPixelsPerFrame;
 
 	//void updateCameraFrame(float* pixels, int resolution, float min, float max, bool saveSnapshot);
 	void drawCameraWindow();

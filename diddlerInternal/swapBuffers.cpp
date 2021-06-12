@@ -362,21 +362,31 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::SliderInt("Resolution", &toolgun::cameraResolution, 32, 512);
 				ImGui::SliderFloat("FOV", &toolgun::cameraFov, 1.f, 10.f, "%.1f");
 				ImGui::Checkbox("Monochrome", &camera::mono);
-				ImGui::Checkbox("Optimised mode", &camera::interlaceMode);
 				ImGui::Checkbox("Enable transparency", &camera::transparency);
 				ImGui::Checkbox("Save image", &toolgun::takeSnapshot);
+				ImGui::Checkbox("(Staged) show progress", &camera::showImageProgress);
+				ImGui::SliderInt("(Staged) max pixels / frame", &camera::staged_maxPixelsPerFrame, 100, 10000);
+				if (ImGui::RadioButton("Interlaced", camera::mode == camera::cameraMode::interlaced)) {
+					camera::mode = camera::cameraMode::interlaced;
+				}
+				if (ImGui::RadioButton("Staged", camera::mode == camera::cameraMode::staged)) {
+					camera::mode = camera::cameraMode::staged;
+				}
+				if (ImGui::RadioButton("Fullframe", camera::mode == camera::cameraMode::fullframe)) {
+					camera::mode = camera::cameraMode::fullframe;
+				}
 
-				if (!camera::interlaceMode) {
-					if (ImGui::RadioButton("Colour mode", camera::colourMode)) {
-						camera::colourMode = !camera::colourMode;
-					}
-					if (ImGui::RadioButton("Distance mode", !camera::colourMode)) {
-						camera::colourMode = !camera::colourMode;
-					}
-				}
-				else {
-					camera::colourMode = true;
-				}
+				//if (!camera::interlaceMode) {
+				//	if (ImGui::RadioButton("Colour mode", camera::colourMode)) {
+				//		camera::colourMode = !camera::colourMode;
+				//	}
+				//	if (ImGui::RadioButton("Distance mode", !camera::colourMode)) {
+				//		camera::colourMode = !camera::colourMode;
+				//	}
+				//}
+				//else {
+				//	camera::colourMode = true;
+				//}
 
 			}
 		}

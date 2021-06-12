@@ -399,9 +399,12 @@ namespace toolgun {
                 
             }
 			else if (currentsetting == tgSettings::camera) {            
-                if (glb::player->isAttacking == true && !glb::displayMenu) {
+                if ((glb::player->isAttacking == true && !glb::displayMenu) || !camera::staged_newFrame) {
                     camera::updateImageColour(cameraResolution, cameraFov);
-                }                           
+                }      
+                else {
+                    camera::staged_newFrame = true;
+                }
                 camera::drawCameraWindow();
 			}
             else if (currentsetting == tgSettings::testing) {

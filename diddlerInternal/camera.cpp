@@ -10,6 +10,7 @@
 #include "imgui/imgui_impl_opengl3.h"
 #include "imgui/imgui_impl_win32.h"
 #include "dotProjector.h"
+#include "camera.h"
 
 typedef unsigned int uint;
 
@@ -18,8 +19,8 @@ namespace camera {
     bool isinit = false;
     bool colourMode = true;
     bool mono = false;
-    bool interlaceMode = true;
     bool transparency = true;
+    cameraMode mode = cameraMode::interlaced;
 
     size_t currentFramebufferSize = 0;
     //byte* frameBuffer = nullptr;
@@ -81,10 +82,13 @@ namespace camera {
         glm::mat4 invViewMat = glm::inverse(vmatrix);
 
         int pixelOffset = 0;
+        bool interlace = flip;
 
         //draw from left to right, bottom to top. This matches openGLs pixel format. 
         for (int y = resolution; y > 0; y--) {
-            if (((y & 2) == 0) == flip) {
+            interlace = !interlace;
+
+            if (interlace) {
                 pixelOffset += resolution * 4;
                 continue;
             }
@@ -150,6 +154,127 @@ namespace camera {
         }
     }
 
+    bool staged_newFrame = true;
+    int staged_maxPixelsPerFrame = 1000;
+    int staged_maxPixelsThisFrame = 1000;
+    int storedX = 0;
+    int storedY = 0;
+    int currentPixelPointer = 0;
+    int pixelOffset = 0;
+    int safeWriteLimt = 0;
+
+    glm::vec3 raycast_dir_bl;
+    raycaster::rayData rd;
+    glm::vec3 glCameraPos;
+    glm::vec3 glTarget;
+    glm::mat4x4 vmatrix;
+    glm::mat4x4 pmatrix;
+    glm::mat4 invProjMat;
+    glm::mat4 invViewMat;
+    td::Vec3 staticCamPosition;
+
+    bool stagedImage(byte* frameBuffer, int resolution, float fov, float aspect, glm::quat* camRotation, td::Vec3 camPosition, td::Vec3 forwardVector, td::Vec3 upVector, RaycastFilter* filter) {
+
+        if (staged_newFrame) {
+            storedX = 0;
+            storedY = resolution;
+            pixelOffset = 0;
+            staged_newFrame = false;
+            staged_maxPixelsThisFrame = staged_maxPixelsPerFrame;
+            staticCamPosition = camPosition;
+
+            raycast_dir_bl = *camRotation * glm::vec3(forwardVector.x, forwardVector.y, forwardVector.z);
+            rd = raycaster::castRayManual(staticCamPosition, { raycast_dir_bl.x, raycast_dir_bl.y, raycast_dir_bl.z }, filter);
+            glCameraPos = glm::vec3(staticCamPosition.x, staticCamPosition.y, staticCamPosition.z);
+            glTarget = glm::vec3(rd.worldPos.x, rd.worldPos.y, rd.worldPos.z);
+            vmatrix = glm::lookAt(glCameraPos, glTarget, glm::vec3(upVector.x, upVector.y, upVector.z));
+            pmatrix = glm::perspective(50.f, aspect, 1.f, 1000.f);
+            invProjMat = glm::inverse(pmatrix);
+            invViewMat = glm::inverse(vmatrix);
+        }
+
+        int completedPixels = 0;
+
+        //draw from left to right, bottom to top. This matches openGLs pixel format. 
+        for (int y = storedY; y > 0; y--) {
+            for (int x = storedX; x < resolution; x++) {
+                //slightly eh implementation of Stochastic Sampling. Thanks Josh!
+                float pxSize = (fov / resolution);
+                float comX = (fov / 2.f) - (x * pxSize) + randFloat(-(pxSize / 3.f), (pxSize / 3.f));
+                float comY = (fov / 2.f) - (y * pxSize) + randFloat(-(pxSize / 3.f), (pxSize / 3.f));
+
+                glm::vec2 ray_nds = glm::vec2(comX, comY);
+                glm::vec4 ray_clip = glm::vec4(ray_nds.x, ray_nds.y, -1.0f, 1.0f);
+                glm::vec4 eyeCoords = invProjMat * ray_clip;
+                eyeCoords = glm::vec4(eyeCoords.x, eyeCoords.y, -1.0f, 0.0f);
+
+                glm::vec4 rayWorld = invViewMat * eyeCoords;
+                glm::vec3 rayDirection = glm::normalize(glm::vec3(rayWorld));
+                rd = raycaster::castRayManual(staticCamPosition, { rayDirection.x, rayDirection.y, rayDirection.z }, filter);
+
+                if (pixelOffset > safeWriteLimt) {
+                    staged_newFrame = true;
+                    return true;
+                }
+
+                if (rd.distance < 1000.f) {
+                    int iThisDist = (rd.distance) / 2;
+
+                    if (mono) {
+                        int avg = (((rd.palette.m_Color.m_R + rd.palette.m_Color.m_G + rd.palette.m_Color.m_B) / 3.f) * 255) - iThisDist;
+                        if (avg < 0) {
+                            avg = 0;
+                        }
+                        frameBuffer[pixelOffset + 0] = (byte)(avg);
+                        frameBuffer[pixelOffset + 1] = (byte)(avg);
+                        frameBuffer[pixelOffset + 2] = (byte)(avg);
+                        frameBuffer[pixelOffset + 3] = (byte)(255);
+                    }
+                    else {
+                        int iColourR = ((rd.palette.m_Color.m_R * 255) - iThisDist);
+                        if (iColourR < 0) { iColourR = 0; }
+                        int iColourG = ((rd.palette.m_Color.m_G * 255) - iThisDist);
+                        if (iColourG < 0) { iColourG = 0; }
+                        int iColourB = ((rd.palette.m_Color.m_B * 255) - iThisDist);
+                        if (iColourB < 0) { iColourB = 0; }
+
+                        frameBuffer[pixelOffset + 0] = (byte)(iColourR);
+                        frameBuffer[pixelOffset + 1] = (byte)(iColourG);
+                        frameBuffer[pixelOffset + 2] = (byte)(iColourB);
+                        frameBuffer[pixelOffset + 3] = (byte)(255);
+                    }
+                }
+                else {
+                    if (mono) {
+                        frameBuffer[pixelOffset + 0] = (byte)(128); //0
+                        frameBuffer[pixelOffset + 1] = (byte)(128); //77
+                        frameBuffer[pixelOffset + 2] = (byte)(128); //77
+                        frameBuffer[pixelOffset + 3] = (byte)(255);
+                    }
+                    else {
+                        frameBuffer[pixelOffset + 0] = (byte)(0);
+                        frameBuffer[pixelOffset + 1] = (byte)(77);
+                        frameBuffer[pixelOffset + 2] = (byte)(77);
+                        frameBuffer[pixelOffset + 3] = (byte)(255);
+                    }
+                }
+
+                if (completedPixels == staged_maxPixelsThisFrame) {
+                    storedY = y;
+                    storedX = x;
+                    return false;
+                }
+
+                completedPixels++;
+                pixelOffset += 4;
+            }
+            storedX = 0;
+        }
+
+        //std::cout << "Frame finished" << std::endl;
+        staged_newFrame = true;
+        return true;
+    }
 
     void constructDistanceFrame(dotProjector::pixelResponse* pixelResponse, int resolution, float min, float max) {
         if (!isinit) {
@@ -276,32 +401,37 @@ namespace camera {
     int lastResolution = 64;
     byte* frameBuffer;
     bool flip = true;
-    void updateImageColour(int resolution, float fov) {
-        if (interlaceMode) {
-            if (resolution != lastResolution || !frameBuffer) {
-                free(frameBuffer);
-                frameBuffer = new byte[(resolution * resolution) * 4];
-            }
-            lastResolution = resolution;
-            if (transparency) {
-                rcf.m_RejectTransparent = true;
-            }
-            else {
-                rcf.m_RejectTransparent = false;
-            }
+    bool showImageProgress = true;
 
+    void updateImageColour(int resolution, float fov) {
+
+        if (resolution != lastResolution || !frameBuffer) {
+            free(frameBuffer);
+            safeWriteLimt = (resolution * resolution) * 4;
+            frameBuffer = new byte[safeWriteLimt];
+        }
+        lastResolution = resolution;
+        if (transparency) {
+            rcf.m_RejectTransparent = true;
+        }
+        else {
+            rcf.m_RejectTransparent = false;
+        }
+
+
+        if (mode == cameraMode::interlaced) {
             flip = !flip;
             interlacedImage(frameBuffer, resolution, flip, fov, 1.f, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
             constructFrameManual(frameBuffer, resolution, false);
         }
-        else {
+        else if (mode == cameraMode::staged) {
+            if (stagedImage(frameBuffer, resolution, fov, 1.f, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf) || showImageProgress) {
+                constructFrameManual(frameBuffer, resolution, false);
+            }
+        }
+        else if (mode == cameraMode::fullframe) {
             dotProjector::pixelResponse* response = dotProjector::projectDotMatrix(resolution, fov, 1.f, true, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
-            if (camera::colourMode) {
-                constructColourFrame(response, resolution, false);
-            }
-            else {
-                constructDistanceFrame(response, resolution, response->minDist, response->maxDist);
-            }
+            constructColourFrame(response, resolution, false);
         }
     }
 }
