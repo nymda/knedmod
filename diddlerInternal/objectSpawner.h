@@ -27,7 +27,8 @@ namespace spawner {
 		objectSpawnType spawnType = objectSpawnType::placed;
 		std::vector<objectAttribute> attributes;
 		td::Vec3 startVelocity = { 0, 0, 0 };
-		glm::quat customRotation = glm::quat(0, 0, 0, 0);
+		td::Vec4 customRotation = { 0, 0, 0, 0 };
+		td::Vec3 backTranslate = { 0, 0, 0 };
 		float maximumPlaceDistance = 1000.f;
 		bool rotateFacePlayer = false;
 		bool unbreakable = false;
@@ -51,6 +52,7 @@ namespace spawner {
 		std::string imagePath;
 		std::string objectName;
 		GLuint imageTexture = 0;
+		TDVox* voxObject = 0;
 		std::vector<objectAttribute> attributes;
 	};
 

@@ -166,20 +166,38 @@ namespace spawner {
                     lastSpawnedObject.body->RotationVelocity = { roVeloX, roVeloY, roVeloZ };
                 }
                 else if (lastSpawnedObject.params.spawnType == objectSpawnType::front) {
-                    float spawnPosx = (glb::player->cameraPosition.x - (objectSize.x / 2)) + (glb::player->cameraEuler().x * 2.25f);
-                    float spawnPosy = (glb::player->cameraPosition.y - (objectSize.y / 2)) + (glb::player->cameraEuler().y * 2.25f);
-                    float spawnPosz = (glb::player->cameraPosition.z - (objectSize.z / 2)) + (glb::player->cameraEuler().z * 2.25f);
-                    *(glm::quat*)&lastSpawnedObject.body->Rotation = lastSpawnedObject.params.customRotation;
+
+                    lastSpawnedObject.body->Rotation = lastSpawnedObject.params.customRotation;
+
+                    glm::quat bodyQuat = *(glm::quat*)&lastSpawnedObject.body->Rotation;
+                    glm::vec3 vx = bodyQuat * glm::vec3(1, 0, 0);
+                    glm::vec3 vy = bodyQuat * glm::vec3(0, 1, 0);
+                    glm::vec3 vz = bodyQuat * glm::vec3(0, 0, 1); //(UP)
+
+                    glm::vec3 translation = ((vz * lastSpawnedObject.params.backTranslate.x) + (vy * lastSpawnedObject.params.backTranslate.y) + (vx * lastSpawnedObject.params.backTranslate.z));
+                    float spawnPosx = ((glb::player->cameraPosition.x) + (glb::player->cameraEuler().x * 2.25f));
+                    float spawnPosy = ((glb::player->cameraPosition.y) + (glb::player->cameraEuler().y * 2.25f));
+                    float spawnPosz = ((glb::player->cameraPosition.z) + (glb::player->cameraEuler().z * 2.25f));
+
+                    lastSpawnedObject.body->Position = { spawnPosx - translation.x,  spawnPosy - translation.y, spawnPosz - translation.z };
                     lastSpawnedObject.body->Velocity = lastSpawnedObject.params.startVelocity;
-                    lastSpawnedObject.body->Position = { spawnPosx,  spawnPosy, spawnPosz };
-
-
-
-                    //uintptr_t tmpJoint = glb::oTMalloc(208);
-                    //glb::oConstructJoint(tmpJoint);
                 }
                 else {
-                    lastSpawnedObject.body->Position = { (target.x - (objectSize.x / 2)), target.y, (target.z - (objectSize.z / 2)) };
+
+                    td::Vec3 voxSize = { lastSpawnedObject.vox->sizeX / 10.f, lastSpawnedObject.vox->sizeY / 10.f, lastSpawnedObject.vox->sizeZ / 10.f }; //this is the vox size in units where 1vx = 1u, convert to 1vx = .1u
+                    glm::quat facePlayer = glm::quat(glm::vec3(4.71238898025f, glb::player->camYaw, 0));
+                    
+                    glm::vec3 vx = facePlayer * glm::vec3(1, 0, 0);
+                    glm::vec3 vy = facePlayer * glm::vec3(0, 1, 0);
+                    glm::vec3 vz = facePlayer * glm::vec3(0, 0, 1); 
+
+                    glm::vec3 translation = ((vz * -0.1f) + (vy * (voxSize.y / 2.f)) + (vx * (voxSize.x / 2.f)));
+
+                    std::cout << voxSize.x << " : " << voxSize.y << " : " << voxSize.z << std::endl;
+
+                    *(glm::quat*)&lastSpawnedObject.body->Rotation = facePlayer;
+
+                    lastSpawnedObject.body->Position = { target.x - translation.x, target.y - translation.y, target.z - translation.z };
                 }
 
                 lastSpawnedObject.isInitByGame = true;
@@ -259,6 +277,12 @@ namespace spawner {
                         lso.basePath = catagoryFolder.path().string();
                         lso.imagePath = lso.basePath + "\\object.png";
                         lso.voxPath = lso.basePath + "\\object.vox";
+
+                        td::small_string ssVoxPath = td::small_string(lso.voxPath.c_str());
+                        td::small_string ssSubPath = td::small_string("");
+
+                        lso.voxObject = (TDVox*)glb::oSpawnVox(&ssVoxPath, &ssSubPath, 1.f);
+
                         lso.objectName = getObjectName(lso.basePath);
 
                         if (foundAttrib) {
@@ -387,21 +411,14 @@ namespace spawner {
         td::Vec3 target = rd.worldPos;
         td::Vec4 newRot = { 0.5, -0.5, -0.5, -0.5 };
 
-        td::Vec3 aVec = rd.angle;
-        float angle = atan2(aVec.x, aVec.z);
-        float qx = aVec.x * sin(angle / 2);
-        float qy = aVec.y * sin(angle / 2);
-        float qz = aVec.z * sin(angle / 2);
-        float qw = cos(angle / 2);
-
         *(float*)(BODY + 0x28) = 0;
         *(float*)(BODY + 0x28 + 4) = 0;
         *(float*)(BODY + 0x28 + 8) = 0;
 
-        *(float*)(BODY + 0x28 + 12) = newRot.x;
-        *(float*)(BODY + 0x28 + 16) = newRot.y;
-        *(float*)(BODY + 0x28 + 20) = newRot.z;
-        *(float*)(BODY + 0x28 + 24) = newRot.w;
+        //*(float*)(BODY + 0x28 + 12) = newRot.x;
+        //*(float*)(BODY + 0x28 + 16) = newRot.y;
+        //*(float*)(BODY + 0x28 + 20) = newRot.z;
+        //*(float*)(BODY + 0x28 + 24) = newRot.w;
 
         return { osp, false, (TDShape*)SHAPE, (TDBody*)BODY, (TDVox*)vox };
     }

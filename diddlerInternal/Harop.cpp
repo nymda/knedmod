@@ -70,7 +70,7 @@ namespace HaropDrone {
                     }
                 }
                 //camera::updateCameraFrameColor(pixelsColor, res, 0, 0, false);
-                camera::drawCameraWindow();
+                camera::drawCameraWindow(0.f);
                 deadCameraframes--;
             }
             else {
@@ -97,7 +97,7 @@ namespace HaropDrone {
             pixels = new float[(res * res)];
         }
 
-        camera::drawCameraWindow();
+        camera::drawCameraWindow(0.f);
 
         td::Color red{ 1.f, 0.f, 0.f, 1.f };
         td::Color green{ 0.f, 1.f, 0.f, 1.f };

@@ -25,7 +25,7 @@ namespace physCamera {
 		spawner::objectSpawnerParams osp = {};
 		//osp.unbreakable = true;
 		osp.nocull = true;
-		camera = spawner::spawnObjectProxy("vox/Default/Camera/object.vox", osp);
+		camera = spawner::spawnObjectProxy("vox/Default/largeCamera/object.vox", osp);
 
 		rcf.m_IgnoredBodies.push_back(camera.body);
 		rcf.m_IgnoredShapes.push_back(camera.shape);
@@ -38,8 +38,8 @@ namespace physCamera {
     int deadCameraframes = 0;
 
     void destroyCamera() {
-        camera.body->Destroy(camera.body, true);
-        camera.shape->Destroy(camera.shape, true);
+        //camera.body->Destroy(camera.body, true);
+        //camera.shape->Destroy(camera.shape, true);
         camera = {};
     }
 
@@ -51,7 +51,15 @@ namespace physCamera {
     bool flip = true;
     byte* frameBuffer;
     byte* pixelsColor = nullptr;
+    std::chrono::steady_clock::time_point FRAMESTART;
+    std::chrono::steady_clock::time_point FRAMEEND;
+    std::chrono::high_resolution_clock execTimer;
+    float fps = 0;
+
 	void updateCamera() {
+
+        FRAMESTART = execTimer.now();
+
         int res = toolgun::cameraResolution;
         float fov = toolgun::cameraFov;
         int pixelOffset = 0;
@@ -77,7 +85,7 @@ namespace physCamera {
                     }
                 }
                 camera::constructFrameManual(pixelsColor, res, false);
-                camera::drawCameraWindow();
+                camera::drawCameraWindow(fps);
                 deadCameraframes--;
             }
             else {
@@ -87,16 +95,24 @@ namespace physCamera {
             return;
         }
 
-		td::Vec3 objectMin = camera.shape->posMin;
-		td::Vec3 objectMax = camera.shape->posMax;
-		td::Vec3 centerpoint = { objectMax.x - ((objectMax.x - objectMin.x) / 2), objectMax.y - ((objectMax.y - objectMin.y) / 2), objectMax.z - ((objectMax.z - objectMin.z) / 2) };
+		//td::Vec3 objectMin = camera.shape->posMin;
+		//td::Vec3 objectMax = camera.shape->posMax;
+		//td::Vec3 centerpoint = { objectMax.x - ((objectMax.x - objectMin.x) / 2), objectMax.y - ((objectMax.y - objectMin.y) / 2), objectMax.z - ((objectMax.z - objectMin.z) / 2) };
+
+        glm::vec3 bodyPos = glm::vec3(camera.body->Position.x, camera.body->Position.y, camera.body->Position.z);
+        glm::quat bodyQuat = *(glm::quat*)&camera.body->Rotation;
+        glm::vec3 vx = bodyQuat * glm::vec3(1, 0, 0);
+        glm::vec3 vy = bodyQuat * glm::vec3(0, 1, 0);
+        glm::vec3 vz = bodyQuat * glm::vec3(0, 0, 1); //(UP)
+        glm::vec3 centerpoint = bodyPos + ((vz * 0.4f) + (vy * 0.4f) + (vx * 0.2f));
+
         deadCameraframes = 30;
 
         glm::quat cameraQuat = *(glm::quat*)(&camera.body->Rotation);
         glm::vec3 cameraUp = cameraQuat * glm::vec3(0, 0, 1);;
 
 
-        camera::drawCameraWindow();
+        camera::drawCameraWindow(fps);
 
         if (toolgun::cameraResolution != lastResolution || !frameBuffer) {
             free(frameBuffer);
@@ -110,7 +126,11 @@ namespace physCamera {
             rcf.m_RejectTransparent = false;
         }
         flip = !flip;
-        camera::interlacedImage(frameBuffer, toolgun::cameraResolution, flip, fov, 1.f, (glm::quat*)&camera.body->Rotation, centerpoint, { -1, 0, 0 }, { cameraUp.x, cameraUp.y, cameraUp.z }, &rcf);
+        camera::interlacedImage(frameBuffer, toolgun::cameraResolution, flip, fov, 1.f, (glm::quat*)&camera.body->Rotation, { centerpoint.x, centerpoint.y, centerpoint.z }, { -1, 0, 0 }, { cameraUp.x, cameraUp.y, cameraUp.z }, &rcf);
         camera::constructFrameManual(frameBuffer, toolgun::cameraResolution, false);
+
+        FRAMEEND = execTimer.now();
+        auto exTime = FRAMEEND - FRAMESTART;
+        fps = (std::chrono::duration_cast<std::chrono::microseconds>(exTime).count() / 1000.f);
 	}
 }

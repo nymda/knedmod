@@ -22,6 +22,9 @@ namespace camera {
     bool transparency = true;
     cameraMode mode = cameraMode::interlaced;
 
+    float execTime = 0.f;
+    std::chrono::high_resolution_clock execTimer;
+
     size_t currentFramebufferSize = 0;
     //byte* frameBuffer = nullptr;
     RaycastFilter rcf = { };
@@ -392,9 +395,39 @@ namespace camera {
         }
     }
 
-    void drawCameraWindow() {
+    float fps = 0;
+
+    void drawCameraWindow(float fps) {
         ImGui::Begin("Camera");
-        ImGui::Image((void*)image_texture, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowHeight() - 35));
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+        ImVec2 posMin = ImGui::GetWindowContentRegionMin();
+        ImVec2 posMax = ImGui::GetWindowContentRegionMax();
+        ImVec2 windowPos = ImGui::GetWindowPos();
+
+        ImVec2 adjustedPosMin = ImVec2(windowPos.x + posMin.x, windowPos.y + posMin.y);
+        ImVec2 adjustedPosMax = ImVec2(windowPos.x + posMax.x, windowPos.y + posMax.y);
+
+
+        drawList->AddImage((void*)image_texture, adjustedPosMin, adjustedPosMax);
+
+        
+        switch (mode) {
+        case cameraMode::interlaced:
+            ImGui::Text("Frame time: %.2f MS (Interlaced)", fps);
+            break;
+
+        case cameraMode::staged:
+            ImGui::Text("Frame time: %.2f MS (Staged)", fps);
+            break;
+
+        case cameraMode::fullframe:
+            ImGui::Text("Frame time: %.2f MS (FullFrame)", fps);
+            break;
+        }
+
+
+        //ImGui::Image((void*)image_texture, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowHeight() - 35));
         ImGui::End();
     }
   
@@ -403,7 +436,12 @@ namespace camera {
     bool flip = true;
     bool showImageProgress = true;
 
-    void updateImageColour(int resolution, float fov) {
+    std::chrono::steady_clock::time_point FRAMESTART;
+    std::chrono::steady_clock::time_point FRAMEEND;
+    float fpsFlt = 0;
+
+
+    float updateImageColour(int resolution, float fov) {
 
         if (resolution != lastResolution || !frameBuffer) {
             free(frameBuffer);
@@ -418,20 +456,43 @@ namespace camera {
             rcf.m_RejectTransparent = false;
         }
 
-
         if (mode == cameraMode::interlaced) {
             flip = !flip;
+
+            FRAMESTART = execTimer.now();
+
             interlacedImage(frameBuffer, resolution, flip, fov, 1.f, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
             constructFrameManual(frameBuffer, resolution, false);
+
+            FRAMEEND = execTimer.now();
+            auto exTime = FRAMEEND - FRAMESTART;
+            fps = (std::chrono::duration_cast<std::chrono::microseconds>(exTime).count() / 1000.f);
+            return fps;
         }
         else if (mode == cameraMode::staged) {
+            if (staged_newFrame) { FRAMESTART = execTimer.now(); }
+
             if (stagedImage(frameBuffer, resolution, fov, 1.f, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf) || showImageProgress) {
                 constructFrameManual(frameBuffer, resolution, false);
+
+                FRAMEEND = execTimer.now();
+                auto exTime = FRAMEEND - FRAMESTART;
+                fps = (std::chrono::duration_cast<std::chrono::microseconds>(exTime).count() / 1000.f);
             }
+
+            return fps;
         }
         else if (mode == cameraMode::fullframe) {
+            FRAMESTART = execTimer.now();
+
             dotProjector::pixelResponse* response = dotProjector::projectDotMatrix(resolution, fov, 1.f, true, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
             constructColourFrame(response, resolution, false);
+
+            FRAMEEND = execTimer.now();
+            auto exTime = FRAMEEND - FRAMESTART;
+            fps = (std::chrono::duration_cast<std::chrono::microseconds>(exTime).count() / 1000.f);
+            return fps;
         }
+        return 0.f;
     }
 }

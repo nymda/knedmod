@@ -86,6 +86,7 @@ namespace toolgun {
     bool takeSnapshot = false;
     int cameraResolution = 64;
     float cameraFov = 8.f;
+    float cameraFps = 0.f;
 
     void handleToolgun() {
 
@@ -125,6 +126,78 @@ namespace toolgun {
                 osp.animate = true;
 
                 if (method == spawngunMethod::placed) {
+
+                    if (currentSpawngunObject.voxObject) {
+
+
+
+                        float voxSizeX = currentSpawngunObject.voxObject->sizeX / 10.f;
+                        float voxSizeY = currentSpawngunObject.voxObject->sizeY / 10.f;
+                        float voxSizeZ = currentSpawngunObject.voxObject->sizeZ / 10.f;
+
+                        td::Vec3 oSize = { voxSizeX, voxSizeY, voxSizeZ };
+
+                        glm::quat facePlayer = glm::quat(glm::vec3(4.71238898025f, glb::player->camYaw, 0));
+                        glm::vec3 vx = facePlayer * glm::vec3(1, 0, 0);
+                        glm::vec3 vy = facePlayer * glm::vec3(0, 1, 0);
+                        glm::vec3 vz = facePlayer * glm::vec3(0, 0, 1);
+
+                        glm::vec3 translationFBL = ((vz * 0.f) + (vy * (voxSizeY * 0.5f)) + (vx * (voxSizeX * 0.5f)));
+                        glm::vec3 translationBBR = ((vz * 0.f) - (vy * (voxSizeY * 0.5f)) - (vx * (voxSizeX * 0.5f)));
+                        glm::vec3 translationBBL = ((vz * 0.f) - (vy * (voxSizeY * 0.5f)) + (vx * (voxSizeX * 0.5f)));
+                        glm::vec3 translationFBR = ((vz * 0.f) + (vy * (voxSizeY * 0.5f)) - (vx * (voxSizeX * 0.5f)));
+
+
+                        glm::vec3 translationFTL = ((vz * (voxSizeZ * -1.f)) + (vy * (voxSizeY * 0.5f)) + (vx * (voxSizeX * 0.5f)));
+                        glm::vec3 translationBTR = ((vz * (voxSizeZ * -1.f)) - (vy * (voxSizeY * 0.5f)) - (vx * (voxSizeX * 0.5f)));
+                        glm::vec3 translationBTL = ((vz * (voxSizeZ * -1.f)) - (vy * (voxSizeY * 0.5f)) + (vx * (voxSizeX * 0.5f)));
+                        glm::vec3 translationFTR = ((vz * (voxSizeZ * -1.f)) + (vy * (voxSizeY * 0.5f)) - (vx * (voxSizeX * 0.5f)));
+
+
+                        td::Vec3 FBL = { target.x - translationFBL.x, target.y - translationFBL.y, target.z - translationFBL.z };
+                        td::Vec3 BBR = { target.x - translationBBR.x, target.y - translationBBR.y, target.z - translationBBR.z };
+                        td::Vec3 BBL = { target.x - translationBBL.x, target.y - translationBBL.y, target.z - translationBBL.z };
+                        td::Vec3 FBR = { target.x - translationFBR.x, target.y - translationFBR.y, target.z - translationFBR.z };
+
+
+                        td::Vec3 FTL = { target.x - translationFTL.x, target.y - translationFTL.y, target.z - translationFTL.z };
+                        td::Vec3 BTR = { target.x - translationBTR.x, target.y - translationBTR.y, target.z - translationBTR.z };
+                        td::Vec3 BTL = { target.x - translationBTL.x, target.y - translationBTL.y, target.z - translationBTL.z };
+                        td::Vec3 FTR = { target.x - translationFTR.x, target.y - translationFTR.y, target.z - translationFTR.z };
+
+
+                        //drawCube(target, 0.05f, red);
+
+                        //drawCube(FBL, 0.05f, white);
+                        //drawCube(BBR, 0.05f, red);
+                        //drawCube(BBL, 0.05f, green);
+                        //drawCube(FBR, 0.05f, blue);
+
+                        //drawCube(FTL, 0.05f, white);
+                        //drawCube(BTR, 0.05f, red);
+                        //drawCube(BTL, 0.05f, green);
+                        //drawCube(FTR, 0.05f, blue);
+
+                        //bottom square
+                        glb::oFDL(glb::renderer, FBL, FBR, white, white, false);
+                        glb::oFDL(glb::renderer, FBL, BBL, white, white, false);
+                        glb::oFDL(glb::renderer, BBL, BBR, white, white, false);
+                        glb::oFDL(glb::renderer, BBR, FBR, white, white, false);
+
+                        //top square
+                        glb::oFDL(glb::renderer, FTL, FTR, white, white, false);
+                        glb::oFDL(glb::renderer, FTL, BTL, white, white, false);
+                        glb::oFDL(glb::renderer, BTL, BTR, white, white, false);
+                        glb::oFDL(glb::renderer, BTR, FTR, white, white, false);
+
+                        //walls
+                        glb::oFDL(glb::renderer, FTL, FBL, white, white, false);
+                        glb::oFDL(glb::renderer, FTR, FBR, white, white, false);
+                        glb::oFDL(glb::renderer, BTL, BBL, white, white, false);
+                        glb::oFDL(glb::renderer, BTR, BBR, white, white, false);
+                    }
+
+
                     osp.spawnType = spawner::objectSpawnType::placed;
                 }
                 else if (method == spawngunMethod::thrown) {
@@ -398,14 +471,14 @@ namespace toolgun {
                 }
                 
             }
-			else if (currentsetting == tgSettings::camera) {            
+			else if (currentsetting == tgSettings::camera) {     
                 if ((glb::player->isAttacking == true && !glb::displayMenu) || !camera::staged_newFrame) {
-                    camera::updateImageColour(cameraResolution, cameraFov);
+                    cameraFps = camera::updateImageColour(cameraResolution, cameraFov);
                 }      
                 else {
                     camera::staged_newFrame = true;
                 }
-                camera::drawCameraWindow();
+                camera::drawCameraWindow(cameraFps);
 			}
             else if (currentsetting == tgSettings::testing) {
                 RaycastFilter rcf = {};
