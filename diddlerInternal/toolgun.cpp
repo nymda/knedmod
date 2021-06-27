@@ -11,6 +11,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include "lidar.h"
 #include "dotProjector.h"
+#include <glm/gtx/quaternion.hpp>
 
 
 namespace toolgun {
@@ -88,10 +89,32 @@ namespace toolgun {
     float cameraFov = 8.f;
     float cameraFps = 0.f;
 
+    bool ropeAttackOnce = true;
+    bool ropeToolFirstPos = true;
+    td::Vec3 ropeFirstPos = {};
+    td::Vec3 ropeSecondPos = {};
+    TDShape* shape1 = 0;
+    TDShape* shape2 = 0;
+    td::Vec3 translatedPoint1 = {};
+    td::Vec3 translatedPoint2 = {};
+    td::Vec3 worldPos1 = {};
+    td::Vec3 worldPos2 = {};
+
     void handleToolgun() {
 
         if (createOrigionalSpawnObject) {
-            currentSpawngunObject.voxPath = "vox\\Default\\dbgcube_metal\\object.vox";
+            //currentSpawngunObject = spawner::spawnerObjectsDatabase[0].objects[0];
+
+            for (spawner::spawnerCatagory catig : spawner::spawnerObjectsDatabase) {
+                for (spawner::LoadedSpawnableObject object : catig.objects) {
+                    if (object.objectName == "brick_metal") {
+                        currentSpawngunObject = object;
+                        break;
+                    }
+                }
+            }
+
+
             createOrigionalSpawnObject = false;
         }
 
@@ -119,7 +142,7 @@ namespace toolgun {
             if (currentsetting == tgSettings::spawner) { //handle spawning objects with the toolgun
                 raycaster::rayData rd = raycaster::castRayPlayer();
                 td::Vec3 target = rd.worldPos;
-                drawCube({ target.x, target.y, target.z }, 0.05, white);
+                //drawCube({ target.x, target.y, target.z }, 0.05, white);
 
                 spawner::objectSpawnerParams osp{};
                 osp.attributes = currentSpawngunObject.attributes;
@@ -129,18 +152,25 @@ namespace toolgun {
 
                     if (currentSpawngunObject.voxObject) {
 
-
-
                         float voxSizeX = currentSpawngunObject.voxObject->sizeX / 10.f;
                         float voxSizeY = currentSpawngunObject.voxObject->sizeY / 10.f;
                         float voxSizeZ = currentSpawngunObject.voxObject->sizeZ / 10.f;
 
                         td::Vec3 oSize = { voxSizeX, voxSizeY, voxSizeZ };
+                        glm::vec3 hitPos = { rd.worldPos.x, rd.worldPos.y, rd.worldPos.z };
 
                         glm::quat facePlayer = glm::quat(glm::vec3(4.71238898025f, glb::player->camYaw, 0));
-                        glm::vec3 vx = facePlayer * glm::vec3(1, 0, 0);
-                        glm::vec3 vy = facePlayer * glm::vec3(0, 1, 0);
-                        glm::vec3 vz = facePlayer * glm::vec3(0, 0, 1);
+                        glm::vec3 vxTmp = facePlayer * glm::vec3(-1, 0, 0);
+
+                        glm::vec3 hitDir = glm::vec3(rd.angle.x, rd.angle.y, rd.angle.z);
+
+                        hitDir = glm::normalize(hitDir);
+
+                        glm::quat q = glm::conjugate(glm::quat(glm::lookAt(hitPos, hitPos + hitDir, vxTmp))); //this is kinda inverted, with "up" facing the player and "forward" facing away from the surface. "fixing" this makes it work less good so eh.
+
+                        glm::vec3 vx = q * glm::vec3(-1, 0, 0);
+                        glm::vec3 vy = q * glm::vec3(0, -1, 0);
+                        glm::vec3 vz = q * glm::vec3(0, 0, -1); //(UP)
 
                         glm::vec3 translationFBL = ((vz * 0.f) + (vy * (voxSizeY * 0.5f)) + (vx * (voxSizeX * 0.5f)));
                         glm::vec3 translationBBR = ((vz * 0.f) - (vy * (voxSizeY * 0.5f)) - (vx * (voxSizeX * 0.5f)));
@@ -165,19 +195,6 @@ namespace toolgun {
                         td::Vec3 BTL = { target.x - translationBTL.x, target.y - translationBTL.y, target.z - translationBTL.z };
                         td::Vec3 FTR = { target.x - translationFTR.x, target.y - translationFTR.y, target.z - translationFTR.z };
 
-
-                        //drawCube(target, 0.05f, red);
-
-                        //drawCube(FBL, 0.05f, white);
-                        //drawCube(BBR, 0.05f, red);
-                        //drawCube(BBL, 0.05f, green);
-                        //drawCube(FBR, 0.05f, blue);
-
-                        //drawCube(FTL, 0.05f, white);
-                        //drawCube(BTR, 0.05f, red);
-                        //drawCube(BTL, 0.05f, green);
-                        //drawCube(FTR, 0.05f, blue);
-
                         //bottom square
                         glb::oFDL(glb::renderer, FBL, FBR, white, white, false);
                         glb::oFDL(glb::renderer, FBL, BBL, white, white, false);
@@ -196,7 +213,6 @@ namespace toolgun {
                         glb::oFDL(glb::renderer, BTL, BBL, white, white, false);
                         glb::oFDL(glb::renderer, BTR, BBR, white, white, false);
                     }
-
 
                     osp.spawnType = spawner::objectSpawnType::placed;
                 }
@@ -274,7 +290,7 @@ namespace toolgun {
 
                 if (glb::player->isAttacking == true) {
                     uintptr_t sceneSpecial = *(uintptr_t*)((uintptr_t)glb::scene + 0x88);
-                    dotProjector::pixelResponse* pixelResponse = dotProjector::projectDotMatrix(16, flRadius, 1.f, true, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
+                    dotProjector::pixelResponse* pixelResponse = dotProjector::projectDotMatrix(16, flRadius, 1.f, false, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
                     for (int i = 0; i < pixelResponse->size; i++) {
                         td::Vec3 firepos = pixelResponse->data[i].worldPos;
                         if (chance == 100) {
@@ -283,14 +299,14 @@ namespace toolgun {
                         else if ((rand() % (100 - chance)) == 0) {
                             glb::oSpawnFire(sceneSpecial, &firepos);
                         }
-                        drawCube(firepos, 0.1, red);
+                        drawCube(firepos, 0.02, red);
                     }
                 }
                 else {
                     uintptr_t sceneSpecial = *(uintptr_t*)((uintptr_t)glb::scene + 0x88);
-                    dotProjector::pixelResponse* pixelResponse = dotProjector::projectDotMatrix(16, flRadius, 1.f, true, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
+                    dotProjector::pixelResponse* pixelResponse = dotProjector::projectDotMatrix(16, flRadius, 1.f, false, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
                     for (int i = 0; i < pixelResponse->size; i++) {
-                        drawCube(pixelResponse->data[i].worldPos, 0.1, green);
+                        drawCube(pixelResponse->data[i].worldPos, 0.02, green);
                     }
                 }
             }
@@ -481,7 +497,7 @@ namespace toolgun {
                 camera::drawCameraWindow(cameraFps);
 			}
             else if (currentsetting == tgSettings::testing) {
-                RaycastFilter rcf = {};
+                /*RaycastFilter rcf = {};
 
                 if (glb::player->isAttacking == true) {
                     uintptr_t sceneSpecial = *(uintptr_t*)((uintptr_t)glb::scene + 0x88);
@@ -491,6 +507,56 @@ namespace toolgun {
                         glb::oWrappedDamage(glb::scene, &pixelResponse->data[i].worldPos, 0.2f, 0.2f, 0, 0);
 
                         drawCube(pixelResponse->data[i].worldPos, 0.1, red);
+                    }
+                }*/
+
+                raycaster::rayData rd = raycaster::castRayPlayer();
+                drawCube(rd.worldPos, 0.02f, white);
+                if (ropeToolFirstPos) {
+                    if (glb::player->isAttacking) {
+                        if (ropeAttackOnce) {
+                            ropeAttackOnce = false;
+                            ropeFirstPos = rd.worldPos;
+
+                            shape1 = rd.hitShape;
+                            worldPos1 = rd.worldPos;
+
+                            ropeToolFirstPos = false;
+                        }
+                    }
+                    else {
+                        ropeAttackOnce = true;
+                    }
+                }
+                else {
+                    drawCube(ropeFirstPos, 0.02f, white);
+                    glb::oFDL(glb::renderer, ropeFirstPos, rd.worldPos, white, white, false);
+                    if (glb::player->isAttacking) {
+                        if (ropeAttackOnce) {
+                            ropeAttackOnce = false;
+                            ropeSecondPos = rd.worldPos;
+                            TDJoint* newJoint = (TDJoint*)glb::oTMalloc(208);
+                            glb::tdConstructJoint(newJoint, nullptr);
+                            shape2 = rd.hitShape;
+                            worldPos2 = rd.worldPos;
+
+                            //TDBody* body1 = shape1->getParentBody();
+                            //glm::mat4 RotationMatrix1 = glm::toMat4(*(glm::quat*)&body1->Rotation);
+                            //glm::vec3 localPos1 = glm::vec3((glm::inverse(RotationMatrix1)) * -glm::vec4(body1->Position.x - worldPos1.x, body1->Position.y - worldPos1.y, body1->Position.z - worldPos1.z, 0.f));
+                            //translatedPoint1 = { localPos1.x, localPos1.y, localPos1.z };
+                            //TDBody* body2 = shape2->getParentBody();
+                            //glm::mat4 RotationMatrix2 = glm::toMat4(*(glm::quat*)&body2->Rotation);
+                            //glm::vec3 localPos2 = glm::vec3((glm::inverse(RotationMatrix2)) * -glm::vec4(body2->Position.x - worldPos1.x, body2->Position.y - worldPos1.y, body2->Position.z - worldPos1.z, 0.f));
+                            //translatedPoint2 = { localPos2.x, localPos2.y, localPos2.z };
+                            //glb::tdInitBall(newJoint, shape1, shape2, &translatedPoint1, &translatedPoint2);
+
+
+                            glb::tdInitWire(newJoint, &ropeFirstPos, &ropeSecondPos, newJoint->m_Size, white, 0.f, 1000.f, 0.f);
+                            ropeToolFirstPos = true;
+                        }
+                    }
+                    else {
+                        ropeAttackOnce = true;
                     }
                 }
             }

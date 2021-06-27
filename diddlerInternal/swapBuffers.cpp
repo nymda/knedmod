@@ -31,9 +31,10 @@ td::Vec2 displayInfoLabelSizeY = { 0.f, 0.f };
 bool showBounds = false;
 bool showBodes = false;
 bool showShapes = false;
-static int selectedToolgunTool = 0;
+int selectedToolgunTool = 0;
 
 float teleportTargetPosition[3] = { 0, 0, 0 };
+int selectedTab = 0;
 
 LRESULT APIENTRY hWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -114,8 +115,6 @@ void terminateHIDsHook() {
 }
 
 
-
-std::vector<spawner::spawnerCatagory> spawnerObjects;
 bool needToLoadObjects = true;
 
 char position[64];
@@ -124,6 +123,9 @@ char cPosition[64];
 char health[64];
 static ImGuiTextFilter filter;
 char tempSkyboxPath[128] = {};
+
+bool bTRUE = true;
+bool bFALSE = false;
 
 bool hwglSwapBuffers(_In_ HDC hDc)
 {
@@ -140,7 +142,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 
 	if (needToLoadObjects) {
 		needToLoadObjects = false;
-		spawnerObjects = spawner::enumerateSpawnableObjects();
+		spawner::spawnerObjectsDatabase = spawner::enumerateSpawnableObjects();
 	}
 
 	ImGui_ImplOpenGL3_NewFrame();
@@ -243,7 +245,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 		if (filter.IsActive()) {
 			collapse = 32;
 		}
-		for (spawner::spawnerCatagory catigory : spawnerObjects) {
+		for (spawner::spawnerCatagory catigory : spawner::spawnerObjectsDatabase) {
 			if (ImGui::CollapsingHeader(catigory.name.c_str(), collapse)) {
 				ImGui::Columns(5);
 				for (spawner::LoadedSpawnableObject lso : catigory.objects) {
@@ -294,7 +296,16 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			glb::oDoQuickload(glb::scene);
 		}
 
-		if (ImGui::CollapsingHeader("toolgun")) {
+		ImGui::BeginTabBar("CtrlTabs");
+
+		if (ImGui::TabItemButton("Toolgun")) {
+			selectedTab = 0;
+		}
+		if (ImGui::TabItemButton("Settings")) {
+			selectedTab = 1;
+		}
+
+		if (selectedTab == 0) {
 			const char* items[] = { "Spawner", "Minigun", "Explosions", "Flamethrower", "Remover", "Set attribute", "Destroyer", "DebugObject", "Leafblower", "Slicer", "Camera", "Testing" };
 			const char* bulletTypes[] = { "Bullet", "Shotgun", "Missile", "???" };
 			const char* leafBlowerModes[] = { "Blow", "Succ", "Delete" };
@@ -302,53 +313,100 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			static int bullet_current = 0;
 			static int blower_current = 0;
 			static int spawnr_current = 0;
-			ImGui::Combo("Current tool", &selectedToolgunTool, items, IM_ARRAYSIZE(items));
+
 			toolgun::currentsetting = (toolgun::tgSettings)selectedToolgunTool;
 
-			ImGui::Separator();
+			bool* bpTrue = &bTRUE;
+			bool* bpFalse = &bFALSE;
 
-			if (toolgun::currentsetting == toolgun::tgSettings::spawner) {
+			if (ImGui::Button("Spawner", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = 0; };
+			if (selectedToolgunTool == 0) {
+				ImGui::Separator();
 				ImGui::Combo("Mode", &spawnr_current, spawnModesCh, IM_ARRAYSIZE(spawnModesCh));
 				toolgun::method = (toolgun::spawngunMethod)spawnr_current;
 				if (toolgun::method == toolgun::spawngunMethod::thrown) {
 					ImGui::Checkbox("Spawn constantly", &toolgun::constSpawn);
 					ImGui::SliderFloat("Throw power", &toolgun::thrownObjectVelocityMultiplier, 1.f, 100.f, "%.2f");
 				}
+				ImGui::Separator();
 			}
-			if (toolgun::currentsetting == toolgun::tgSettings::minigun) {
+
+			ImGui::SetNextItemWidth(ImGui::GetWindowWidth());
+			if (ImGui::Button("Minigun", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = 1; };
+			if (selectedToolgunTool == 1) {
+				ImGui::Separator();
 				ImGui::Combo("Bullet type", &bullet_current, bulletTypes, IM_ARRAYSIZE(bulletTypes));
 				toolgun::minigunBulletType = bullet_current;
 				ImGui::SliderFloat("Minigun spread", &toolgun::spreadVal, 0, 0.5, "%.2f");
 				ImGui::SliderInt("Minigun bullet count", &toolgun::bulletsPerFrame, 1, 50);
+				ImGui::Separator();				ImGui::Separator();
 			}
-			if (toolgun::currentsetting == toolgun::tgSettings::explosion) {
+
+			ImGui::SetNextItemWidth(ImGui::GetWindowWidth());
+			if (ImGui::Button("Explosions", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = 2; };
+			if (selectedToolgunTool == 2) {
+				ImGui::Separator();
 				ImGui::SliderFloat("Explosion spread", &toolgun::EXspreadVal, 0, 0.5, "%.2f");
 				ImGui::SliderInt("Explosion count", &toolgun::EXbulletsPerFrame, 0, 25);
 				ImGui::SliderFloat("Power", &toolgun::power, 0.25f, 25.f, "%.2f");
+				ImGui::Separator();
 			}
-			if (toolgun::currentsetting == toolgun::tgSettings::flamethrower) {
+
+			if (ImGui::Button("Flamethrower", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = 3; };
+			if (selectedToolgunTool == 3) {
+				ImGui::Separator();
 				ImGui::SliderFloat("Radius", &toolgun::flRadius, 1.f, 10.f, "%.2f");
 				ImGui::SliderInt("Chance %", &toolgun::chance, 1, 100);
+				ImGui::Separator();
 			}
-			if (toolgun::currentsetting == toolgun::tgSettings::destroyer) {
+
+			if (ImGui::Button("Remover", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = 4; };
+			if (selectedToolgunTool == 4) {
+				ImGui::Separator();
+				ImGui::Text("Remover tab");
+				ImGui::Separator();
+			}
+
+			if (ImGui::Button("Set attribute", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = 5; };
+			if (selectedToolgunTool == 5) {
+				if (toolgun::currentsetting == toolgun::tgSettings::setAtttibute) {
+					ImGui::Separator();
+					ImGui::InputText("Attribute 1", toolgun::setAttributeFirst, 128);
+					ImGui::InputText("Attribute 2", toolgun::setAttributeSecond, 128);
+					ImGui::Separator();
+				}
+			}
+
+			if (ImGui::Button("Destroyer", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = 6; };
+			if (selectedToolgunTool == 6) {
+				ImGui::Separator();
 				ImGui::SliderFloat("Max Dist", &toolgun::maxRange, 0.1f, 100.f, "%.2f");
 				ImGui::SliderFloat("Hole size", &toolgun::holeSize, 0.1f, 100.f, "%.2f");
 				ImGui::Checkbox("Fire constantly", &toolgun::fireConst);
+				ImGui::Separator();
 			}
-			if (toolgun::currentsetting == toolgun::tgSettings::setAtttibute) {
-				if (toolgun::currentsetting == toolgun::tgSettings::setAtttibute) {
-					ImGui::InputText("Attribute 1", toolgun::setAttributeFirst, 128);
-					ImGui::InputText("Attribute 2", toolgun::setAttributeSecond, 128);
-				}
+
+			if (ImGui::Button("DebugObject", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = 7; };
+			if (selectedToolgunTool == 7) {
+				ImGui::Separator();
+				ImGui::Text("DebugObject tab");
+				ImGui::Separator();
 			}
-			if (toolgun::currentsetting == toolgun::tgSettings::leafblower) {
+
+			if (ImGui::Button("Leafblower", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = 8; };
+			if (selectedToolgunTool == 8) {
+				ImGui::Separator();
 				ImGui::Combo("Mode", &blower_current, leafBlowerModes, IM_ARRAYSIZE(leafBlowerModes));
 				toolgun::LBMode = (toolgun::leafblowerModes)blower_current;
 				ImGui::Checkbox("Show rays", &toolgun::showRayHitPos);
 				ImGui::SliderInt("Rays", &toolgun::leafBlowerRayCount, 0, 500);
 				ImGui::SliderFloat("FOV", &toolgun::leafBlowerFOV, 0.01f, 0.5f, "%.2f");
+				ImGui::Separator();
 			}
-			if (toolgun::currentsetting == toolgun::tgSettings::slicer) {
+
+			if (ImGui::Button("Slicer", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = 9; };
+			if (selectedToolgunTool == 9) {
+				ImGui::Separator();
 				ImGui::SliderInt("Resolution", &toolgun::slicer_resolution, 64, 1024);
 				ImGui::SliderFloat("maxDist", &toolgun::slicer_maxDist, 1.f, 1000.f, "%.2f");
 				if (ImGui::RadioButton("Horizontal", toolgun::slicerHorizontal)) {
@@ -357,8 +415,12 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				if (ImGui::RadioButton("Vertical", !toolgun::slicerHorizontal)) {
 					toolgun::slicerHorizontal = !toolgun::slicerHorizontal;
 				}
+				ImGui::Separator();
 			}
-			if (toolgun::currentsetting == toolgun::tgSettings::camera) {
+		
+			if (ImGui::Button("Camera", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = 10; };
+			if (selectedToolgunTool == 10) {
+				ImGui::Separator();
 				ImGui::SliderInt("Resolution", &toolgun::cameraResolution, 32, 512);
 				ImGui::SliderFloat("FOV", &toolgun::cameraFov, 1.f, 10.f, "%.1f");
 				ImGui::Checkbox("Monochrome", &camera::mono);
@@ -375,6 +437,87 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				if (ImGui::RadioButton("Fullframe", camera::mode == camera::cameraMode::fullframe)) {
 					camera::mode = camera::cameraMode::fullframe;
 				}
+				ImGui::Separator();
+			}
+
+			if (ImGui::Button("Testing", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = 11; };
+			if (selectedToolgunTool == 11) {
+				ImGui::Separator();
+				ImGui::Text("Testing tab");
+				ImGui::Separator();
+			}
+
+			/*if (ImGui::CollapsingHeader("Set attribute", ((selectedToolgunTool == 5) ? bpTrue : bpFalse), 0)) {
+				selectedToolgunTool = 5;
+				ImGui::Text("attribute tab");
+			}
+			if (ImGui::CollapsingHeader("Destroyer", ((selectedToolgunTool == 6) ? bpTrue : bpFalse), 0)) {
+				selectedToolgunTool = 6;
+				ImGui::Text("Destroyer tab");
+			}
+			if (ImGui::CollapsingHeader("DebugObject", ((selectedToolgunTool == 7) ? bpTrue : bpFalse), 0)) {
+				selectedToolgunTool = 7;
+				ImGui::Text("DebugObject tab");
+			}
+			if (ImGui::CollapsingHeader("Leafblower", ((selectedToolgunTool == 8) ? bpTrue : bpFalse), 0)) {
+				selectedToolgunTool = 8;
+				ImGui::Text("Leafblower tab");
+			}
+			if (ImGui::CollapsingHeader("Slicer", ((selectedToolgunTool == 9) ? bpTrue : bpFalse), 0)) {
+				selectedToolgunTool = 9;
+				ImGui::Text("Slicer tab");
+			}
+			if (ImGui::CollapsingHeader("Camera", ((selectedToolgunTool == 10) ? bpTrue : bpFalse), 0)) {
+				ImGui::Text("Camera tab");
+				selectedToolgunTool = 10;
+			}
+			if (ImGui::CollapsingHeader("Testing", ((selectedToolgunTool == 11) ? bpTrue : bpFalse), 0)) {
+				ImGui::Text("Testing tab");
+				selectedToolgunTool = 11;
+			}*/
+		}
+
+		ImGui::EndTabBar();
+
+		ImGui::Separator();
+
+		if (ImGui::CollapsingHeader("toolgun")) {
+			const char* items[] = { "Spawner", "Minigun", "Explosions", "Flamethrower", "Remover", "Set attribute", "Destroyer", "DebugObject", "Leafblower", "Slicer", "Camera", "Testing" };
+			const char* bulletTypes[] = { "Bullet", "Shotgun", "Missile", "???" };
+			const char* leafBlowerModes[] = { "Blow", "Succ", "Delete" };
+			const char* spawnModesCh[] = { "Placed", "Thrown" };
+
+			ImGui::Combo("Current tool", &selectedToolgunTool, items, IM_ARRAYSIZE(items));
+			toolgun::currentsetting = (toolgun::tgSettings)selectedToolgunTool;
+
+			ImGui::Separator();
+
+			if (toolgun::currentsetting == toolgun::tgSettings::spawner) {
+
+			}
+			if (toolgun::currentsetting == toolgun::tgSettings::minigun) {
+
+			}
+			if (toolgun::currentsetting == toolgun::tgSettings::explosion) {
+
+			}
+			if (toolgun::currentsetting == toolgun::tgSettings::flamethrower) {
+
+			}
+			if (toolgun::currentsetting == toolgun::tgSettings::destroyer) {
+
+			}
+			if (toolgun::currentsetting == toolgun::tgSettings::setAtttibute) {
+
+			}
+			if (toolgun::currentsetting == toolgun::tgSettings::leafblower) {
+
+			}
+			if (toolgun::currentsetting == toolgun::tgSettings::slicer) {
+
+			}
+			if (toolgun::currentsetting == toolgun::tgSettings::camera) {
+
 
 				//if (!camera::interlaceMode) {
 				//	if (ImGui::RadioButton("Colour mode", camera::colourMode)) {

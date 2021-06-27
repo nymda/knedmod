@@ -27,6 +27,11 @@ namespace td {
 		float z;
 	};
 
+	struct Transform {
+		td::Vec3 position;
+		td::Vec4 rotation;
+	};
+
 	struct Color {
 		float r;
 		float g;
@@ -134,12 +139,6 @@ namespace td {
 
 	struct Matrix4x4 {
 		float m[4][4];
-	};
-
-	struct Transform
-	{
-		Vector3_f32 m_Position;
-		Vector4_f32 m_Rotation;
 	};
 
 	// Misuse of these will cause crashes if used improperly!

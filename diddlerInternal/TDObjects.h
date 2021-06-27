@@ -152,9 +152,14 @@ public:
 class TDShape : public Entity
 {
 public:
-	char pad_0019[8]; //0x0028
-	byte attributes;
-	char pad_008[19];
+//0x0028
+
+	//byte fuckYouPadding[8];
+	//byte attributes;
+	//char pad_008[19];
+	td::Vec3 pOffset;
+	td::Vec4 rOffset;
+
 	td::Vec3 posMin; //0x0044
 	td::Vec3 posMax; //0x0050
 	char pad_005C[4]; //0x005C
@@ -180,6 +185,27 @@ public:
 
 class TDJoint : public Entity {
 public:
+	TDShape* m_Attachment0;
+	TDShape* m_Attachment1;
+	TDJoint* m_AttachmentJoint0;
+	TDJoint* m_AttachmentJoint1;
+	uint32_t m_JointType;
+	float m_Size;
+	bool m_Collide;
+	bool m_IsConnected; uint8_t pad_52[2];
+	float m_Stiffness;
+	float m_Springiness;
+	int32_t field_5C;
+	int64_t field_60;
+	td::Vec3 m_AttachmentPosition0;
+	td::Vec3 m_AttachmentPosition1;
+	td::Vec3 m_AttachmentDirection0;
+	td::Vec3 m_AttachmentDirection1;
+	td::Vec4 m_Angle;
+	td::Vec2 m_Limits; // In meters or radians depending on joint type
+	td::Vec2 m_Motor;
+	int64_t field_B8; // Pointer to unidentified structure; only used with Wire type
+	bool m_Sound; uint8_t pad_C1[7];
 };
 
 class TDObjectList {
@@ -202,7 +228,9 @@ public:
 	//byte paddingD[0x2];
 	float FMove;				//0x0CE - 0x0D2
 	float SMove;				//0x0D2 - 0x0D6
-	byte paddingE[0xD];			//0x0D6 - 0x0EA
+	byte paddingE[0xB];			//0x0D6 - 0x0EA
+	byte isAttackingSecondary;
+	byte isAttackingPadding;
 	byte isAttacking;			//0x0EA - 0x0EB
 	byte paddingF[0x70];		//0x0EB - 0x154
 	float health;				//0x15C - 0x160

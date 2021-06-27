@@ -13,11 +13,10 @@ namespace missile {
     struct missileObject {
         spawner::KMSpawnedObject obj;
         int age = 0;
-        bool destroyed = false;
+        bool destroyed = true;
     };
 
-	std::vector<missileObject> launchedMissiles = {};
-    missileObject mostRecentMissile = {};
+    missileObject launchedMissile = {};
 
     bool runOnce = false;
     td::Color white{ 1.f, 1.f, 1.f, 1.f };
@@ -35,8 +34,7 @@ namespace missile {
         osp.startVelocity = { cameraDirection.x * 100, cameraDirection.y * 100, cameraDirection.z * 100 };
 
         const char* currentPath = "vox\\Default\\missile\\object.vox";
-        mostRecentMissile = { spawner::spawnObjectProxy(currentPath, osp), 0 };
-        launchedMissiles.push_back(mostRecentMissile);
+        launchedMissile = { spawner::spawnObjectProxy(currentPath, osp), 0, false };
         //mostRecentMissile = {};
 	}
 
@@ -57,7 +55,7 @@ namespace missile {
         int pixelOffset = 0;
         flip = !flip;
 
-        if (!mostRecentMissile.obj.body || !mostRecentMissile.obj.shape) {
+        if (launchedMissile.destroyed) {
             if (deadCameraframes > 0) {
                 free(pixelsColor);
                 pixelsColor = new byte[(res * res) * 4];
@@ -90,8 +88,8 @@ namespace missile {
 
 
         td::Color red{ 1.f, 0.f, 0.f, 1.f };
-        glm::vec3 bodyPos = glm::vec3(mostRecentMissile.obj.body->Position.x, mostRecentMissile.obj.body->Position.y, mostRecentMissile.obj.body->Position.z);
-        glm::quat bodyQuat = *(glm::quat*)&mostRecentMissile.obj.body->Rotation;
+        glm::vec3 bodyPos = glm::vec3(launchedMissile.obj.body->Position.x, launchedMissile.obj.body->Position.y, launchedMissile.obj.body->Position.z);
+        glm::quat bodyQuat = *(glm::quat*)&launchedMissile.obj.body->Rotation;
         glm::vec3 vx = bodyQuat * glm::vec3(1, 0, 0);
         glm::vec3 vy = bodyQuat * glm::vec3(0, 1, 0);
         glm::vec3 vz = bodyQuat * glm::vec3(0, 0, 1); //(UP)
@@ -113,25 +111,28 @@ namespace missile {
             rcf.m_RejectTransparent = false;
         }
 
-        rcf.m_IgnoredShapes.push_back(mostRecentMissile.obj.shape);
+        rcf.m_IgnoredShapes.push_back(launchedMissile.obj.shape);
 
-        camera::interlacedImage(frameBuffer, toolgun::cameraResolution, flip, fov, 1.f, (glm::quat*)&mostRecentMissile.obj.body->Rotation, { centerpoint.x, centerpoint.y, centerpoint.z }, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
+        camera::interlacedImage(frameBuffer, toolgun::cameraResolution, flip, fov, 1.f, (glm::quat*)&launchedMissile.obj.body->Rotation, { centerpoint.x, centerpoint.y, centerpoint.z }, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
         camera::constructFrameManual(frameBuffer, toolgun::cameraResolution, false);
 
     }
 
     td::Color green{ 0.f, 1.f, 0.f, 1.f };
+
     void runMissile() {
         if (glb::game->State == gameState::menu) {
-            launchedMissiles.clear();
+            launchedMissile = {};
         }
-          
+         
+        bool selfDestruct = false;
+
         const char* launcherName = "launcher";
         if (memcmp(glb::player->heldItemName, launcherName, 8) == 0) {
             updateCamera();
 
             if (glb::player->isAttacking == true) {
-                if (runOnce) {
+                if (runOnce && launchedMissile.destroyed) {
                     launchMissile();
                     runOnce = false;
                 }
@@ -139,65 +140,57 @@ namespace missile {
             else {
                 runOnce = true;
             }
-        }
 
-        bool hasActiveMissile = false;
-
-        for (missileObject& missile : launchedMissiles)
-        {
-            if (!missile.destroyed) {  
-                hasActiveMissile = true;
-
-                uintptr_t special = *(uintptr_t*)((uintptr_t)glb::scene + 0x68);
-                missile.age++;
-
-                td::Vec3 rotationEul = quat2euler(missile.obj.body->Rotation, 0, true);
-                td::Vec3 rotationEulForward = { rotationEul.x * 1.5f, rotationEul.y * 1.5f, rotationEul.z * 1.5f };
-
-                float totalSpeed = missile.obj.body->Velocity.x + missile.obj.body->Velocity.y + missile.obj.body->Velocity.z;
-
-                if (totalSpeed < 200.f && totalSpeed > -200.f) {
-                    missile.obj.body->Velocity.x += (rotationEul.x * 30);
-                    missile.obj.body->Velocity.y += (rotationEul.y * 30);
-                    missile.obj.body->Velocity.z += (rotationEul.z * 30);
-                }
-
-                RaycastFilter rcf = {};
-                rcf.m_IgnoredBodies.push_back(missile.obj.body);
-                rcf.m_IgnoredShapes.push_back(missile.obj.shape);
-
-                td::Vec3 objectMin = missile.obj.shape->posMin;
-                td::Vec3 objectMax = missile.obj.shape->posMax;
-                td::Vec3 centerpoint = { objectMax.x - ((objectMax.x - objectMin.x) / 2) + rotationEulForward.x, objectMax.y - ((objectMax.y - objectMin.y) / 2) + rotationEulForward.y, objectMax.z - ((objectMax.z - objectMin.z) / 2) + rotationEulForward.z };
-
-                raycaster::rayData rayDat = raycaster::castRayManual(centerpoint, rotationEul, &rcf);
-
-                td::Vec3 vel = { 0.f, 0.f, 0.f };
-                td::particleInfo tdpi = { 0.f, 0.f, 0.f, 0.7f, 0.7f, 0.7f, 1.f, 0.7f, 0.7f, 0.7f, 1.f, 0.f, 0.f, 0.f, 0.2f, 0.f, 0.f, 0.f, 0.f, 0.15f, 0.25f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 1.f, 1.f, 0.f, 0.f, 0.f, 1.f, 1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f };
-                glb::TDspawnParticle((DWORD*)special, &tdpi, centerpoint, vel, 0.5f);
-
-                //glb::oFDL(glb::renderer, centerpoint, rayDat.worldPos, green, green, false);
-                //drawCube(rayDat.worldPos, 0.2f, green);
-
-                //isAwake seems to be set if the object is colliding with another object. 
-                if ((missile.obj.body->isAwake && missile.age > 10) || (missile.age > 300)) {
-                    glb::TDcreateExplosion((uintptr_t)glb::scene, &centerpoint, 2.f);
-
-                    if (missile.obj.shape == mostRecentMissile.obj.shape) {
-                        mostRecentMissile.obj.shape->Destroy(mostRecentMissile.obj.shape, true);
-                        mostRecentMissile.obj.body->Destroy(mostRecentMissile.obj.body, true);
-                        mostRecentMissile = {};
-                    }
-
-                    missile.obj.shape->Destroy(missile.obj.shape, true);
-                    missile.obj.body->Destroy(missile.obj.body, true);
-                    missile.destroyed = true;
-                }
+            if (glb::player->isAttackingSecondary && !launchedMissile.destroyed) {
+                selfDestruct = true;
             }
         }
-        if (!hasActiveMissile && launchedMissiles.size() > 0) {
-            std::cout << "Clearing missiles" << std::endl;
-            launchedMissiles.clear();
+
+
+        //Missile is in flight
+        if (!launchedMissile.destroyed) {
+
+
+            td::Vec3 targetPosition = raycaster::castRayPlayer().worldPos;
+
+            uintptr_t special = *(uintptr_t*)((uintptr_t)glb::scene + 0x68);
+            launchedMissile.age++;
+
+            td::Vec3 rotationEul = quat2euler(launchedMissile.obj.body->Rotation, 0, true);
+            td::Vec3 rotationEulForward = { rotationEul.x * 1.5f, rotationEul.y * 1.5f, rotationEul.z * 1.5f };
+
+            float totalSpeed = launchedMissile.obj.body->Velocity.x + launchedMissile.obj.body->Velocity.y + launchedMissile.obj.body->Velocity.z;
+
+            if (totalSpeed < 200.f && totalSpeed > -200.f) {
+                launchedMissile.obj.body->Velocity.x += (rotationEul.x * 30);
+                launchedMissile.obj.body->Velocity.y += (rotationEul.y * 30);
+                launchedMissile.obj.body->Velocity.z += (rotationEul.z * 30);
+            }
+
+            RaycastFilter rcf = {};
+            rcf.m_IgnoredBodies.push_back(launchedMissile.obj.body);
+            rcf.m_IgnoredShapes.push_back(launchedMissile.obj.shape);
+
+            td::Vec3 objectMin = launchedMissile.obj.shape->posMin;
+            td::Vec3 objectMax = launchedMissile.obj.shape->posMax;
+            td::Vec3 centerpoint = { objectMax.x - ((objectMax.x - objectMin.x) / 2) + rotationEulForward.x, objectMax.y - ((objectMax.y - objectMin.y) / 2) + rotationEulForward.y, objectMax.z - ((objectMax.z - objectMin.z) / 2) + rotationEulForward.z };
+
+            raycaster::rayData rayDat = raycaster::castRayManual(centerpoint, rotationEul, &rcf);
+
+            td::Vec3 vel = { 0.f, 0.f, 0.f };
+            td::particleInfo tdpi = { 0.f, 0.f, 0.f, 0.7f, 0.7f, 0.7f, 1.f, 0.7f, 0.7f, 0.7f, 1.f, 0.f, 0.f, 0.f, 0.2f, 0.f, 0.f, 0.f, 0.f, 0.15f, 0.25f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 1.f, 1.f, 0.f, 0.f, 0.f, 1.f, 1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f };
+            glb::TDspawnParticle((DWORD*)special, &tdpi, centerpoint, vel, 0.5f);
+
+            //glb::oFDL(glb::renderer, centerpoint, rayDat.worldPos, green, green, false);
+            //drawCube(rayDat.worldPos, 0.2f, green);
+
+            //isAwake seems to be set if the object is colliding with another object. 
+            if ((launchedMissile.obj.body->isAwake && launchedMissile.age > 10) || (launchedMissile.age > 300) || selfDestruct) {
+                glb::TDcreateExplosion((uintptr_t)glb::scene, &centerpoint, 6.f);
+                launchedMissile.obj.shape->Destroy(launchedMissile.obj.shape, true);
+                launchedMissile.obj.body->Destroy(launchedMissile.obj.body, true);
+                launchedMissile.destroyed = true;
+            }
         }
     }
 }

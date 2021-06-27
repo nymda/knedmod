@@ -73,6 +73,8 @@ bool LoadTextureFromFile(const char* filename, GLuint* out_texture, int* out_wid
 //DONT FUCKING TOUCH IT
 namespace spawner {
 
+    std::vector<spawner::spawnerCatagory> spawnerObjectsDatabase;
+
     std::vector<toolgun::fadeShapeOutline> spawnedObjects = {};
     std::vector<KMSpawnedObject> spawnList = {};
     KMSpawnedObject lastSpawnedObject{};
@@ -153,17 +155,29 @@ namespace spawner {
                 td::Vec3 objectSize = { (objectMax.x - objectMin.x), (objectMax.y - objectMin.y), (objectMax.z - objectMin.z) };
                
                 if (lastSpawnedObject.params.spawnType == objectSpawnType::thrown) {
-                    float spawnPosx = (glb::player->cameraPosition.x - (objectSize.x / 2)) + glb::player->cameraEuler().x;
-                    float spawnPosy = (glb::player->cameraPosition.y - (objectSize.y / 2)) + glb::player->cameraEuler().y;
-                    float spawnPosz = (glb::player->cameraPosition.z - (objectSize.z / 2)) + glb::player->cameraEuler().z;
 
-                    lastSpawnedObject.body->Position = { spawnPosx,  spawnPosy, spawnPosz };
-                    lastSpawnedObject.body->Velocity = lastSpawnedObject.params.startVelocity;
 
-                    float roVeloX = (rand() % 20) - 10;
-                    float roVeloY = (rand() % 20) - 10;
-                    float roVeloZ = (rand() % 20) - 10;
+                    td::Vec3 voxSize = { lastSpawnedObject.vox->sizeX / 10.f, lastSpawnedObject.vox->sizeY / 10.f, lastSpawnedObject.vox->sizeZ / 10.f }; //this is the vox size in units where 1vx = 1u, convert to 1vx = .1u
+                    glm::quat facePlayer = glm::quat(glm::vec3(glb::player->camPitch + 4.71238898025f, glb::player->camYaw, 0));
+                    float spawnPosx = (glb::player->cameraPosition.x + glb::player->cameraEuler().x);
+                    float spawnPosy = (glb::player->cameraPosition.y + glb::player->cameraEuler().y);
+                    float spawnPosz = (glb::player->cameraPosition.z + glb::player->cameraEuler().z);
+
+                    glm::vec3 vx = facePlayer * glm::vec3(1, 0, 0);
+                    glm::vec3 vy = facePlayer * glm::vec3(0, 1, 0);
+                    glm::vec3 vz = facePlayer * glm::vec3(0, 0, 1);
+
+                    glm::vec3 translation = ((vz * (voxSize.z / 2.f)) + (vy * (voxSize.y / 2.f)) + (vx * (voxSize.x / 2.f)));
+
+                    *(glm::quat*)&lastSpawnedObject.body->Rotation = facePlayer;
+
+                    lastSpawnedObject.body->Position = { spawnPosx - translation.x, spawnPosy - translation.y, spawnPosz - translation.z };
+
+                    float roVeloX = (rand() % 8) - 4;
+                    float roVeloY = (rand() % 8) - 4;
+                    float roVeloZ = (rand() % 8) - 4;
                     lastSpawnedObject.body->RotationVelocity = { roVeloX, roVeloY, roVeloZ };
+                    lastSpawnedObject.body->Velocity = lastSpawnedObject.params.startVelocity;
                 }
                 else if (lastSpawnedObject.params.spawnType == objectSpawnType::front) {
 
@@ -182,22 +196,48 @@ namespace spawner {
                     lastSpawnedObject.body->Position = { spawnPosx - translation.x,  spawnPosy - translation.y, spawnPosz - translation.z };
                     lastSpawnedObject.body->Velocity = lastSpawnedObject.params.startVelocity;
                 }
-                else {
+                else if(lastSpawnedObject.params.spawnType == objectSpawnType::placed) {
 
                     td::Vec3 voxSize = { lastSpawnedObject.vox->sizeX / 10.f, lastSpawnedObject.vox->sizeY / 10.f, lastSpawnedObject.vox->sizeZ / 10.f }; //this is the vox size in units where 1vx = 1u, convert to 1vx = .1u
-                    glm::quat facePlayer = glm::quat(glm::vec3(4.71238898025f, glb::player->camYaw, 0));
-                    
-                    glm::vec3 vx = facePlayer * glm::vec3(1, 0, 0);
-                    glm::vec3 vy = facePlayer * glm::vec3(0, 1, 0);
-                    glm::vec3 vz = facePlayer * glm::vec3(0, 0, 1); 
+                    glm::vec3 hitPos = { rd.worldPos.x, rd.worldPos.y, rd.worldPos.z };
 
-                    glm::vec3 translation = ((vz * -0.1f) + (vy * (voxSize.y / 2.f)) + (vx * (voxSize.x / 2.f)));
+                    if (rd.angle.x == 0.f) {
+                        rd.angle.x += 0.0001f;
+                    }
 
-                    std::cout << voxSize.x << " : " << voxSize.y << " : " << voxSize.z << std::endl;
+                    if (rd.angle.y == 0.f) {
+                        rd.angle.y += 0.0001f;
+                    }
 
-                    *(glm::quat*)&lastSpawnedObject.body->Rotation = facePlayer;
+                    if (rd.angle.z == 0.f) {
+                        rd.angle.z += 0.0001f;
+                    }
+
+                    glm::quat facePlayer = glm::quat(glm::vec3(0, glb::player->camYaw, 0));
+                    glm::vec3 vxTmp = facePlayer * glm::vec3(1, 0, 0);
+
+                    glm::vec3 hitDir = glm::vec3(rd.angle.x, rd.angle.y, rd.angle.z);
+
+                    hitDir = glm::normalize(hitDir);
+
+                    glm::quat q = glm::conjugate(glm::quat(glm::lookAt(hitPos, hitPos + -hitDir, vxTmp))); //this is kinda inverted, with "up" facing the player and "forward" facing away from the surface. "fixing" this makes it work less good so eh.
+
+                    glm::vec3 vx = q * glm::vec3(1, 0, 0);
+                    glm::vec3 vy = q * glm::vec3(0, 1, 0);
+                    glm::vec3 vz = q * glm::vec3(0, 0, 1); //(UP)
+
+                    glm::vec3 translation = ((vz * (-0.f)) + (vy * (voxSize.y / 2.f)) + (vx * (voxSize.x / 2.f)));
+
+                    *(glm::quat*)&lastSpawnedObject.body->Rotation = q;
+                    lastSpawnedObject.body->RotationVelocity = { 0, 0, 0 };
+                    lastSpawnedObject.body->Velocity = { 0, 0, 0 };
 
                     lastSpawnedObject.body->Position = { target.x - translation.x, target.y - translation.y, target.z - translation.z };
+                }
+                else {
+                    lastSpawnedObject.body->RotationVelocity = { 0, 0, 0 };
+                    lastSpawnedObject.body->Velocity = { 0, 0, 0 };
+                    //lastSpawnedObject.body->Position = lastSpawnedObject.params.startPosition;
                 }
 
                 lastSpawnedObject.isInitByGame = true;
@@ -348,14 +388,19 @@ namespace spawner {
         uintptr_t BODY = 0;
 
         if (osp.parentBody) {
+            std::cout << "USING EXISTING PARENT" << std::endl;
             BODY = (uintptr_t)osp.parentBody;
         }
         else {
+            std::cout << "USING NEW PARENT" << std::endl;
             BODY = glb::oTMalloc(0x232u);
             glb::oB_Constructor((uintptr_t)BODY, (uintptr_t)nullptr);
+            glb::oSetDynamic((uintptr_t)BODY, true);
         }
 
-        glb::oSetDynamic((uintptr_t)BODY, true);
+        (*(TDBody*)&BODY).isAwake = true;
+        (*(TDBody*)&BODY).countDown = 0xF0;
+
         std::cout << "Body address:  0x" << std::hex << BODY << std::endl;
 
         td::small_string file_path((char*)(filepath).c_str());
@@ -389,6 +434,10 @@ namespace spawner {
                 return { defaultParams, false, 0, 0 };
             }
 
+            if (osp.parentBody) {
+                ((TDShape*)SHAPE)->pOffset = osp.parentBodyoffset;
+            }
+
             glb::oCreateTexture(vox);
             glb::oCreatePhysics(vox);
 
@@ -411,9 +460,10 @@ namespace spawner {
         td::Vec3 target = rd.worldPos;
         td::Vec4 newRot = { 0.5, -0.5, -0.5, -0.5 };
 
-        *(float*)(BODY + 0x28) = 0;
-        *(float*)(BODY + 0x28 + 4) = 0;
-        *(float*)(BODY + 0x28 + 8) = 0;
+        //*(float*)(BODY + 0x28) = 0;
+        //*(float*)(BODY + 0x28 + 4) = 0;
+        //*(float*)(BODY + 0x28 + 8) = 0;
+       
 
         //*(float*)(BODY + 0x28 + 12) = newRot.x;
         //*(float*)(BODY + 0x28 + 16) = newRot.y;

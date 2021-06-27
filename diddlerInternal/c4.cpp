@@ -105,7 +105,7 @@ namespace c4 {
                             td::Vec3 objectMax = curC4.object.shape->posMax;
                             td::Vec3 centerpoint = { objectMax.x - ((objectMax.x - objectMin.x) / 2), objectMax.y - ((objectMax.y - objectMin.y) / 2), objectMax.z - ((objectMax.z - objectMin.z) / 2) };
                             glb::TDcreateExplosion((uintptr_t)glb::scene, &centerpoint, curC4.explosionSize);
-                            curC4.object.shape->attributes = 0x00;
+                            //curC4.object.shape->attributes = 0x00;
                             curC4.object.shape->Destroy(curC4.object.shape, true);
                             curC4.object.body->Destroy(curC4.object.body, true);
                         }
@@ -228,7 +228,7 @@ namespace c4 {
                     td::Vec3 objectMax = curC4.object.shape->posMax;
                     td::Vec3 centerpoint = { objectMax.x - ((objectMax.x - objectMin.x) / 2), objectMax.y - ((objectMax.y - objectMin.y) / 2), objectMax.z - ((objectMax.z - objectMin.z) / 2) };
                     glb::TDcreateExplosion((uintptr_t)glb::scene, &centerpoint, curC4.explosionSize);
-                    curC4.object.shape->attributes = 0x00;
+                    //curC4.object.shape->attributes = 0x00;
                     curC4.object.shape->Destroy(curC4.object.shape, true);
                     curC4.object.body->Destroy(curC4.object.body, true);
                     explosiveObjects.erase(explosiveObjects.begin());

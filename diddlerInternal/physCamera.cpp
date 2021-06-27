@@ -25,7 +25,7 @@ namespace physCamera {
 		spawner::objectSpawnerParams osp = {};
 		//osp.unbreakable = true;
 		osp.nocull = true;
-		camera = spawner::spawnObjectProxy("vox/Default/largeCamera/object.vox", osp);
+		camera = spawner::spawnObjectProxy("vox/Default/camera/object.vox", osp);
 
 		rcf.m_IgnoredBodies.push_back(camera.body);
 		rcf.m_IgnoredShapes.push_back(camera.shape);
@@ -95,8 +95,8 @@ namespace physCamera {
             return;
         }
 
-		//td::Vec3 objectMin = camera.shape->posMin;
-		//td::Vec3 objectMax = camera.shape->posMax;
+		td::Vec3 objectMin = camera.shape->posMin;
+		td::Vec3 objectMax = camera.shape->posMax;
 		//td::Vec3 centerpoint = { objectMax.x - ((objectMax.x - objectMin.x) / 2), objectMax.y - ((objectMax.y - objectMin.y) / 2), objectMax.z - ((objectMax.z - objectMin.z) / 2) };
 
         glm::vec3 bodyPos = glm::vec3(camera.body->Position.x, camera.body->Position.y, camera.body->Position.z);
@@ -104,13 +104,12 @@ namespace physCamera {
         glm::vec3 vx = bodyQuat * glm::vec3(1, 0, 0);
         glm::vec3 vy = bodyQuat * glm::vec3(0, 1, 0);
         glm::vec3 vz = bodyQuat * glm::vec3(0, 0, 1); //(UP)
-        glm::vec3 centerpoint = bodyPos + ((vz * 0.4f) + (vy * 0.4f) + (vx * 0.2f));
+        glm::vec3 centerpoint = bodyPos + ((vz * 0.15f) + (vy * 0.15f) + (vx * 0.15f));
 
         deadCameraframes = 30;
 
         glm::quat cameraQuat = *(glm::quat*)(&camera.body->Rotation);
         glm::vec3 cameraUp = cameraQuat * glm::vec3(0, 0, 1);;
-
 
         camera::drawCameraWindow(fps);
 

@@ -33,6 +33,14 @@ namespace glb {
 	unknReadVoxData oIUnReadVox;
 	isActiveWindow oIsActive;
 
+	joinConstructor tdConstructJoint;
+	initBall tdInitBall;
+	initHinge tdInitHinge;
+	initPrismatic tdInitPrismatic;
+	initWire tdInitWire;
+	attachJoint tdAttachJoint;
+	updateJoint tdUpdateJoint;
+
 	highlightShape oHighlightShape;
 	outlineShape oOutlineShape;
 	outlineBody oOutlineBody;

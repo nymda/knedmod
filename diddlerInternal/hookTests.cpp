@@ -267,17 +267,6 @@ void hkSetAttribute(TDShape* object, td::small_string* a1, td::small_string* a2)
     return;
 }
 
-void hkAttachJoint(void* a1, void* a2, void* a3, void* a4, void* a5) {
-
-    std::cout << "a1: " << (uintptr_t)a1 << std::endl;
-    std::cout << "a2: " << (uintptr_t)a2 << " (" << std::to_string(((td::Vec3*)a2)->x) << " : " << std::to_string(((td::Vec3*)a2)->y) << " : " << std::to_string(((td::Vec3*)a2)->z) << std::endl;
-    std::cout << "a3: " << (uintptr_t)a3 << std::endl;
-    std::cout << "a4: " << (uintptr_t)a4 << std::endl;
-    std::cout << "a5: " << (uintptr_t)a5 << std::endl;
-    std::cout << "=====" << std::endl;
-
-    glb::oAttachJoint(a1, a2, a3, a4, a5);
-}
 
 void hkContextItem(char* a1, int a2, int a3, float* a4) {
 
@@ -355,11 +344,24 @@ bool hkDoQuickload(TDScene* a1) {
     return glb::oDoQuickload(a1);
 }
 
+void hkCreateBallJoint(TDJoint* joint, TDShape* shape1, TDShape* shape2, td::Vec3* point1, td::Vec3* point2) {
+
+    std::cout << "Shape 1: " << std::hex << (uintptr_t)shape1 << std::endl;
+    std::cout << "Shape 2: " << std::hex << (uintptr_t)shape2 << std::endl;
+
+
+    std::cout << "Point1 X: " << std::to_string(point1->x) << " Y: " << std::to_string(point1->y) << " Z:" << std::to_string(point1->z) << std::endl;
+    std::cout << "Point2 X: " << std::to_string(point2->x) << " Y: " << std::to_string(point2->y) << " Z:" << std::to_string(point2->z) << std::endl;
+
+    std::cout << "==========" << std::endl;
+
+    glb::tdInitBall(joint, shape1, shape2, point1, point2);
+}
 
 void initTestHook() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    //DetourAttach(&(PVOID&)glb::oSpawnVox, hkSpawnVox);
+    DetourAttach(&(PVOID&)glb::tdInitBall, hkCreateBallJoint);
     //DetourAttach(&(PVOID&)glb::oDoQuicksave, hkDoQuicksave);
     DetourTransactionCommit();
 }
@@ -367,7 +369,7 @@ void initTestHook() {
 void terminateTestHook() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    //DetourDetach(&(PVOID&)glb::oSpawnVox, hkSpawnVox);
+    DetourDetach(&(PVOID&)glb::tdInitBall, hkCreateBallJoint);
     //DetourDetach(&(PVOID&)glb::oDoQuicksave, hkDoQuicksave);
     DetourTransactionCommit();
 }

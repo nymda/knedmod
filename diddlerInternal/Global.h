@@ -61,14 +61,15 @@ typedef void(__fastcall* ConstructJoint) (uintptr_t joint);
 typedef void(__fastcall* AttachJoint) (void* a1, void* a2, void* a3, void* a4, void* a5);
 typedef int(__fastcall* ReadSubobjectsFromVox) (td::small_string* path, int* out);
 typedef void*(__fastcall* unknReadVoxData) (void* a1, void* a2);
+
 //joints
 typedef void(__fastcall* joinConstructor)(TDJoint* joint, Entity* parent);
-typedef void(__fastcall* initBall)(TDJoint* joint, td::Vec3* transform, float size, float strengh, float springiness, bool collide);
-typedef void(__fastcall* initHinge)(TDJoint* joint, td::Vec3* transform, float size, int64_t strengh, float springiness, bool collide, td::Vec2* limits);
-typedef void(__fastcall* initPrismatic)(TDJoint* joint, td::Vec3* transform, float size, bool collide, td::Vec2* limits);
-typedef void(__fastcall* initWire)(TDJoint* joint, td::Vec3* p1, td::Vec3* p2, float size, td::Vec4 color, float slack, float strengh, float maxStretch);
-typedef void(__fastcall* attach)(TDJoint* joint, TDShape* shape1, TDShape* shape2, td::Vec3* pos1, td::Vec3* pos2);
-typedef void(__fastcall* update)(TDJoint* joint);
+typedef void(__fastcall* initBall)(TDJoint* joint, TDShape* shape1, TDShape* shape2, td::Vec3* point1, td::Vec3* point2);
+typedef void(__fastcall* initHinge)(TDJoint* joint, td::Transform* transform, float size, int64_t strengh, float springiness, bool collide, td::Vec2* limits);
+typedef void(__fastcall* initPrismatic)(TDJoint* joint, td::Transform* transform, float size, bool collide, td::Vec2* limits);
+typedef void(__fastcall* initWire)(TDJoint* joint, td::Vec3* p1, td::Vec3* p2, float size, td::Color color, float slack, float strengh, float maxStretch);
+typedef void(__fastcall* attachJoint)(TDJoint* joint, TDShape* shape1, TDShape* shape2, td::Vec3* pos1, td::Vec3* pos2);
+typedef void(__fastcall* updateJoint)(TDJoint* joint);
 
 //misc
 typedef void(__stdcall* damageObject)(uintptr_t a1, uintptr_t a2, td::Vec3* a3, float a4, float a5, uintptr_t a6, uintptr_t a7, uintptr_t a8);
@@ -120,12 +121,18 @@ namespace glb {
     extern tdMain oTDmain;
     extern wrappedDoDamage oWrappedDamage;
     extern setBodySomething oSetBody;
-    extern ConstructJoint oConstructJoint;
-    extern AttachJoint oAttachJoint;
     extern handleBombObjs oHandleBombObjs;
     extern setShapeParentBody oSetShapeParentBody;
     extern unknReadVoxData oIUnReadVox;
     extern isActiveWindow oIsActive;
+
+    extern joinConstructor tdConstructJoint;
+    extern initBall tdInitBall;
+    extern initHinge tdInitHinge;
+    extern initPrismatic tdInitPrismatic;
+    extern initWire tdInitWire;
+    extern attachJoint tdAttachJoint;
+    extern updateJoint tdUpdateJoint;
 
     extern highlightShape oHighlightShape;
     extern outlineShape oOutlineShape;

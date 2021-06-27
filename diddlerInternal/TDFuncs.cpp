@@ -35,8 +35,6 @@ void sigscanItems() {
     glb::plankPatchFunction = (uintptr_t)mem::FindPattern((PBYTE)"\x40\x55\x56\x57\x41\x54\x41\x55\x41\x56\x41\x57\x48\x8D\xAC\x24\x50\xCF\xFF\xFF\xB8\xB0\x31\x00\x00\xE8\xF2\xE8\x19\x00\x48\x2B", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::oQuatEul = (apiQuatEuler)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x48\x89\x58\x08\x57\x48\x81\xEC\x80\x00\x00\x00\x0F\x29\x70\xE8\x48\x8B\xDA\xF3\x0F\x10\x72\x04\x48\x8B\xF9\x0F\x29", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::oSetBody = (setBodySomething)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x20\x48\x8B\x59\x20\x41\x0F\xB6\xF8\x0F\xB6\xF2\x48\x85\xDB\x74\x20\x90", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
-    glb::oConstructJoint = (ConstructJoint)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x4C\x8B\xC2\x48\x8B\xD9\xBA\x07\x00\x00", "xxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
-    glb::oAttachJoint = (AttachJoint)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x30\x48\x89\x51\x28\x48\x8B\xF1\x4C\x89\x41\x30\x49\x8B\xF8\x48\x8D\x4A", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::oWrappedDamage = (wrappedDoDamage)mem::FindPattern((PBYTE)"\x48\x83\xEC\x48\x48\x8B\x44\x24\x78\x4C\x8B\xC2\xF3\x0F\x10\x44", "xxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::oSOAS = (SetObjectAttributeSingle)mem::FindPattern((PBYTE)"\x40\x57\x41\x57\x48\x83\xEC\x58\xF6\x41\x09\x01\x4C\x8B\xFA\x48\x8B\xF9\x0F\x84\x21\x01\x00\x00\x48\x89\x5C\x24\x70\x48\x8D\x15", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::oHandleBombObjs = (handleBombObjs)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x57\x41\x56\x48\x8D\xA8\x18\xFF\xFF\xFF\x48\x81", "xxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
@@ -52,7 +50,10 @@ void sigscanItems() {
     glb::oValidate = (validateFileExistance)mem::FindPattern((PBYTE)"\x40\x57\x48\x83\xEC\x60\x48\xC7\x44\x24\x28\xFE\xFF\xFF\xFF\x48\x89\x5C\x24\x70\x49\x8B\xF8\x48\x8B\xDA\xC7\x44\x24\x20\x00\x00\x00\x00\x48\x8D\x4C\x24\x50\xE8\xF4\xFA\x02\x00\x90\x48\x8B\xD0", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::oDoQuicksave = (doQuicksave)mem::FindPattern((PBYTE)"\x40\x53\x48\x81\xEC\x90\x00\x00\x00\x48\xC7\x44\x24\x20\xFE\xFF\xFF\xFF\x48\x8B\xD9\x48\x8B\x0D\xE4\xB3\x36\x00\x48\x8B\x89\xA0", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::oDoQuickload = (doQuickload)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x57\x48\x83\xEC\x70\x48\xC7\x40\xA8\xFE\xFF\xFF\xFF\x48\x89\x58\x08\x48\x89\x70\x10\x48\x8B\xF1\x48\x8B\x0D\xEE\xB4", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
-
+    glb::tdConstructJoint = (joinConstructor)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x4C\x8B\xC2\x48\x8B\xD9\xBA\x07\x00\x00\x00\xE8\x1A\x71\x05\x00\xC7\x43\x4C\xCD\xCC\xCC\x3D\x48\x8D\x05", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    glb::tdAttachJoint = (attachJoint)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x30\x48\x89\x51\x28\x48\x8B\xF1\x4C\x89\x41\x30\x49\x8B\xF8\x48\x8D\x4A", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    glb::tdInitWire = (initWire)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x56\x41\x57\x48\x8D\x68\xC1\x48\x81\xEC\xD0\x00\x00\x00\x48\xC7\x45\x1F\xFE\xFF\xFF\xFF\x48\x89\x58\x08\x48", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    glb::tdInitBall = (initBall)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x30\x48\x89\x51\x28\x48\x8B\xF1\x4C\x89\x41\x30\x49\x8B\xF8\x48\x8D\x4A", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     //sadly cant sigscan for this, yet
     //0x0041CB00 requires further investigation - looks like a table of pointers for various game functions
 
@@ -66,6 +67,13 @@ void sigscanItems() {
 
     std::cout << "" << std::endl;
     std::cout << "[Function Addresses:       ]" << std::endl;
+    std::cout << "tdConstructJoint     : " << std::hex << glb::tdConstructJoint << std::endl;
+    std::cout << "tdInitBall           : " << std::hex << glb::tdInitBall << std::endl;
+    std::cout << "tdInitHinge          : " << std::hex << glb::tdInitHinge << std::endl;
+    std::cout << "tdInitPrismatic      : " << std::hex << glb::tdInitPrismatic << std::endl;
+    std::cout << "tdInitWire           : " << std::hex << glb::tdInitWire << std::endl;
+    std::cout << "tdAttachJoint        : " << std::hex << glb::tdAttachJoint << std::endl;
+    std::cout << "tdUpdateJoint        : " << std::hex << glb::tdUpdateJoint << std::endl;
     std::cout << "oDoQuicksave         : " << std::hex << glb::oDoQuicksave << std::endl;
     std::cout << "oDoQuickload         : " << std::hex << glb::oDoQuickload << std::endl;
     std::cout << "oValidate            : " << std::hex << glb::oValidate << std::endl;
@@ -105,8 +113,6 @@ void sigscanItems() {
     std::cout << "outline body         : " << std::hex << glb::oOutlineBody << std::endl;
     std::cout << "QuatEuler            : " << std::hex << glb::oQuatEul << std::endl;
     std::cout << "createPlankVox       : " << std::hex << glb::oSetBody << std::endl;
-    std::cout << "jointConstructor     : " << std::hex << glb::oConstructJoint << std::endl;
-    std::cout << "attach joint         : " << std::hex << glb::oAttachJoint << std::endl;
     std::cout << "handle bombs         : " << std::hex << glb::oHandleBombObjs << std::endl;
     std::cout << "set shape body       : " << std::hex << glb::oSetShapeParentBody << std::endl;
     std::cout << "Add context item     : " << std::hex << glb::oAddCItem << std::endl;
