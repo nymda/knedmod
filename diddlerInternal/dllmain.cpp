@@ -77,6 +77,7 @@ DWORD WINAPI main(HMODULE hModule)
     initHIDsHook();
 
     std::cout << "[I] Hooked WNDPROC" << std::endl;
+    std::cout << "[I] Hooked setCursorPos : " << std::hex << glb::ocursor << std::endl;
 
     sigscanItems();
 

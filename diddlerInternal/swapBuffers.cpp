@@ -97,6 +97,7 @@ void initHIDsHook() {
 	HMODULE u32 = GetModuleHandle(L"user32.dll");
 	glb::ocursor = (hk_SetCursorPos)GetProcAddress(u32, "SetCursorPos");
 
+
 	oWndProc = reinterpret_cast<WNDPROC>(SetWindowLongPtrW(glb::gWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(hWndProc)));
 
 	DetourTransactionBegin();
