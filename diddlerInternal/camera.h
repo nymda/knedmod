@@ -19,7 +19,7 @@ namespace camera {
 	//void updateCameraFrame(float* pixels, int resolution, float min, float max, bool saveSnapshot);
 	void drawCameraWindow(float fps);
 	void constructDistanceFrame(dotProjector::pixelResponse* pixelResponse, int resolution, float min, float max);
-	void constructColourFrame(dotProjector::pixelResponse* pixelResponse, int resolution, bool enableDistanceFog);
+	void constructColourFrame(dotProjector::pixelResponse* pixelResponse, int resolution, bool enableDistanceFog, bool saveSnapshot);
 	float updateImageColour(int resolution, float fov);
 	void constructFrameManual(byte* pixels, int resolution, bool saveSnapshot);
 	void interlacedImage(byte* frameBuffer, int resolution, bool flip, float fov, float aspect, glm::quat* camRotation, td::Vec3 camPosition, td::Vec3 forwardVector, td::Vec3 upVector, RaycastFilter* filter);

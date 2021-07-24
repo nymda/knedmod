@@ -320,7 +320,7 @@ namespace camera {
         free(frameBuffer);
     }
 
-    void constructColourFrame(dotProjector::pixelResponse* pixelResponse, int resolution, bool enableDistanceFog) {
+    void constructColourFrame(dotProjector::pixelResponse* pixelResponse, int resolution, bool enableDistanceFog, bool saveSnapshot) {
         if (!isinit) {
             initTexture();
         }
@@ -363,6 +363,10 @@ namespace camera {
         #endif
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, resolution, resolution, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)rgbFrameBuffer);
+
+        if (saveSnapshot) {
+            createBitmap((DWORD*)rgbFrameBuffer, resolution);
+        }
 
         free(rgbFrameBuffer);
     }
@@ -462,7 +466,7 @@ namespace camera {
             FRAMESTART = execTimer.now();
 
             interlacedImage(frameBuffer, resolution, flip, fov, 1.f, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
-            constructFrameManual(frameBuffer, resolution, false);
+            constructFrameManual(frameBuffer, resolution, toolgun::takeSnapshot);
 
             FRAMEEND = execTimer.now();
             auto exTime = FRAMEEND - FRAMESTART;
@@ -473,7 +477,7 @@ namespace camera {
             if (staged_newFrame) { FRAMESTART = execTimer.now(); }
 
             if (stagedImage(frameBuffer, resolution, fov, 1.f, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf) || showImageProgress) {
-                constructFrameManual(frameBuffer, resolution, false);
+                constructFrameManual(frameBuffer, resolution, toolgun::takeSnapshot);
 
                 FRAMEEND = execTimer.now();
                 auto exTime = FRAMEEND - FRAMESTART;
@@ -486,7 +490,7 @@ namespace camera {
             FRAMESTART = execTimer.now();
 
             dotProjector::pixelResponse* response = dotProjector::projectDotMatrix(resolution, fov, 1.f, true, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
-            constructColourFrame(response, resolution, false);
+            constructColourFrame(response, resolution, true, toolgun::takeSnapshot);
 
             FRAMEEND = execTimer.now();
             auto exTime = FRAMEEND - FRAMESTART;

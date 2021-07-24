@@ -91,6 +91,7 @@ typedef void(__fastcall* addContextItem)(char* a1, int a2, int a3, float* a4);
 typedef bool(__fastcall* isActiveWindow)(void* a1);
 //td maths
 typedef __int64(__fastcall* apiQuatEuler)(float* a1, float* a2);
+typedef __int64(__fastcall* interestingUpdateFunc)(TDBody* body, __int8 a2, __int8 a3);
 
 //TD files
 typedef bool(__fastcall* doQuicksave)(TDScene* a1);
@@ -134,6 +135,7 @@ namespace glb {
     extern attachJoint tdAttachJoint;
     extern updateJoint tdUpdateJoint;
 
+    extern 	interestingUpdateFunc tdUpdateFunc;
     extern highlightShape oHighlightShape;
     extern outlineShape oOutlineShape;
     extern outlineBody oOutlineBody;

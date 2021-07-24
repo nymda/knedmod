@@ -358,10 +358,19 @@ void hkCreateBallJoint(TDJoint* joint, TDShape* shape1, TDShape* shape2, td::Vec
     glb::tdInitBall(joint, shape1, shape2, point1, point2);
 }
 
+uintptr_t hkMalloc(size_t bytes) {
+    uintptr_t newPtr = glb::oTMalloc(bytes);
+    if (bytes == 112) {
+        std::cout << "Allocated memory sized " << std::to_string(bytes) << "B at " << std::hex << newPtr << std::endl;
+    }
+
+    return newPtr;
+}
+
 void initTestHook() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    DetourAttach(&(PVOID&)glb::tdInitBall, hkCreateBallJoint);
+    //DetourAttach(&(PVOID&)glb::oTMalloc, hkMalloc);
     //DetourAttach(&(PVOID&)glb::oDoQuicksave, hkDoQuicksave);
     DetourTransactionCommit();
 }
@@ -369,7 +378,7 @@ void initTestHook() {
 void terminateTestHook() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    DetourDetach(&(PVOID&)glb::tdInitBall, hkCreateBallJoint);
+    //DetourDetach(&(PVOID&)glb::oTMalloc, hkMalloc);
     //DetourDetach(&(PVOID&)glb::oDoQuicksave, hkDoQuicksave);
     DetourTransactionCommit();
 }

@@ -8,9 +8,11 @@
 
 inline bool exists(const std::string& name);
 
+
 namespace spawner {
 
 	extern std::string currentSpawngunObject;
+	extern float voxScale;
 
 	struct objectAttribute {
 		td::small_string attribute;

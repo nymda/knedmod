@@ -159,7 +159,6 @@ public:
 	//char pad_008[19];
 	td::Vec3 pOffset;
 	td::Vec4 rOffset;
-
 	td::Vec3 posMin; //0x0044
 	td::Vec3 posMax; //0x0050
 	char pad_005C[4]; //0x005C

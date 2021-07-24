@@ -17,6 +17,7 @@
 #include "physCamera.h"
 #include "Harop.h"
 #include "objectTranslationTest.h"
+#include "Firespread.h"
 
 #pragma comment(lib, "glew32s.lib")
 
@@ -36,8 +37,12 @@ int selectedToolgunTool = 0;
 float teleportTargetPosition[3] = { 0, 0, 0 };
 int selectedTab = 0;
 
+ImColor ropeColorBuffer = ImColor(255, 255, 255);
+
 LRESULT APIENTRY hWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	bool lockoutScroll = false;
+
 	switch (uMsg)
 	{
 	case WM_KEYDOWN:
@@ -63,11 +68,22 @@ LRESULT APIENTRY hWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (wParam == 0x5A) { //Z
 			spawner::deleteLastObject();
 		}
+
+	case WM_MOUSEWHEEL:
+		if ((short)(HIWORD(wParam)) > 0 && (LOWORD(wParam) & MK_SHIFT)) {
+			spawner::voxScale += 0.05f;
+			lockoutScroll = true;
+		}
+		if ((short)(HIWORD(wParam)) < 0 && (LOWORD(wParam) & MK_SHIFT)) {
+			spawner::voxScale -= 0.05f;
+			if (spawner::voxScale < 0.0f) { spawner::voxScale = 0.05f; }
+			lockoutScroll = true;
+		}
 	}
 
 	ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
 
-	if (glb::displayMenu)
+	if (glb::displayMenu || lockoutScroll)
 	{
 		return true;
 	}
@@ -127,6 +143,27 @@ char tempSkyboxPath[128] = {};
 
 bool bTRUE = true;
 bool bFALSE = false;
+bool showingWelcome = true;
+
+void showWelcomeMessage() {
+	ImGui::SetNextWindowSize({ 500, 125 });
+	ImGui::SetNextWindowPos({ (float)((glb::game->m_ResX / 2) - 250), (float)((glb::game->m_ResY / 2) - 62) });
+	ImGui::Begin("Welcome");
+
+	ImGui::Text("Welcome to knedmod");
+	ImGui::Text("To access the main menu, press [F1]. To enter noclip, press [V]");
+	ImGui::Separator();
+	ImGui::Text("This build of knedmod is designed for teardown 0.1.4");
+	ImGui::Text("Knedmod is in beta, you are likely to encounter bugs / crashes");
+	ImGui::Text("Press [ESC] to close this message");
+
+	if (((((GetAsyncKeyState(VK_ESCAPE) >> 15) & 0x0001) == 0x0001))) {
+		showingWelcome = false;
+	}
+
+
+	ImGui::End();
+}
 
 bool hwglSwapBuffers(_In_ HDC hDc)
 {
@@ -156,6 +193,9 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 		lidar::drawLidarWindow(displayInfoLabelSizeY);
 	}
 
+	if (showingWelcome) {
+		showWelcomeMessage();
+	}
 
 	if (glb::displayMenu) {
 		ImGui::Begin("KnedMod");
@@ -287,16 +327,6 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
 		ImGui::BeginChild("ChildR", ImVec2(0, 0), true, window_flags2);
 
-		if (ImGui::Button("Quicksave")) {
-			glb::oDoQuicksave(glb::scene);
-		}
-
-		ImGui::SameLine();
-
-		if (ImGui::Button("Quickload")) {
-			glb::oDoQuickload(glb::scene);
-		}
-
 		ImGui::BeginTabBar("CtrlTabs");
 
 		if (ImGui::TabItemButton("Toolgun")) {
@@ -307,7 +337,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 		}
 
 		if (selectedTab == 0) {
-			const char* items[] = { "Spawner", "Minigun", "Explosions", "Flamethrower", "Remover", "Set attribute", "Destroyer", "DebugObject", "Leafblower", "Slicer", "Camera", "Testing" };
+			const char* items[] = { "Spawner", "Minigun", "Explosions", "Flamethrower", "Remover", "Set attribute", "Destroyer", "DebugObject", "Leafblower", "Slicer", "Camera", "Rope" };
 			const char* bulletTypes[] = { "Bullet", "Shotgun", "Missile", "???" };
 			const char* leafBlowerModes[] = { "Blow", "Succ", "Delete" };
 			const char* spawnModesCh[] = { "Placed", "Thrown" };
@@ -320,8 +350,8 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			bool* bpTrue = &bTRUE;
 			bool* bpFalse = &bFALSE;
 
-			if (ImGui::Button("Spawner", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = 0; };
-			if (selectedToolgunTool == 0) {
+			if (ImGui::Button("Spawner", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::spawner; };
+			if (selectedToolgunTool == (int)toolgun::tgSettings::spawner) {
 				ImGui::Separator();
 				ImGui::Combo("Mode", &spawnr_current, spawnModesCh, IM_ARRAYSIZE(spawnModesCh));
 				toolgun::method = (toolgun::spawngunMethod)spawnr_current;
@@ -333,8 +363,8 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			}
 
 			ImGui::SetNextItemWidth(ImGui::GetWindowWidth());
-			if (ImGui::Button("Minigun", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = 1; };
-			if (selectedToolgunTool == 1) {
+			if (ImGui::Button("Minigun", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::minigun; };
+			if (selectedToolgunTool == (int)toolgun::tgSettings::minigun) {
 				ImGui::Separator();
 				ImGui::Combo("Bullet type", &bullet_current, bulletTypes, IM_ARRAYSIZE(bulletTypes));
 				toolgun::minigunBulletType = bullet_current;
@@ -344,8 +374,8 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			}
 
 			ImGui::SetNextItemWidth(ImGui::GetWindowWidth());
-			if (ImGui::Button("Explosions", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = 2; };
-			if (selectedToolgunTool == 2) {
+			if (ImGui::Button("Explosions", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::explosion; };
+			if (selectedToolgunTool == (int)toolgun::tgSettings::explosion) {
 				ImGui::Separator();
 				ImGui::SliderFloat("Explosion spread", &toolgun::EXspreadVal, 0, 0.5, "%.2f");
 				ImGui::SliderInt("Explosion count", &toolgun::EXbulletsPerFrame, 0, 25);
@@ -353,23 +383,23 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::Separator();
 			}
 
-			if (ImGui::Button("Flamethrower", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = 3; };
-			if (selectedToolgunTool == 3) {
+			if (ImGui::Button("Flamethrower", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::flamethrower; };
+			if (selectedToolgunTool == (int)toolgun::tgSettings::flamethrower) {
 				ImGui::Separator();
 				ImGui::SliderFloat("Radius", &toolgun::flRadius, 1.f, 10.f, "%.2f");
 				ImGui::SliderInt("Chance %", &toolgun::chance, 1, 100);
 				ImGui::Separator();
 			}
 
-			if (ImGui::Button("Remover", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = 4; };
-			if (selectedToolgunTool == 4) {
+			if (ImGui::Button("Remover", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::remover; };
+			if (selectedToolgunTool == (int)toolgun::tgSettings::remover) {
 				ImGui::Separator();
 				ImGui::Text("Remover tab");
 				ImGui::Separator();
 			}
 
-			if (ImGui::Button("Set attribute", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = 5; };
-			if (selectedToolgunTool == 5) {
+			if (ImGui::Button("Set attribute", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::setAtttibute; };
+			if (selectedToolgunTool == (int)toolgun::tgSettings::setAtttibute) {
 				if (toolgun::currentsetting == toolgun::tgSettings::setAtttibute) {
 					ImGui::Separator();
 					ImGui::InputText("Attribute 1", toolgun::setAttributeFirst, 128);
@@ -378,8 +408,8 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				}
 			}
 
-			if (ImGui::Button("Destroyer", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = 6; };
-			if (selectedToolgunTool == 6) {
+			if (ImGui::Button("Destroyer", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::destroyer; };
+			if (selectedToolgunTool == (int)toolgun::tgSettings::destroyer) {
 				ImGui::Separator();
 				ImGui::SliderFloat("Max Dist", &toolgun::maxRange, 0.1f, 100.f, "%.2f");
 				ImGui::SliderFloat("Hole size", &toolgun::holeSize, 0.1f, 100.f, "%.2f");
@@ -387,15 +417,15 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::Separator();
 			}
 
-			if (ImGui::Button("DebugObject", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = 7; };
-			if (selectedToolgunTool == 7) {
+			if (ImGui::Button("DebugObject", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::debugObject; };
+			if (selectedToolgunTool == (int)toolgun::tgSettings::debugObject) {
 				ImGui::Separator();
 				ImGui::Text("DebugObject tab");
 				ImGui::Separator();
 			}
 
-			if (ImGui::Button("Leafblower", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = 8; };
-			if (selectedToolgunTool == 8) {
+			if (ImGui::Button("Leafblower", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::leafblower; };
+			if (selectedToolgunTool == (int)toolgun::tgSettings::leafblower) {
 				ImGui::Separator();
 				ImGui::Combo("Mode", &blower_current, leafBlowerModes, IM_ARRAYSIZE(leafBlowerModes));
 				toolgun::LBMode = (toolgun::leafblowerModes)blower_current;
@@ -405,8 +435,8 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::Separator();
 			}
 
-			if (ImGui::Button("Slicer", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = 9; };
-			if (selectedToolgunTool == 9) {
+			if (ImGui::Button("Slicer", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::slicer; };
+			if (selectedToolgunTool == (int)toolgun::tgSettings::slicer) {
 				ImGui::Separator();
 				ImGui::SliderInt("Resolution", &toolgun::slicer_resolution, 64, 1024);
 				ImGui::SliderFloat("maxDist", &toolgun::slicer_maxDist, 1.f, 1000.f, "%.2f");
@@ -419,8 +449,8 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::Separator();
 			}
 		
-			if (ImGui::Button("Camera", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = 10; };
-			if (selectedToolgunTool == 10) {
+			if (ImGui::Button("Camera", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::camera; };
+			if (selectedToolgunTool == (int)toolgun::tgSettings::camera) {
 				ImGui::Separator();
 				ImGui::SliderInt("Resolution", &toolgun::cameraResolution, 32, 512);
 				ImGui::SliderFloat("FOV", &toolgun::cameraFov, 1.f, 10.f, "%.1f");
@@ -441,285 +471,224 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::Separator();
 			}
 
-			if (ImGui::Button("Testing", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = 11; };
-			if (selectedToolgunTool == 11) {
+			if (ImGui::Button("Rope", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::rope; };
+			if (selectedToolgunTool == (int)toolgun::tgSettings::rope) {
+				ImGui::Separator();
+				ImGui::Text("Rope tab");
+				ImGui::SliderFloat("Slack", &toolgun::ropeSlack, -10.f, 10.f, "%.1f");
+				ImGui::SliderFloat("Stretchyness", &toolgun::ropeStrength, 0.f, 10.f, "%.1f");
+				ImGui::SliderFloat("Max stretch", &toolgun::ropeMaxStretch, 0.f, 10.f, "%.1f");
+				ImGui::ColorPicker4("Colour", (float*)&toolgun::ropeColor);
+				ImGui::Separator();
+			}
+
+			if (ImGui::Button("testing", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::testing; };
+			if (selectedToolgunTool == (int)toolgun::tgSettings::testing) {
 				ImGui::Separator();
 				ImGui::Text("Testing tab");
 				ImGui::Separator();
 			}
 
-			/*if (ImGui::CollapsingHeader("Set attribute", ((selectedToolgunTool == 5) ? bpTrue : bpFalse), 0)) {
-				selectedToolgunTool = 5;
-				ImGui::Text("attribute tab");
+		}
+		else {
+			if (ImGui::CollapsingHeader("debug")) {
+				if (ImGui::Button("Spawn DebugCube")) {
+					objectTesting::spawnDebugObject();
+				}
+				if (ImGui::Button("Free DebugCube")) {
+					objectTesting::destroyDebugObject();
+				}
 			}
-			if (ImGui::CollapsingHeader("Destroyer", ((selectedToolgunTool == 6) ? bpTrue : bpFalse), 0)) {
-				selectedToolgunTool = 6;
-				ImGui::Text("Destroyer tab");
+
+			if (ImGui::CollapsingHeader("misc")) {
+				ImGui::InputFloat3("TP pos (X:Y:Z)", teleportTargetPosition, 2);
+
+				if (ImGui::Button("TP")) {
+					glb::player->position = { teleportTargetPosition[0], teleportTargetPosition[1], teleportTargetPosition[2] };
+				}
+
+				ImGui::SliderFloat("Vox scale", &spawner::voxScale, 0.1f, 2.0f, "%.2f");
+				ImGui::Checkbox("Info popup", &displayInfoLabel);
+				ImGui::Checkbox("Godmode", &mods::godmode);
+				ImGui::Checkbox("Show bounds", &showBounds);
+				ImGui::Checkbox("Show bodies", &showBodes);
+				ImGui::Checkbox("Show shapes", &showShapes);
+				ImGui::Checkbox("Run when unfocused", &mods::dontLockWhenOutOfFocus);
+				ImGui::Checkbox("Remove map boundary", &mods::removeWalls);
+				//if (ImGui::Checkbox("Remove plank length limit", &miscPatches::plankPatch)) {
+				//	miscPatches::updatePlankPatch();
+				//}
+				if (ImGui::CollapsingHeader("objects")) {
+					if (ImGui::Button("Spawn lantern")) {
+						lantern::spawnLantern();
+					}
+
+					ImGui::SliderFloat("pointSize", &lantern::a1, 0.1f, 255.f, "%.2f");
+					ImGui::SliderFloat("shadows", &lantern::a2, 0.1f, 255.f, "%.2f");
+					ImGui::SliderFloat("brightness", &lantern::a3, 0.1f, 255.f, "%.2f");
+					ImGui::SliderFloat("fog", &lantern::a4, 0.1f, 255.f, "%.2f");
+					ImGui::Spacing();
+					ImGui::SliderFloat("R", &lantern::lightR, 0.1f, 255.f, "%.2f");
+					ImGui::SliderFloat("G", &lantern::lightG, 0.1f, 255.f, "%.2f");
+					ImGui::SliderFloat("B", &lantern::lightB, 0.1f, 255.f, "%.2f");
+				}
+				ImGui::SliderFloat("Cracker power", &c4::firecrackerExplosionSize, 0.f, 5.f, "%.1f");
+
+				if (ImGui::Button("Spawn physCamera")) {
+					physCamera::spawnCameraObject();
+				}
+				if (ImGui::Button("Destroy physCamera")) {
+					physCamera::destroyCamera();
+				}
+
+				if (ImGui::Checkbox("Everything can burn", &fireSpreadMod::isFireModEnabled)) {
+					fireSpreadMod::toggleFireMod();
+				}
 			}
-			if (ImGui::CollapsingHeader("DebugObject", ((selectedToolgunTool == 7) ? bpTrue : bpFalse), 0)) {
-				selectedToolgunTool = 7;
-				ImGui::Text("DebugObject tab");
+
+			if (ImGui::CollapsingHeader("minimap")) {
+				ImGui::Checkbox("Enabled", &lidar::enabled);
+				ImGui::SliderFloat("Zoom", &lidar::zoom, 1.f, 100.f, "%2.f");
+				ImGui::Checkbox("Colour", &lidar::colour);
 			}
-			if (ImGui::CollapsingHeader("Leafblower", ((selectedToolgunTool == 8) ? bpTrue : bpFalse), 0)) {
-				selectedToolgunTool = 8;
-				ImGui::Text("Leafblower tab");
+
+			if (ImGui::CollapsingHeader("c4")) {
+				ImGui::Checkbox("Global C4 detonation", &mods::c4_global_detonation);
+				ImGui::SliderInt("C4 size", &c4::selectedBombSizeInt, 1, 4);
 			}
-			if (ImGui::CollapsingHeader("Slicer", ((selectedToolgunTool == 9) ? bpTrue : bpFalse), 0)) {
-				selectedToolgunTool = 9;
-				ImGui::Text("Slicer tab");
+
+			if (ImGui::CollapsingHeader("environment (buggy)")) {
+				if (ImGui::Button("Set night")) {
+					envOptions::setNight();
+				}
+
+				if (ImGui::Button("All lights off")) {
+					for (TDLight* tdl : *(glb::scene->m_Lights)) {
+						((TDLight*)tdl)->m_Enabled = false;
+					}
+				}
+
+				if (ImGui::Button("All lights on")) {
+					for (TDLight* tdl : *(glb::scene->m_Lights)) {
+						((TDLight*)tdl)->m_Enabled = true;
+					}
+				}
+
+				//ImGui::InputText("Skybox", tempSkyboxPath, 128);
+				ImGui::SliderFloat("Sun brightness", &glb::scene->pEnvironment->m_SunBrightness, 0.f, 255.f, "%.2f");
+				ImGui::SliderFloat("Sun spread", &glb::scene->pEnvironment->m_SunSpread, 0.f, 255.f, "%.2f");
+				ImGui::SliderFloat("Sun length", &glb::scene->pEnvironment->m_SunLength, 0.f, 255.f, "%.2f");
+				ImGui::SliderFloat("Sun fog", &glb::scene->pEnvironment->m_FogScale, 0.f, 255.f, "%.2f");
+				ImGui::SliderFloat("Sun glare", &glb::scene->pEnvironment->m_SunGlare, 0.f, 255.f, "%.2f");
+				ImGui::Spacing();
+				ImGui::SliderFloat("sun R", &glb::scene->pEnvironment->m_SunColorTint.x, 0.f, 255.f, "%.2f");
+				ImGui::SliderFloat("sun G", &glb::scene->pEnvironment->m_SunColorTint.y, 0.f, 255.f, "%.2f");
+				ImGui::SliderFloat("sun B", &glb::scene->pEnvironment->m_SunColorTint.z, 0.f, 255.f, "%.2f");
+				ImGui::Spacing();
+				ImGui::SliderFloat("Exposure max", &glb::scene->pEnvironment->m_Exposure.x, 0.f, 255.f, "%.2f");
+				ImGui::SliderFloat("Exposure min", &glb::scene->pEnvironment->m_Exposure.y, 0.f, 255.f, "%.2f");
+				ImGui::Spacing();
+				ImGui::SliderFloat("Ambience", &glb::scene->pEnvironment->m_Ambient, 0.f, 255.f, "%.2f");
+				ImGui::SliderFloat("Brightness", &glb::scene->pEnvironment->m_Brightness, 0.f, 255.f, "%.2f");
+				ImGui::SliderFloat("rain", &glb::scene->pEnvironment->m_Rain, 0.f, 1.f, "%.2f");
+				ImGui::SliderFloat("wetness", &glb::scene->pEnvironment->m_Wetness, 0.f, 1.f, "%.2f");
+				ImGui::SliderFloat("puddle ammount", &glb::scene->pEnvironment->m_PuddleAmount, 0.f, 1.f, "%.2f");
+				ImGui::SliderFloat("puddle size", &glb::scene->pEnvironment->m_Puddlesize, 0.f, 1.f, "%.2f");
+				ImGui::SliderFloat("slippery", &glb::scene->pEnvironment->m_Slippery, 0.f, 1.f, "%.2f");
+				ImGui::SliderFloat("sky rotation", &glb::scene->pEnvironment->m_SkyboxRot, 0.f, 255.f, "%.2f");
+				ImGui::Checkbox("Nightlight", &glb::scene->pEnvironment->m_Nightlight);
+				if (ImGui::Button("Update pEnvironment") && glb::game->State == gameState::ingame) {
+					glb::oEnvUpdate((uintptr_t)glb::scene->pEnvironment);
+				}
+				if (ImGui::Button("Sleep all bodies")) {
+					for (TDBody* tdb : *(glb::scene->m_Bodies)) {
+						tdb->countDown = 0x00;
+						tdb->isAwake = false;
+					}
+				}
+
 			}
-			if (ImGui::CollapsingHeader("Camera", ((selectedToolgunTool == 10) ? bpTrue : bpFalse), 0)) {
-				ImGui::Text("Camera tab");
-				selectedToolgunTool = 10;
+
+			if (ImGui::CollapsingHeader("Smoker (buggy)")) {
+				if (ImGui::Button("Spawn smoker")) {
+					smoker::spawnSmoker();
+				}
+
+				ImGui::SliderFloat("Velo X", &smoker::velocity.x, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("Velo Y", &smoker::velocity.y, 0.f, 10.f, "%.2f");
+				ImGui::SliderFloat("Velo Z", &smoker::velocity.z, 0.f, 10.f, "%.2f");
+				ImGui::SliderFloat("Lifetime", &smoker::lifetime, 0.f, 10.f, "%.2f");
+
+				ImGui::SliderFloat("U01", &smoker::pInfo.U01, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U02", &smoker::pInfo.U02, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U03", &smoker::pInfo.U03, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U04", &smoker::pInfo.U04, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U05", &smoker::pInfo.U05, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U06", &smoker::pInfo.U06, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U07", &smoker::pInfo.U07, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U08", &smoker::pInfo.U08, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U09", &smoker::pInfo.U09, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U10", &smoker::pInfo.U10, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U11", &smoker::pInfo.U11, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U12", &smoker::pInfo.U12, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U13", &smoker::pInfo.U13, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U14", &smoker::pInfo.U14, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U15", &smoker::pInfo.U15, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U16", &smoker::pInfo.U16, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U17", &smoker::pInfo.U17, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U18", &smoker::pInfo.U18, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U19", &smoker::pInfo.U19, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U20", &smoker::pInfo.U20, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U21", &smoker::pInfo.U21, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U22", &smoker::pInfo.U22, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U23", &smoker::pInfo.U23, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U24", &smoker::pInfo.U24, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U25", &smoker::pInfo.U25, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U26", &smoker::pInfo.U26, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U27", &smoker::pInfo.U27, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U28", &smoker::pInfo.U28, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U29", &smoker::pInfo.U29, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U30", &smoker::pInfo.U30, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U31", &smoker::pInfo.U31, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U32", &smoker::pInfo.U32, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U33", &smoker::pInfo.U33, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U34", &smoker::pInfo.U34, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U35", &smoker::pInfo.U35, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U36", &smoker::pInfo.U36, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U37", &smoker::pInfo.U37, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U38", &smoker::pInfo.U38, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U39", &smoker::pInfo.U39, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U40", &smoker::pInfo.U40, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U41", &smoker::pInfo.U41, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U42", &smoker::pInfo.U42, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U43", &smoker::pInfo.U43, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U44", &smoker::pInfo.U44, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U45", &smoker::pInfo.U45, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U46", &smoker::pInfo.U46, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U47", &smoker::pInfo.U47, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U48", &smoker::pInfo.U48, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U49", &smoker::pInfo.U49, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U50", &smoker::pInfo.U50, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U51", &smoker::pInfo.U51, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U52", &smoker::pInfo.U52, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U53", &smoker::pInfo.U53, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U54", &smoker::pInfo.U54, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U55", &smoker::pInfo.U55, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U56", &smoker::pInfo.U56, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U57", &smoker::pInfo.U57, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U58", &smoker::pInfo.U58, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U59", &smoker::pInfo.U59, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U60", &smoker::pInfo.U60, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U61", &smoker::pInfo.U61, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U62", &smoker::pInfo.U62, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U63", &smoker::pInfo.U63, 0.f, 5.f, "%.2f");
+				ImGui::SliderFloat("U64", &smoker::pInfo.U64, 0.f, 5.f, "%.2f");
 			}
-			if (ImGui::CollapsingHeader("Testing", ((selectedToolgunTool == 11) ? bpTrue : bpFalse), 0)) {
-				ImGui::Text("Testing tab");
-				selectedToolgunTool = 11;
-			}*/
 		}
 
 		ImGui::EndTabBar();
 
 		ImGui::Separator();
-
-		if (ImGui::CollapsingHeader("toolgun")) {
-			const char* items[] = { "Spawner", "Minigun", "Explosions", "Flamethrower", "Remover", "Set attribute", "Destroyer", "DebugObject", "Leafblower", "Slicer", "Camera", "Testing" };
-			const char* bulletTypes[] = { "Bullet", "Shotgun", "Missile", "???" };
-			const char* leafBlowerModes[] = { "Blow", "Succ", "Delete" };
-			const char* spawnModesCh[] = { "Placed", "Thrown" };
-
-			ImGui::Combo("Current tool", &selectedToolgunTool, items, IM_ARRAYSIZE(items));
-			toolgun::currentsetting = (toolgun::tgSettings)selectedToolgunTool;
-
-			ImGui::Separator();
-
-			if (toolgun::currentsetting == toolgun::tgSettings::spawner) {
-
-			}
-			if (toolgun::currentsetting == toolgun::tgSettings::minigun) {
-
-			}
-			if (toolgun::currentsetting == toolgun::tgSettings::explosion) {
-
-			}
-			if (toolgun::currentsetting == toolgun::tgSettings::flamethrower) {
-
-			}
-			if (toolgun::currentsetting == toolgun::tgSettings::destroyer) {
-
-			}
-			if (toolgun::currentsetting == toolgun::tgSettings::setAtttibute) {
-
-			}
-			if (toolgun::currentsetting == toolgun::tgSettings::leafblower) {
-
-			}
-			if (toolgun::currentsetting == toolgun::tgSettings::slicer) {
-
-			}
-			if (toolgun::currentsetting == toolgun::tgSettings::camera) {
-
-
-				//if (!camera::interlaceMode) {
-				//	if (ImGui::RadioButton("Colour mode", camera::colourMode)) {
-				//		camera::colourMode = !camera::colourMode;
-				//	}
-				//	if (ImGui::RadioButton("Distance mode", !camera::colourMode)) {
-				//		camera::colourMode = !camera::colourMode;
-				//	}
-				//}
-				//else {
-				//	camera::colourMode = true;
-				//}
-
-			}
-		}
-
-		if (ImGui::CollapsingHeader("debug")) {
-			if (ImGui::Button("Spawn DebugCube")) {
-				objectTesting::spawnDebugObject();
-			}
-		}
-
-		if (ImGui::CollapsingHeader("misc")) {
-			ImGui::InputFloat3("TP pos (X:Y:Z)", teleportTargetPosition, 2);
-
-			if (ImGui::Button("TP")) {
-				glb::player->position = { teleportTargetPosition[0], teleportTargetPosition[1], teleportTargetPosition[2] };
-			}
-
-			ImGui::Checkbox("Info popup", &displayInfoLabel);
-			ImGui::Checkbox("Godmode", &mods::godmode);
-			ImGui::Checkbox("Show bounds", &showBounds);
-			ImGui::Checkbox("Show bodies", &showBodes);
-			ImGui::Checkbox("Show shapes", &showShapes);
-			ImGui::Checkbox("Run when unfocused", &mods::dontLockWhenOutOfFocus);
-			ImGui::Checkbox("Remove map boundary", &mods::removeWalls);
-			if (ImGui::Checkbox("Remove plank length limit", &miscPatches::plankPatch)) {
-				miscPatches::updatePlankPatch();
-			}
-			if (ImGui::CollapsingHeader("objects")) {
-				if (ImGui::Button("Spawn lantern")) {
-					lantern::spawnLantern();
-				}
-
-				ImGui::SliderFloat("pointSize", &lantern::a1, 0.1f, 255.f, "%.2f");
-				ImGui::SliderFloat("shadows", &lantern::a2, 0.1f, 255.f, "%.2f");
-				ImGui::SliderFloat("brightness", &lantern::a3, 0.1f, 255.f, "%.2f");
-				ImGui::SliderFloat("fog", &lantern::a4, 0.1f, 255.f, "%.2f");
-				ImGui::Spacing();
-				ImGui::SliderFloat("R", &lantern::lightR, 0.1f, 255.f, "%.2f");
-				ImGui::SliderFloat("G", &lantern::lightG, 0.1f, 255.f, "%.2f");
-				ImGui::SliderFloat("B", &lantern::lightB, 0.1f, 255.f, "%.2f");
-			}
-			ImGui::SliderFloat("Cracker power", &c4::firecrackerExplosionSize, 0.f, 5.f, "%.1f");
-
-			if (ImGui::Button("Spawn physCamera")) {
-				physCamera::spawnCameraObject();
-			}
-			if (ImGui::Button("Destroy physCamera")) {
-				physCamera::destroyCamera();
-			}
-		}
-
-		if (ImGui::CollapsingHeader("minimap")) {
-			ImGui::Checkbox("Enabled", &lidar::enabled);
-			ImGui::SliderFloat("Zoom", &lidar::zoom, 1.f, 100.f, "%2.f");
-			ImGui::Checkbox("Colour", &lidar::colour);
-		}
-
-		if (ImGui::CollapsingHeader("c4")) {
-			ImGui::Checkbox("Global C4 detonation", &mods::c4_global_detonation);
-			ImGui::SliderInt("C4 size", &c4::selectedBombSizeInt, 1, 4);
-		}
-
-		if (ImGui::CollapsingHeader("environment")) {
-			if (ImGui::Button("Set night")) {
-				envOptions::setNight();
-			}
-
-			if (ImGui::Button("All lights off")) {
-			    for (TDLight* tdl : *(glb::scene->m_Lights)) {
-			        ((TDLight*)tdl)->m_Enabled = false;
-			    }
-			}
-
-			if (ImGui::Button("All lights on")) {
-			    for (TDLight* tdl : *(glb::scene->m_Lights)) {
-			        ((TDLight*)tdl)->m_Enabled = true;
-			    }
-			}
-
-			//ImGui::InputText("Skybox", tempSkyboxPath, 128);
-			ImGui::SliderFloat("Sun brightness", &glb::scene->pEnvironment->m_SunBrightness, 0.f, 255.f, "%.2f");
-			ImGui::SliderFloat("Sun spread", &glb::scene->pEnvironment->m_SunSpread, 0.f, 255.f, "%.2f");
-			ImGui::SliderFloat("Sun length", &glb::scene->pEnvironment->m_SunLength, 0.f, 255.f, "%.2f");
-			ImGui::SliderFloat("Sun fog", &glb::scene->pEnvironment->m_FogScale, 0.f, 255.f, "%.2f");
-			ImGui::SliderFloat("Sun glare", &glb::scene->pEnvironment->m_SunGlare, 0.f, 255.f, "%.2f");
-			ImGui::Spacing();
-			ImGui::SliderFloat("sun R", &glb::scene->pEnvironment->m_SunColorTint.x, 0.f, 255.f, "%.2f");
-			ImGui::SliderFloat("sun G", &glb::scene->pEnvironment->m_SunColorTint.y, 0.f, 255.f, "%.2f");
-			ImGui::SliderFloat("sun B", &glb::scene->pEnvironment->m_SunColorTint.z, 0.f, 255.f, "%.2f");
-			ImGui::Spacing();
-			ImGui::SliderFloat("Exposure max", &glb::scene->pEnvironment->m_Exposure.x, 0.f, 255.f, "%.2f");
-			ImGui::SliderFloat("Exposure min", &glb::scene->pEnvironment->m_Exposure.y, 0.f, 255.f, "%.2f");
-			ImGui::Spacing();
-			ImGui::SliderFloat("Ambience", &glb::scene->pEnvironment->m_Ambient, 0.f, 255.f, "%.2f");
-			ImGui::SliderFloat("Brightness", &glb::scene->pEnvironment->m_Brightness, 0.f, 255.f, "%.2f");
-			ImGui::SliderFloat("rain", &glb::scene->pEnvironment->m_Rain, 0.f, 1.f, "%.2f");
-			ImGui::SliderFloat("wetness", &glb::scene->pEnvironment->m_Wetness, 0.f, 1.f, "%.2f");
-			ImGui::SliderFloat("puddle ammount", &glb::scene->pEnvironment->m_PuddleAmount, 0.f, 1.f, "%.2f");
-			ImGui::SliderFloat("puddle size", &glb::scene->pEnvironment->m_Puddlesize, 0.f, 1.f, "%.2f");
-			ImGui::SliderFloat("slippery", &glb::scene->pEnvironment->m_Slippery, 0.f, 1.f, "%.2f");
-			ImGui::SliderFloat("sky rotation", &glb::scene->pEnvironment->m_SkyboxRot, 0.f, 255.f, "%.2f");
-			ImGui::Checkbox("Nightlight", &glb::scene->pEnvironment->m_Nightlight);
-			if (ImGui::Button("Update pEnvironment") && glb::game->State == gameState::ingame) {
-				glb::oEnvUpdate((uintptr_t)glb::scene->pEnvironment);
-			}
-			if (ImGui::Button("Sleep all bodies")) {
-				for (TDBody* tdb : *(glb::scene->m_Bodies)) {
-					tdb->countDown = 0x00;
-					tdb->isAwake = false;
-				}
-			}
-
-		}
-
-		if (ImGui::CollapsingHeader("Smoker")) {
-			if (ImGui::Button("Spawn smoker")) {
-				smoker::spawnSmoker();
-			}
-
-			ImGui::SliderFloat("Velo X", &smoker::velocity.x, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("Velo Y", &smoker::velocity.y, 0.f, 10.f, "%.2f");
-			ImGui::SliderFloat("Velo Z", &smoker::velocity.z, 0.f, 10.f, "%.2f");
-			ImGui::SliderFloat("Lifetime", &smoker::lifetime, 0.f, 10.f, "%.2f");
-
-			ImGui::SliderFloat("U01", &smoker::pInfo.U01, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U02", &smoker::pInfo.U02, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U03", &smoker::pInfo.U03, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U04", &smoker::pInfo.U04, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U05", &smoker::pInfo.U05, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U06", &smoker::pInfo.U06, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U07", &smoker::pInfo.U07, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U08", &smoker::pInfo.U08, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U09", &smoker::pInfo.U09, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U10", &smoker::pInfo.U10, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U11", &smoker::pInfo.U11, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U12", &smoker::pInfo.U12, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U13", &smoker::pInfo.U13, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U14", &smoker::pInfo.U14, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U15", &smoker::pInfo.U15, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U16", &smoker::pInfo.U16, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U17", &smoker::pInfo.U17, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U18", &smoker::pInfo.U18, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U19", &smoker::pInfo.U19, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U20", &smoker::pInfo.U20, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U21", &smoker::pInfo.U21, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U22", &smoker::pInfo.U22, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U23", &smoker::pInfo.U23, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U24", &smoker::pInfo.U24, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U25", &smoker::pInfo.U25, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U26", &smoker::pInfo.U26, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U27", &smoker::pInfo.U27, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U28", &smoker::pInfo.U28, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U29", &smoker::pInfo.U29, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U30", &smoker::pInfo.U30, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U31", &smoker::pInfo.U31, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U32", &smoker::pInfo.U32, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U33", &smoker::pInfo.U33, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U34", &smoker::pInfo.U34, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U35", &smoker::pInfo.U35, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U36", &smoker::pInfo.U36, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U37", &smoker::pInfo.U37, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U38", &smoker::pInfo.U38, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U39", &smoker::pInfo.U39, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U40", &smoker::pInfo.U40, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U41", &smoker::pInfo.U41, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U42", &smoker::pInfo.U42, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U43", &smoker::pInfo.U43, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U44", &smoker::pInfo.U44, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U45", &smoker::pInfo.U45, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U46", &smoker::pInfo.U46, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U47", &smoker::pInfo.U47, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U48", &smoker::pInfo.U48, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U49", &smoker::pInfo.U49, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U50", &smoker::pInfo.U50, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U51", &smoker::pInfo.U51, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U52", &smoker::pInfo.U52, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U53", &smoker::pInfo.U53, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U54", &smoker::pInfo.U54, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U55", &smoker::pInfo.U55, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U56", &smoker::pInfo.U56, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U57", &smoker::pInfo.U57, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U58", &smoker::pInfo.U58, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U59", &smoker::pInfo.U59, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U60", &smoker::pInfo.U60, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U61", &smoker::pInfo.U61, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U62", &smoker::pInfo.U62, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U63", &smoker::pInfo.U63, 0.f, 5.f, "%.2f");
-			ImGui::SliderFloat("U64", &smoker::pInfo.U64, 0.f, 5.f, "%.2f");
-		}
 
 		ImGui::EndChild();
 		ImGui::PopStyleVar();

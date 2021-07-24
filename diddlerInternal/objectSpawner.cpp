@@ -16,6 +16,7 @@ namespace fs = std::filesystem;
 
 spawner::objectSpawnerParams defaultParams = {};
 
+
 std::string getObjectName(std::string path) {
 
     int tmpOffset = 0;
@@ -73,6 +74,7 @@ bool LoadTextureFromFile(const char* filename, GLuint* out_texture, int* out_wid
 //DONT FUCKING TOUCH IT
 namespace spawner {
 
+    float voxScale = 1.f;
     std::vector<spawner::spawnerCatagory> spawnerObjectsDatabase;
 
     std::vector<toolgun::fadeShapeOutline> spawnedObjects = {};
@@ -157,11 +159,12 @@ namespace spawner {
                 if (lastSpawnedObject.params.spawnType == objectSpawnType::thrown) {
 
 
-                    td::Vec3 voxSize = { lastSpawnedObject.vox->sizeX / 10.f, lastSpawnedObject.vox->sizeY / 10.f, lastSpawnedObject.vox->sizeZ / 10.f }; //this is the vox size in units where 1vx = 1u, convert to 1vx = .1u
+                    td::Vec3 voxSize = { (lastSpawnedObject.vox->sizeX / 10.f) * voxScale, (lastSpawnedObject.vox->sizeY / 10.f) * voxScale, (lastSpawnedObject.vox->sizeZ / 10.f) * voxScale }; //this is the vox size in units where 1vx = 1u, convert to 1vx = .1u
                     glm::quat facePlayer = glm::quat(glm::vec3(glb::player->camPitch + 4.71238898025f, glb::player->camYaw, 0));
                     float spawnPosx = (glb::player->cameraPosition.x + glb::player->cameraEuler().x);
                     float spawnPosy = (glb::player->cameraPosition.y + glb::player->cameraEuler().y);
                     float spawnPosz = (glb::player->cameraPosition.z + glb::player->cameraEuler().z);
+
 
                     glm::vec3 vx = facePlayer * glm::vec3(1, 0, 0);
                     glm::vec3 vy = facePlayer * glm::vec3(0, 1, 0);
@@ -198,7 +201,7 @@ namespace spawner {
                 }
                 else if(lastSpawnedObject.params.spawnType == objectSpawnType::placed) {
 
-                    td::Vec3 voxSize = { lastSpawnedObject.vox->sizeX / 10.f, lastSpawnedObject.vox->sizeY / 10.f, lastSpawnedObject.vox->sizeZ / 10.f }; //this is the vox size in units where 1vx = 1u, convert to 1vx = .1u
+                    td::Vec3 voxSize = { (lastSpawnedObject.vox->sizeX / 10.f) * voxScale, (lastSpawnedObject.vox->sizeY / 10.f) * voxScale, (lastSpawnedObject.vox->sizeZ / 10.f) * voxScale }; 
                     glm::vec3 hitPos = { rd.worldPos.x, rd.worldPos.y, rd.worldPos.z };
 
                     if (rd.angle.x == 0.f) {
@@ -420,7 +423,7 @@ namespace spawner {
             SHAPE = glb::oTMalloc(0x176u);
             glb::oS_Constructor((uintptr_t)SHAPE, (uintptr_t)BODY);
 
-            vox = glb::oSpawnVox(&file_path, &sub_path, 1.f);
+            vox = glb::oSpawnVox(&file_path, &sub_path, voxScale);
 
             if (strcmp(sub_path.c_str(), "") == 0) {
                 std::cout << "Subobject: [none] | Shape: " << std::hex << SHAPE << " | Vox: " << std::hex << vox << std::endl;
@@ -455,6 +458,7 @@ namespace spawner {
         ((TDShape*)SHAPE)->TextureIntensity = 1.f;
 
         glb::oUpdateShapes((uintptr_t)BODY);
+        glb::tdUpdateFunc((TDBody*)BODY, 0, 1);
 
         raycaster::rayData rd = raycaster::castRayPlayer();
         td::Vec3 target = rd.worldPos;

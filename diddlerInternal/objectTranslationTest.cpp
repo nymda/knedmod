@@ -10,9 +10,12 @@ namespace objectTesting {
 	td::Color blue{ 0.f, 0.f, 1.f, 1.f };
 
 	void spawnDebugObject() {
-		spawner::objectSpawnerParams osp{};
-		
+		spawner::objectSpawnerParams osp{};		
 		dbgObject = spawner::spawnObjectProxy("vox\\Default\\knedcube\\object.vox", osp);
+	}
+
+	void destroyDebugObject() {
+		dbgObject = {};
 	}
 
 	void drawCircleAroundPoint(td::Vec3 vPoint, td::Vec3 vUp) {

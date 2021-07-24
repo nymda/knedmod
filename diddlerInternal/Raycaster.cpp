@@ -18,6 +18,7 @@ namespace raycaster {
         float outDist = 0.f;
         glb::oRC(glb::scene, &pCopy, &rCopy, 250.f, filterCus, &outDist, &output, &oShape, (uintptr_t*)&rdp.palette);
         if (outDist == 0) {
+            oShape = 0;
             outDist = 1000.f;
         }
 
@@ -43,6 +44,7 @@ namespace raycaster {
         float outDist = 0.f;
         glb::oRC(glb::scene, &camPos, &euler, 250.f, &filter, &outDist, &output, &oShape, (uintptr_t*)&rdp.palette);
         if (outDist == 0) {
+            oShape = 0;
             outDist = 1000.f;
         }
 

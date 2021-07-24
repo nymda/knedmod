@@ -165,12 +165,14 @@
   <ItemGroup>
     <ClInclude Include="c4.h" />
     <ClInclude Include="camera.h" />
+    <ClInclude Include="cameraManager.h" />
     <ClInclude Include="cutter.h" />
     <ClInclude Include="detours.h" />
     <ClInclude Include="detver.h" />
     <ClInclude Include="dotProjector.h" />
     <ClInclude Include="drawCube.h" />
     <ClInclude Include="envOptions.h" />
+    <ClInclude Include="Firespread.h" />
     <ClInclude Include="Flamethrower.h" />
     <ClInclude Include="focusHook.h" />
     <ClInclude Include="glm\trigonometric.hpp" />
@@ -208,17 +210,20 @@
     <ClInclude Include="mem.h" />
     <ClInclude Include="swapBuffers.h" />
     <ClInclude Include="TDObjects.h" />
+    <ClInclude Include="thirdperson.h" />
     <ClInclude Include="toolgun.h" />
     <ClInclude Include="types.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="c4.cpp" />
     <ClCompile Include="camera.cpp" />
+    <ClCompile Include="cameraManager.cpp" />
     <ClCompile Include="cutter.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="dotProjector.cpp" />
     <ClCompile Include="drawCube.cpp" />
     <ClCompile Include="envOptions.cpp" />
+    <ClCompile Include="Firespread.cpp" />
     <ClCompile Include="Flamethrower.cpp" />
     <ClCompile Include="focusHook.cpp" />
     <ClCompile Include="godmode.cpp" />
@@ -250,6 +255,7 @@
     <ClCompile Include="mem.cpp" />
     <ClCompile Include="swapBuffers.cpp" />
     <ClCompile Include="TDObjects.cpp" />
+    <ClCompile Include="thirdperson.cpp" />
     <ClCompile Include="toolgun.cpp" />
     <ClCompile Include="types.cpp" />
   </ItemGroup>

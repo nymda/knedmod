@@ -18,7 +18,9 @@ namespace toolgun {
         leafblower = 8,
         slicer = 9,
         camera = 10,
-        testing = 11
+        rope = 11,
+        destructionGrid = 12,
+        testing = 13
     };
 
     struct targetDbgInfo {
@@ -37,6 +39,10 @@ namespace toolgun {
         del = 2
     };
     
+    extern float ropeSlack;
+    extern float ropeStrength;
+    extern float ropeMaxStretch;
+    extern td::Color ropeColor;
     extern float cameraFov;
     extern bool slicerHorizontal;
     extern bool takeSnapshot;

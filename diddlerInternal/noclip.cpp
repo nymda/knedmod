@@ -3,15 +3,19 @@
 #include "maths.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include "cameraManager.h"
 
 namespace noclip {
+
+	/*
+	* i hate making this stupid fucking function work, its such a fucking pain in the ass, why are there two things writing to Y that are at the same location, why does it do that
+	* why dont i just sigscan for the functions instead of doing this manually
+	* why do i hate myself
+	*/
+
 	bool enabled = false;
 	bool inNoclip = false;
-	byte xBuffer[5]       = { 0xF2, 0x0F, 0x10, 0x43, 0x7C };
-	byte yBuffer[8]       = { 0xF3, 0x0F, 0x11, 0x93, 0x80, 0x00, 0x00, 0x00 };
-	byte yBuffer2[5]      = { 0xF2, 0x0F, 0x11, 0x43, 0x7C }; //why the fuck is this nessicary? why do we need two instructions writing to the SAME FUCKING VARIABLE in the SAME FUCKING LOOP? WHAT ARE YOU DOING DENNIS?
-	byte zBuffer[8]       = { 0xF3, 0x0F, 0x11, 0x83, 0x84, 0x00, 0x00, 0x00 };
-	 
+
 	td::Vec3 movementVector = { 0, 0, 0 };
 	td::Vec3 lastMmovementVector = { 0, 0, 0 };
 	td::Vec3 cameraForwardVector = { 0, 0, 0 };
@@ -19,39 +23,14 @@ namespace noclip {
 	td::Vec4 cameraQuat = { 0, 0, 0, 0 };
 
 
-	void setCameraEnabled(bool enable) {
-		uintptr_t baseAddy = (uintptr_t)glb::oCamPos;
-		uintptr_t xInstruction   = baseAddy + 0x658; // ok
-		uintptr_t yInstruction   = baseAddy + 0x650; // ok 
-		uintptr_t yInstruction2  = baseAddy + 0x661; // ok 
-		uintptr_t zInstruction   = baseAddy + 0x614; // ok
-
-		if (enable) {
-			mem::Patch((byte*)xInstruction,  xBuffer, 5);
-			mem::Patch((byte*)yInstruction,  yBuffer, 8);
-			mem::Patch((byte*)yInstruction2, yBuffer2, 5);
-			mem::Patch((byte*)zInstruction,  zBuffer, 8);
-
-		}
-		else {
-			mem::Nop((byte*)xInstruction,  5);
-			mem::Nop((byte*)yInstruction,  8);
-			mem::Nop((byte*)yInstruction2, 5);
-			mem::Nop((byte*)zInstruction,  8);
-		}
-	}
-
-
 	void ToggleNoclip() {
-
-
 		inNoclip = !inNoclip;
 		if (inNoclip) {
-			setCameraEnabled(false);
+			cameraManager::takeCamera();
 		}
 		else {
 
-			setCameraEnabled(true);
+			cameraManager::returnCamera();
 			glb::player->position = { glb::player->cameraPosition.x, glb::player->cameraPosition.y - 1.7f, glb::player->cameraPosition.z };
 			glb::player->velocity = { lastMmovementVector.x * 50, lastMmovementVector.y * 50, lastMmovementVector.z * 50 };
 		}

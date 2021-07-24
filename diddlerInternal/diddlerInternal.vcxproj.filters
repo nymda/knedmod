@@ -180,6 +180,15 @@
     <ClInclude Include="objectTranslationTest.h">
       <Filter>Header Files\TDAPI</Filter>
     </ClInclude>
+    <ClInclude Include="Firespread.h">
+      <Filter>Header Files\Mods</Filter>
+    </ClInclude>
+    <ClInclude Include="cameraManager.h">
+      <Filter>Header Files\TDAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdperson.h">
+      <Filter>Header Files\Mods</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -301,6 +310,15 @@
     </ClCompile>
     <ClCompile Include="objectTranslationTest.cpp">
       <Filter>Source Files\TDAPI</Filter>
+    </ClCompile>
+    <ClCompile Include="Firespread.cpp">
+      <Filter>Source Files\Mods</Filter>
+    </ClCompile>
+    <ClCompile Include="cameraManager.cpp">
+      <Filter>Source Files\TDAPI</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdperson.cpp">
+      <Filter>Source Files\Mods</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
