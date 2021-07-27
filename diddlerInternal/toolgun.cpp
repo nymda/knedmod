@@ -255,7 +255,16 @@ namespace toolgun {
                     }
                     if (spawnOnce) {
                         spawnOnce = false;
-                        spawner::KMSpawnedObject last = spawnObjectProxy(currentSpawngunObject.voxPath, osp);
+                        //spawner::KMSpawnedObject last = spawnObjectProxy(currentSpawngunObject.voxPath, osp);
+                        
+                        if (spawner::freeMode) {
+                            spawner::placeFreeObject(currentSpawngunObject.voxPath);
+                        }
+                        else if (spawner::childMode) {
+                            spawner::placeChildObject(currentSpawngunObject.voxPath);
+                        }
+
+
                     }
                 }
                 else {

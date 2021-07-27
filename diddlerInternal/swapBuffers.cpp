@@ -353,12 +353,26 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			if (ImGui::Button("Spawner", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::spawner; };
 			if (selectedToolgunTool == (int)toolgun::tgSettings::spawner) {
 				ImGui::Separator();
-				ImGui::Combo("Mode", &spawnr_current, spawnModesCh, IM_ARRAYSIZE(spawnModesCh));
-				toolgun::method = (toolgun::spawngunMethod)spawnr_current;
-				if (toolgun::method == toolgun::spawngunMethod::thrown) {
-					ImGui::Checkbox("Spawn constantly", &toolgun::constSpawn);
-					ImGui::SliderFloat("Throw power", &toolgun::thrownObjectVelocityMultiplier, 1.f, 100.f, "%.2f");
+				//ImGui::Combo("Mode", &spawnr_current, spawnModesCh, IM_ARRAYSIZE(spawnModesCh));
+				//toolgun::method = (toolgun::spawngunMethod)spawnr_current;
+
+				if (ImGui::RadioButton("Placed (free)", spawner::freeMode)) {
+					spawner::freeMode = true;
+					spawner::childMode = false;
+					spawner::thrownMode = false;
 				}
+				if (ImGui::RadioButton("Placed (child)", spawner::childMode)) {
+					spawner::freeMode = false;
+					spawner::childMode = true;
+					spawner::thrownMode = false;
+				}
+				if (ImGui::RadioButton("Thrown", spawner::thrownMode)) {
+					spawner::freeMode = false;
+					spawner::childMode = false;
+					spawner::thrownMode = true;
+				}
+				ImGui::Checkbox("Spawn constantly", &toolgun::constSpawn);
+				ImGui::SliderFloat("Throw power", &toolgun::thrownObjectVelocityMultiplier, 1.f, 100.f, "%.2f");
 				ImGui::Separator();
 			}
 

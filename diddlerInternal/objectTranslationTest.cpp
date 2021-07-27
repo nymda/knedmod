@@ -175,56 +175,19 @@ namespace objectTesting {
 		glb::oFDL(glb::renderer, glm2td(bodyPos), glm2td(bodyLineZ), blue, blue, false);
 
 		//World -> Local
-		td::Vec3 worldPos = raycaster::castRayPlayer().worldPos;
-		
+		raycaster::rayData rd = raycaster::castRayPlayer();
+		td::Vec3 worldPos = rd.worldPos;
+		td::Vec3 worldRot = rd.angle;
+
+		glb::oFDL(glb::renderer, worldPos, { worldPos.x + worldRot.x, worldPos.y + worldRot.y, worldPos.z + worldRot.z }, white, white, false);
+
 		glm::vec3 localPos = glm::vec3((glm::inverse(RotationMatrix)) * -glm::vec4(bodyPos.x - worldPos.x, bodyPos.y - worldPos.y, bodyPos.z - worldPos.z, 0.f));
 
-		if (glb::player->isAttacking) {
-			spawner::objectSpawnerParams osp;
-			osp.parentBody = dbgObject.body;
-			osp.parentBodyoffset = glm2td(localPos);
-			osp.spawnType = spawner::objectSpawnType::raw;
-			osp.startPosition = dbgObject.body->Position;
-			spawner::spawnObjectProxy("vox\\Default\\brick_metal\\object.vox", osp);
-		}
-
 		glm::vec3 convertedWorldPos = bodyPos + glm::vec3(RotationMatrix * glm::vec4(localPos.x, localPos.y, localPos.z, 0.f));
-
-		//if ((localPos.x < (boundaries.x + 0.01f) && localPos.y < (boundaries.y + 0.01f) && localPos.z < (boundaries.z + 0.01f)) && (localPos.x > -0.01f && localPos.y > -0.01f && localPos.z > -0.01f)) {
-
-		//}
 
 		std::cout << std::to_string(localPos.x) << " : " << std::to_string(localPos.y) << " : " << std::to_string(localPos.z) << std::endl;
 		drawCube(glm2td(convertedWorldPos), 0.05f, red);
 
-		//glm::vec3 vxObj = bodyQuat * glm::vec3(1, 0, 0);
-		//glm::vec3 vyObj = bodyQuat * glm::vec3(0, 1, 0);
-		//glm::vec3 vzObj = bodyQuat * glm::vec3(0, 0, 1); //(UP)
-
-		//draw x line
-		//td::Vec3 vx_p1 = dbgObject.body->Position;
-		//td::Vec3 vx_p2 = { dbgObject.body->Position.x + (vxObj.x * (oSizeObj.x / 10.f)), dbgObject.body->Position.y + (vxObj.y * (oSizeObj.y / 10.f)), dbgObject.body->Position.z + (vxObj.z * (oSizeObj.z / 10.f)) };
-		//glb::oFDL(glb::renderer, vx_p1, vx_p2, red, red, false);
-
-		//draw y line
-		//td::Vec3 vy_p1 = dbgObject.body->Position;
-		//td::Vec3 vy_p2 = { dbgObject.body->Position.x + (vyObj.x * (oSizeObj.x / 10.f)), dbgObject.body->Position.y + (vyObj.y * (oSizeObj.y / 10.f)), dbgObject.body->Position.z + (vyObj.z * (oSizeObj.z / 10.f)) };
-		//glb::oFDL(glb::renderer, vy_p1, vy_p2, green, green, false);
-
-		//draw z line
-		//td::Vec3 vz_p1 = dbgObject.body->Position;
-		//td::Vec3 vz_p2 = { dbgObject.body->Position.x + (vzObj.x * (oSizeObj.x / 10.f)), dbgObject.body->Position.y + (vzObj.y * (oSizeObj.y / 10.f)), dbgObject.body->Position.z + (vzObj.z * (oSizeObj.z / 10.f)) };
-		//glb::oFDL(glb::renderer, vz_p1, vz_p2, blue, blue, false);
-
-		//glm::vec3 translation = ((vzObj * ((dbgObject.vox->sizeX / 2.f) / 10.f)) + (vyObj * ((dbgObject.vox->sizeY / 2.f) / 10.f)) + (vxObj * ((dbgObject.vox->sizeZ / 2.f) / 10.f)));
-		
-
-		//dbgObject.body->Position = { centerpoint.x - translation.x,  centerpoint.y - translation.y, centerpoint.z - translation.z };
-
-		//dbgObject.body->Velocity = { 0.f, 0.f, 0.f };
-
-		//dbgObject.body->countDown = 0x20;
-		//dbgObject.body->isAwake = true;
 	}
 }
 

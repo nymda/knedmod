@@ -11,6 +11,7 @@
 #include "maths.h"
 #include <glm/gtc/quaternion.hpp>
 #include "toolgun.h"
+#include <glm/gtx/quaternion.hpp>
 
 namespace fs = std::filesystem;
 
@@ -82,6 +83,10 @@ namespace spawner {
     KMSpawnedObject lastSpawnedObject{};
     td::Color white{ 1.f, 1.f, 1.f, 1.f };
     bool spawnOnce = true;
+
+    bool freeMode = true;
+    bool childMode = false;
+    bool thrownMode = false;
 
     KMSpawnedObject spawnObjectProxy(std::string path, objectSpawnerParams params) {
         KMSpawnedObject lsp = spawnEntity(path, params);
@@ -348,36 +353,194 @@ namespace spawner {
         return returnObj;
     }
 
-    //void handleSpawnerWeapon() {
-    //    const char* spawngunName = "spawngun";
-    //    if (memcmp(glb::player->heldItemName, spawngunName, 8) == 0) {
-    //        raycaster::rayData rd = raycaster::castRayPlayer();
-    //        td::Vec3 target = rd.worldPos;
-    //        drawCube({ target.x, target.y, target.z }, 0.05, white);
-
-    //        objectSpawnerParams osp{};
-    //        osp.customRotation = rd.angle;
-
-    //        if (glb::player->isAttacking == true) {
-    //            if (spawnOnce) {
-    //                spawnOnce = false;
-    //                lastSpawnedObject = spawnObjectProxy(currentSpawngunObject, osp);
-    //            }
-    //        }
-    //        else {
-    //            spawnOnce = true;
-    //        }
-    //    }
-    //}
-
     void deleteLastObject() {
         if (glb::game->State == gameState::ingame) {
             if (spawnList.size() > 0) {
-                spawnList.back().shape->Destroy(spawnList.back().shape, true);
+                //spawnList.back().shape->Destroy(spawnList.back().shape, true);
                 spawnList.back().body->Destroy(spawnList.back().body, true);
                 spawnList.pop_back();
             }
         }
+    }
+
+    //spawns a free object wherever the player is looking
+    spawnedObject placeFreeObject(std::string filepath) {
+        raycaster::rayData rd = raycaster::castRayPlayer();
+
+        spawnedObject object = {};
+        freeObjectSpawnParams params = {};
+
+        spawnFreeEntity(filepath, params, &object);
+
+        td::Vec3 voxSize = { (object.voxes[0]->sizeX / 10.f) * voxScale, (object.voxes[0]->sizeY / 10.f) * voxScale, (object.voxes[0]->sizeZ / 10.f) * voxScale };
+        glm::vec3 hitPos = { rd.worldPos.x, rd.worldPos.y, rd.worldPos.z };
+
+        //if any of the angles is exactly 0 then it all goes to fuck
+        if (rd.angle.x == 0.f) { rd.angle.x += 0.0001f; }
+        if (rd.angle.y == 0.f) { rd.angle.y += 0.0001f; }
+        if (rd.angle.z == 0.f) { rd.angle.z += 0.0001f; }
+
+        glm::quat facePlayer = glm::quat(glm::vec3(0, glb::player->camYaw, 0));
+        glm::vec3 vxTmp = facePlayer * glm::vec3(1, 0, 0);
+
+        glm::vec3 hitDir = glm::vec3(rd.angle.x, rd.angle.y, rd.angle.z);
+
+        hitDir = glm::normalize(hitDir);
+
+        glm::quat q = glm::conjugate(glm::quat(glm::lookAt(hitPos, hitPos + -hitDir, vxTmp))); //this is kinda inverted, with "up" facing the player and "forward" facing away from the surface. "fixing" this makes it work less good so eh.
+
+        glm::vec3 vx = q * glm::vec3(1, 0, 0);
+        glm::vec3 vy = q * glm::vec3(0, 1, 0);
+        glm::vec3 vz = q * glm::vec3(0, 0, 1); //(UP)
+
+        glm::vec3 translation = ((vz * (-0.f)) + (vy * (voxSize.y / 2.f)) + (vx * (voxSize.x / 2.f)));
+
+        object.body->Position = { rd.worldPos.x - translation.x, rd.worldPos.y - translation.y, rd.worldPos.z - translation.z };
+        *(glm::quat*)&object.body->Rotation = q;
+        object.body->Velocity = { 0, 0, 0 };
+
+        return object;
+    }
+
+    bool spawnFreeEntity(std::string filepath, freeObjectSpawnParams params, spawnedObject* object) {
+        if (!exists(filepath)) {
+            std::cout << "[E] no file" << std::endl;
+            return false;
+        }
+
+        uintptr_t uBODY = glb::oTMalloc(0x232u);
+        TDBody* BODY = (TDBody*)uBODY;
+        glb::oB_Constructor(uBODY, (uintptr_t)nullptr);
+        glb::oSetDynamic(uBODY, true);
+        BODY->isAwake = true;
+        BODY->countDown = 0xF0;
+
+        td::small_string file_path((char*)(filepath).c_str());
+        std::vector<td::small_string> nameOut = {};
+        glb::TDreadSubobjects(&file_path, (int*)&nameOut);
+        if (nameOut.size() == 0) {
+            nameOut.push_back(td::small_string(""));
+        }
+
+        for (td::small_string sub_path : nameOut) {
+            uintptr_t uSHAPE = glb::oTMalloc(0x176u);
+            TDShape* SHAPE = (TDShape*)uSHAPE;
+
+            glb::oS_Constructor(uSHAPE, uBODY);
+            uintptr_t VOX = glb::oSpawnVox(&file_path, &sub_path, voxScale);
+
+            glb::oCreateTexture(VOX);
+            glb::oCreatePhysics(VOX);
+
+            SHAPE->pVox = (TDVox*)VOX;
+
+            object->shapes.push_back(SHAPE);
+            object->voxes.push_back((TDVox*)VOX);
+
+            if (params.nocull) {
+                *(byte*)(SHAPE + 9) |= 16;
+            }
+
+            ((TDShape*)SHAPE)->Texture = 3;
+            ((TDShape*)SHAPE)->TextureIntensity = 1.f;
+        }
+
+        object->body = BODY;
+        glb::oUpdateShapes(uBODY);
+
+        return true;
+    }
+
+    spawnedObject placeChildObject(std::string filepath) {
+        raycaster::rayData rd = raycaster::castRayPlayer();
+
+        spawnedObject object = {};
+
+        if (!rd.hitShape) {
+            return object;
+        }
+
+
+        childObjectSpawnParams params = {};
+        params.parentBody = rd.hitShape->getParentBody();
+        spawnChildEntity(filepath, params, &object);
+
+        td::Vec3 voxSize = { (object.voxes[0]->sizeX / 10.f) * voxScale, (object.voxes[0]->sizeY / 10.f) * voxScale, (object.voxes[0]->sizeZ / 10.f) * voxScale };
+        glm::vec3 hitPos = { rd.worldPos.x, rd.worldPos.y, rd.worldPos.z };
+
+        if (rd.angle.x == 0.f) { rd.angle.x += 0.0001f; }
+        if (rd.angle.y == 0.f) { rd.angle.y += 0.0001f; }
+        if (rd.angle.z == 0.f) { rd.angle.z += 0.0001f; }
+        
+        glm::quat facePlayer = glm::quat(glm::vec3(0, glb::player->camYaw, 0));
+        glm::vec3 vxTmp = facePlayer * glm::vec3(1, 0, 0);
+
+        glm::vec3 hitDir = glm::vec3(rd.angle.x, rd.angle.y, rd.angle.z);
+        hitDir = glm::normalize(hitDir);
+
+        glm::vec3 bodyPos = glm::vec3(params.parentBody->Position.x, params.parentBody->Position.y, params.parentBody->Position.z);
+        glm::quat bodyQuat = *(glm::quat*)&params.parentBody->Rotation;
+        glm::mat4 RotationMatrix = glm::toMat4(bodyQuat);
+
+        glm::quat q = glm::conjugate(glm::quat(glm::lookAt(hitPos, hitPos + -hitDir, vxTmp))); //this is kinda inverted, with "up" facing the player and "forward" facing away from the surface. "fixing" this makes it work less good so eh.
+
+        glm::vec3 vx = q * glm::vec3(1, 0, 0);
+        glm::vec3 vy = q * glm::vec3(0, 1, 0);
+        glm::vec3 vz = q * glm::vec3(0, 0, 1); //(UP)
+
+        glm::vec3 translation = ((vz * (-0.f)) + (vy * (voxSize.y / 2.f)) + (vx * (voxSize.x / 2.f)));
+        glm::vec3 localPos = glm::vec3((glm::inverse(RotationMatrix)) * -glm::vec4((bodyPos.x - rd.worldPos.x) + translation.x, (bodyPos.y - rd.worldPos.y) + translation.y, (bodyPos.z - rd.worldPos.z) + translation.z, 0.f));
+        glm::quat localRot = glm::inverse(bodyQuat) * q;
+
+        object.shapes[0]->pOffset = { localPos.x, localPos.y, localPos.z };
+        *(glm::quat*)&object.shapes[0]->rOffset = localRot;
+        glb::oUpdateShapes((uintptr_t)params.parentBody);
+        glb::tdUpdateFunc(params.parentBody, 0, 1);
+
+        return object;
+    }
+
+    bool spawnChildEntity(std::string filepath, childObjectSpawnParams params, spawnedObject* object) {
+        if (!exists(filepath)) {
+            std::cout << "[E] no file" << std::endl;
+            return false;
+        }
+
+        td::small_string file_path((char*)(filepath).c_str());
+        std::vector<td::small_string> nameOut = {};
+        glb::TDreadSubobjects(&file_path, (int*)&nameOut);
+        if (nameOut.size() == 0) {
+            nameOut.push_back(td::small_string(""));
+        }
+
+        for (td::small_string sub_path : nameOut) {
+            uintptr_t uSHAPE = glb::oTMalloc(0x176u);
+            TDShape* SHAPE = (TDShape*)uSHAPE;
+
+            glb::oS_Constructor(uSHAPE, (uintptr_t)params.parentBody);
+            uintptr_t VOX = glb::oSpawnVox(&file_path, &sub_path, voxScale);
+
+            glb::oCreateTexture(VOX);
+            glb::oCreatePhysics(VOX);
+
+            SHAPE->pVox = (TDVox*)VOX;
+
+            object->shapes.push_back(SHAPE);
+            object->voxes.push_back((TDVox*)VOX);
+
+            if (params.nocull) {
+                *(byte*)(SHAPE + 9) |= 16;
+            }
+
+            ((TDShape*)SHAPE)->Texture = 3;
+            ((TDShape*)SHAPE)->TextureIntensity = 1.f;
+        }
+
+        object->body = params.parentBody;
+
+        glb::oUpdateShapes((uintptr_t)params.parentBody);
+
+        return true;
     }
 
     KMSpawnedObject spawnEntity(std::string filepath, objectSpawnerParams osp) {
@@ -408,7 +571,6 @@ namespace spawner {
 
         td::small_string file_path((char*)(filepath).c_str());
 
-        uintptr_t names2 = glb::oTMalloc(1024);
         td::small_vector<td::small_string> nameOut = {};
         glb::TDreadSubobjects(&file_path, (int*)&nameOut);
 
@@ -459,20 +621,6 @@ namespace spawner {
 
         glb::oUpdateShapes((uintptr_t)BODY);
         glb::tdUpdateFunc((TDBody*)BODY, 0, 1);
-
-        raycaster::rayData rd = raycaster::castRayPlayer();
-        td::Vec3 target = rd.worldPos;
-        td::Vec4 newRot = { 0.5, -0.5, -0.5, -0.5 };
-
-        //*(float*)(BODY + 0x28) = 0;
-        //*(float*)(BODY + 0x28 + 4) = 0;
-        //*(float*)(BODY + 0x28 + 8) = 0;
-       
-
-        //*(float*)(BODY + 0x28 + 12) = newRot.x;
-        //*(float*)(BODY + 0x28 + 16) = newRot.y;
-        //*(float*)(BODY + 0x28 + 20) = newRot.z;
-        //*(float*)(BODY + 0x28 + 24) = newRot.w;
 
         return { osp, false, (TDShape*)SHAPE, (TDBody*)BODY, (TDVox*)vox };
     }

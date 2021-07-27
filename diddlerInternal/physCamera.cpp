@@ -12,23 +12,32 @@
 #include "imgui/imgui_impl_win32.h"
 #include "camera.h"
 #include "dotProjector.h"
+#include <glm/gtx/quaternion.hpp>
 
 namespace physCamera {
 
-	spawner::KMSpawnedObject camera = {};
+	spawner::spawnedObject camera = {};
 	RaycastFilter rcf = {};
 	td::Color blue{ 0.f, 0.f, 1.f, 1.f };
 	td::Color red{ 1.f, 0.f, 0.f, 1.f };
 	const float pi = 3.1415926535f;
 
+    bool useExistingParentBody = true;
+
 	void spawnCameraObject() {
 		spawner::objectSpawnerParams osp = {};
 		//osp.unbreakable = true;
 		osp.nocull = true;
-		camera = spawner::spawnObjectProxy("vox/Default/camera/object.vox", osp);
+        if (useExistingParentBody) {
+            camera = spawner::placeChildObject("vox/Default/camera/object.vox");
+        }
+        else {
+            camera = spawner::placeFreeObject("vox/Default/camera/object.vox");
+        }
 
-		rcf.m_IgnoredBodies.push_back(camera.body);
-		rcf.m_IgnoredShapes.push_back(camera.shape);
+
+		//rcf.m_IgnoredBodies.push_back(camera.body);
+		rcf.m_IgnoredShapes.push_back(camera.shapes[0]);
 	}
 
 	bool genFilter = true;
@@ -64,12 +73,19 @@ namespace physCamera {
         float fov = toolgun::cameraFov;
         int pixelOffset = 0;
 
-		if (!camera.body || !camera.shape) {
+        if (camera.body == 0x00) {
+            return;
+        }
+
+        TDShape* cameraShape = camera.shapes[0];
+        TDBody* cameraBody = camera.body;
+
+		if (!cameraBody || !cameraShape) {
 
 			return;
 		}
   
-        if (camera.shape->isBroken) {
+        if (cameraShape->isBroken) {
             if (deadCameraframes > 0) {
                 free(pixelsColor);
                 pixelsColor = new byte[(res * res) * 4];
@@ -95,21 +111,40 @@ namespace physCamera {
             return;
         }
 
-		td::Vec3 objectMin = camera.shape->posMin;
-		td::Vec3 objectMax = camera.shape->posMax;
+		td::Vec3 objectMin = cameraShape->posMin;
+		td::Vec3 objectMax = cameraShape->posMax;
 		//td::Vec3 centerpoint = { objectMax.x - ((objectMax.x - objectMin.x) / 2), objectMax.y - ((objectMax.y - objectMin.y) / 2), objectMax.z - ((objectMax.z - objectMin.z) / 2) };
 
         glm::vec3 bodyPos = glm::vec3(camera.body->Position.x, camera.body->Position.y, camera.body->Position.z);
-        glm::quat bodyQuat = *(glm::quat*)&camera.body->Rotation;
+        glm::quat bodyQuat = *(glm::quat*)&cameraBody->Rotation;
+
+        glm::vec3 cameraPosOffset = *(glm::vec3*)&cameraShape->pOffset;
+        glm::quat cameraRotOffset = *(glm::quat*)&cameraShape->rOffset;
+       
+        //bodyQuat = cameraRotOffset * bodyQuat;
+
         glm::vec3 vx = bodyQuat * glm::vec3(1, 0, 0);
         glm::vec3 vy = bodyQuat * glm::vec3(0, 1, 0);
         glm::vec3 vz = bodyQuat * glm::vec3(0, 0, 1); //(UP)
-        glm::vec3 centerpoint = bodyPos + ((vz * 0.15f) + (vy * 0.15f) + (vx * 0.15f));
+
+        glm::vec3 offsetPos = bodyPos + ((vz * cameraPosOffset.z) + (vy * cameraPosOffset.y) + (vx * cameraPosOffset.x)); //this is the position of the camera IN RELATION TO THE WORLD
+
+        //recreate the cameras rotation in relation to the world and recreate the 3 vectors
+        bodyQuat = bodyQuat * cameraRotOffset;
+        vx = bodyQuat * glm::vec3(1, 0, 0);
+        vy = bodyQuat * glm::vec3(0, 1, 0);
+        vz = bodyQuat * glm::vec3(0, 0, 1); //(UP)
+
+        //find the "sensor" pos
+        glm::vec3 centerpoint = offsetPos + ((vz * 0.15f) + (vy * 0.15f) + (vx * 0.15f));
+
+        //drawCube({ offsetPos.x, offsetPos.y, offsetPos.z }, 0.10f, red);
+        //drawCube({ centerpoint.x, centerpoint.y, centerpoint.z }, 0.05f, red);
 
         deadCameraframes = 30;
 
-        glm::quat cameraQuat = *(glm::quat*)(&camera.body->Rotation);
-        glm::vec3 cameraUp = cameraQuat * glm::vec3(0, 0, 1);;
+        //glm::quat cameraQuat = *(glm::quat*)(&camera.body->Rotation);
+        glm::vec3 cameraUp = bodyQuat * glm::vec3(0, 0, 1);;
 
         camera::drawCameraWindow(fps);
 
@@ -125,7 +160,7 @@ namespace physCamera {
             rcf.m_RejectTransparent = false;
         }
         flip = !flip;
-        camera::interlacedImage(frameBuffer, toolgun::cameraResolution, flip, fov, 1.f, (glm::quat*)&camera.body->Rotation, { centerpoint.x, centerpoint.y, centerpoint.z }, { -1, 0, 0 }, { cameraUp.x, cameraUp.y, cameraUp.z }, &rcf);
+        camera::interlacedImage(frameBuffer, toolgun::cameraResolution, flip, fov, 1.f, &bodyQuat, { centerpoint.x, centerpoint.y, centerpoint.z }, { -1, 0, 0 }, { cameraUp.x, cameraUp.y, cameraUp.z }, &rcf);
         camera::constructFrameManual(frameBuffer, toolgun::cameraResolution, false);
 
         FRAMEEND = execTimer.now();

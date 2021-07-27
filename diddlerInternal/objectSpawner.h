@@ -14,6 +14,10 @@ namespace spawner {
 	extern std::string currentSpawngunObject;
 	extern float voxScale;
 
+	extern bool freeMode;
+	extern bool childMode;
+	extern bool thrownMode;
+
 	struct objectAttribute {
 		td::small_string attribute;
 		td::small_string level;
@@ -24,6 +28,22 @@ namespace spawner {
 		thrown = 1,
 		front = 2,
 		raw = 3
+	};
+
+
+	struct childObjectSpawnParams {
+		TDBody* parentBody = 0;
+		td::Vec3 positionOffset = { 0, 0, 0 };
+		td::Vec4 rotationOffset = { 0, 0, 0, 0 };
+		std::vector<objectAttribute> attributes;
+		bool nocull = false;
+		bool animate = false;
+	};
+
+	struct freeObjectSpawnParams {
+		std::vector<objectAttribute> attributes;
+		bool nocull = false;
+		bool animate = false;
 	};
 
 	struct objectSpawnerParams {
@@ -55,6 +75,12 @@ namespace spawner {
 		bool animate = false;
 	};
 
+	struct spawnedObject {
+		TDBody* body = 0;
+		std::vector<TDShape*> shapes;
+		std::vector<TDVox*> voxes;
+	};
+
 	struct KMSpawnedObject {
 		objectSpawnerParams params;
 		bool isInitByGame = false;
@@ -79,6 +105,10 @@ namespace spawner {
 		std::vector<LoadedSpawnableObject> objects;
 	};
 
+	spawnedObject placeChildObject(std::string filepath);
+	bool spawnChildEntity(std::string filepath, childObjectSpawnParams params, spawnedObject* object);
+	spawnedObject placeFreeObject(std::string filepath);
+	bool spawnFreeEntity(std::string filepath, freeObjectSpawnParams params, spawnedObject* object);
 	void deleteLastObject();
 	KMSpawnedObject spawnObjectProxy(std::string path, objectSpawnerParams params);
 	void processMostRecentObject();
