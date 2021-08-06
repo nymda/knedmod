@@ -367,18 +367,23 @@ uintptr_t hkMalloc(size_t bytes) {
     return newPtr;
 }
 
+__int64 hkUpdateShapeBody(uintptr_t a1, uintptr_t a2) {
+
+    std::cout << "A1: " << std::hex << a1 << " A2: " << std::hex << a2 << std::endl;
+
+    return glb::tdUpdateShapeBody(a1, a2);
+}
+
 void initTestHook() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    //DetourAttach(&(PVOID&)glb::oTMalloc, hkMalloc);
-    //DetourAttach(&(PVOID&)glb::oDoQuicksave, hkDoQuicksave);
+    //DetourAttach(&(PVOID&)glb::tdUpdateShapeBody, hkUpdateShapeBody);
     DetourTransactionCommit();
 }
 
 void terminateTestHook() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    //DetourDetach(&(PVOID&)glb::oTMalloc, hkMalloc);
-    //DetourDetach(&(PVOID&)glb::oDoQuicksave, hkDoQuicksave);
+    //DetourDetach(&(PVOID&)glb::tdUpdateShapeBody, hkUpdateShapeBody);
     DetourTransactionCommit();
 }

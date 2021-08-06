@@ -15,6 +15,8 @@
 
 
 namespace toolgun {
+    bool testingAttackOnce = true;
+
     bool spawnOnce = false;
     const char* tgName = "toolgun";
     td::Color red{ 1.f, 0.f, 0.f, 1.f };
@@ -32,6 +34,7 @@ namespace toolgun {
     bool createOrigionalSpawnObject = true;
     spawner::LoadedSpawnableObject currentSpawngunObject;
     bool constSpawn = false;
+
 
     //minigun specific vars
     int minigunBulletType = 0;
@@ -105,20 +108,19 @@ namespace toolgun {
     td::Vec3 worldPos1 = {};
     td::Vec3 worldPos2 = {};
 
-    //weld specific items
+    //duplicator specific items
     bool weldStageOne = true;
     bool weldAttackOnce = true;
+    TDVox* duplicationBuffer = 0;
 
-    TDVox* weldTargetVox = 0;
-    TDShape* weldTargetShape = 0;
-    glm::quat weldTargetWorldRotation = { 0, 0, 0, 0 };
-    glm::vec3 weldTargetWorldPosition = { 0, 0, 0 };
-
-    TDBody* weldNewBody = 0;
-    glm::quat weldLocalRotationOffset = { 0, 0, 0, 0 };
-    glm::vec3 weldLocalPositionOffset = { 0, 0, 0 };
-
-
+    TDShape* weldTargetShape1 = 0;
+    TDBody* weldTargetBody1 = 0;
+    TDShape* weldTargetShape2 = 0;
+    TDBody* weldTargetBody2 = 0;
+    td::Vec3 weldFirstPos = {};
+    td::Vec3 weldSecondPos = {};
+    TDBody* postCompletionBody = 0;
+    float postCompletionHighlight = 1.f;
 
     void handleToolgun() {
 
@@ -258,10 +260,14 @@ namespace toolgun {
                         //spawner::KMSpawnedObject last = spawnObjectProxy(currentSpawngunObject.voxPath, osp);
                         
                         if (spawner::freeMode) {
-                            spawner::placeFreeObject(currentSpawngunObject.voxPath);
+                            spawner::freeObjectSpawnParams params = {};
+                            params.attributes = currentSpawngunObject.attributes;
+                            spawner::placeFreeObject(currentSpawngunObject.voxPath, params);
                         }
                         else if (spawner::childMode) {
-                            spawner::placeChildObject(currentSpawngunObject.voxPath);
+                            spawner::childObjectSpawnParams params = {};
+                            params.attributes = currentSpawngunObject.attributes;
+                            spawner::placeChildObject(currentSpawngunObject.voxPath, params);
                         }
 
 
@@ -568,18 +574,25 @@ namespace toolgun {
                     }
                 }
             }
-            else if (currentsetting == tgSettings::testing) {
+            else if (currentsetting == tgSettings::weld) {
                 raycaster::rayData rd = raycaster::castRayPlayer();
                 drawCube(rd.worldPos, 0.02f, white);
+
                 if (weldStageOne) {
                     if (glb::player->isAttacking) {
                         if (weldAttackOnce) {
                             weldAttackOnce = false;
 
-                            weldTargetVox = rd.hitShape->pVox;
-                            weldTargetShape = rd.hitShape;
+                            //if (rd.successful) {
+                            //    std::cout << "Shape count: " << std::to_string(rd.hitShape->getParentBody()->countContainedShapes()) << std::endl;
+                            //}
 
-                            weldStageOne = false;
+                            if (rd.successful) {
+                                weldTargetShape1 = rd.hitShape;
+                                weldTargetBody1 = rd.hitShape->getParentBody();
+                                weldStageOne = false;
+                            }
+
                         }
                     }
                     else {
@@ -590,28 +603,129 @@ namespace toolgun {
                     if (glb::player->isAttacking) {
                         if (weldAttackOnce) {
                             weldAttackOnce = false;
-                            weldNewBody = rd.hitShape->getParentBody();
 
-                            weldNewBody->isAwake = true;
-                            weldNewBody->countDown = 0xF0;
+                            if (rd.successful) {
+                                weldTargetShape2 = rd.hitShape;
+                                weldTargetBody2 = rd.hitShape->getParentBody();
 
-                            TDShape* newShape = (TDShape*)glb::oTMalloc(0x176u);
-                            glb::oS_Constructor((uintptr_t)newShape, (uintptr_t)weldNewBody);
-                            *(uintptr_t*)(newShape + 0x90) = (uintptr_t)weldTargetVox;
-                            glb::oCreateTexture((uintptr_t)weldTargetVox);
-                            glb::oCreatePhysics((uintptr_t)weldTargetVox);
-                            glb::oUpdateShapes((uintptr_t)weldNewBody);
+                                if (weldTargetBody1 == weldTargetBody2 || weldTargetShape1 == weldTargetShape2) {
+                                    return;
+                                }
 
-                            //weldTargetShape->Destroy(weldTargetShape, false);
+                                int body1ShapeCount = weldTargetBody1->countContainedShapes();
+                                int body2ShapeCount = weldTargetBody2->countContainedShapes();
+                                TDShape* cTargetShape = 0;
+                                TDBody* newBody = 0;
+                                TDBody* oldBody = 0;
 
-                            weldStageOne = true;
+                                std::vector<TDShape*> scheduledShapes = {};
+                                int transferCounter = 0;
+
+                                //decide which parent is kept
+                                if (body1ShapeCount > body2ShapeCount) {
+                                    //move shapes from body2 to body1
+                                    cTargetShape = (TDShape*)weldTargetBody2->pChild;
+                                    newBody = weldTargetBody1;
+                                    oldBody = weldTargetBody2;
+                                }
+                                else {
+                                    //move shapes from body1 to body2
+                                    cTargetShape = (TDShape*)weldTargetBody1->pChild;
+                                    newBody = weldTargetBody2;
+                                    oldBody = weldTargetBody1;
+                                }
+
+                                //iterate children on the doomed parent and schedule them for transfer
+                                while (cTargetShape != 0) {
+                                    std::cout << cTargetShape << " : " << entityTypeStr[(int)cTargetShape->Type-1] << std::endl;
+                                    if ((int)cTargetShape->Type == 2) {
+                                        scheduledShapes.push_back(cTargetShape);
+                                    }
+                                    else {
+                                        weldStageOne = true;
+                                        return;
+                                    }
+                                    cTargetShape = (TDShape*)cTargetShape->pSibling;
+                                }
+
+                                //transfer all children to the new parent, destroy the old one
+                                for (TDShape* targetShape : scheduledShapes) {
+                                    transferCounter++;
+
+                                    glm::vec3 targetShapeWorldPosition = math::expandPosition(math::q_td2glm(targetShape->getParentBody()->Rotation), math::v3_td2glm(targetShape->getParentBody()->Position), math::v3_td2glm(targetShape->pOffset));
+                                    glm::quat targetShapeWorldrotation = math::expandRotation(math::q_td2glm(targetShape->getParentBody()->Rotation), math::q_td2glm(targetShape->rOffset));
+                                    glm::vec3 targetShapeNewPOffset = math::localisePosition(math::q_td2glm(newBody->Rotation), math::v3_td2glm(newBody->Position), targetShapeWorldPosition);
+                                    glm::quat targetShapeNewROffset = math::localiseRotation(math::q_td2glm(newBody->Rotation), targetShapeWorldrotation);
+                                    
+                                    glb::tdUpdateShapeBody((uintptr_t)targetShape, (uintptr_t)newBody);
+                                    targetShape->pOffset = { targetShapeNewPOffset.x, targetShapeNewPOffset.y, targetShapeNewPOffset.z };
+                                    *(glm::quat*)&targetShape->rOffset = targetShapeNewROffset;
+                                }
+
+                                glb::oUpdateShapes((uintptr_t)newBody);
+                                glb::tdUpdateFunc(newBody, 0, 1);
+                                std::cout << "(WELD) Transfered " << std::to_string(transferCounter) << "shapes from " << std::hex << oldBody << " to " << newBody << std::endl;
+                                oldBody->Destroy(oldBody, true);
+                                scheduledShapes.clear();
+                                postCompletionBody = newBody;
+
+                                weldStageOne = true;
+                            }
                         }
                     }
                     else {
                         weldAttackOnce = true;
                     }
                 }
+
+                if (postCompletionBody) {
+                    if (postCompletionHighlight > 0.f) {
+                        utils::highlightBody(postCompletionBody, postCompletionHighlight);
+                        postCompletionHighlight -= 0.1f;
+                    }
+                    else {
+                        postCompletionHighlight = 1.f;
+                        postCompletionBody = 0;
+                    }
+                }
             }
+			else if (currentsetting == tgSettings::testing) {
+			    raycaster::rayData rd = raycaster::castRayPlayer();
+			    drawCube(rd.worldPos, 0.02f, white);
+				if (glb::player->isAttacking) {
+				    if (testingAttackOnce) {
+                        testingAttackOnce = false;
+                        if (rd.successful) {
+                            TDShape* targetShape = rd.hitShape;
+
+                            td::Vec3 oBodyWorldPos = (rd.hitShape->getParentBody()->Position);
+                            td::Vec4 oBodyWorldRot = (rd.hitShape->getParentBody()->Rotation);
+
+                            td::Vec3 oShapePosOffset = (rd.hitShape->pOffset);
+                            td::Vec4 oShapeRotOffset = (rd.hitShape->rOffset);
+
+                            uintptr_t newBody = glb::oTMalloc(0x232u);
+                            glb::oB_Constructor((uintptr_t)newBody, (uintptr_t)nullptr);
+                            glb::oSetDynamic((uintptr_t)newBody, true);
+
+                            (*(TDBody*)&newBody).isAwake = true;
+                            (*(TDBody*)&newBody).countDown = 0xF0;
+
+                            (*(TDBody*)&newBody).Position = oBodyWorldPos;
+                            (*(TDBody*)&newBody).Rotation = oBodyWorldRot;
+                            targetShape->pOffset = oShapePosOffset;
+                            targetShape->rOffset = oShapeRotOffset;
+
+                            glb::tdUpdateShapeBody((uintptr_t)targetShape, (uintptr_t)newBody);
+                            glb::oUpdateShapes((uintptr_t)newBody);
+                            glb::tdUpdateFunc((TDBody*)newBody, 0, 1);
+                        }
+					}
+				}
+			    else {
+			     testingAttackOnce = true;
+			    }
+			}
             else {
                 playerIsHoldingToolgun = false;
             }

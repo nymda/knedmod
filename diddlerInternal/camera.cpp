@@ -422,7 +422,7 @@ namespace camera {
             break;
 
         case cameraMode::staged:
-            ImGui::Text("Frame time: %.2f MS (Staged)", fps);
+            ImGui::Text("Frame time: %.2f MS (Staged) | %.2f percent", fps, ((float)pixelOffset / (float)safeWriteLimt) * 100.f);
             break;
 
         case cameraMode::fullframe:
@@ -476,13 +476,14 @@ namespace camera {
         else if (mode == cameraMode::staged) {
             if (staged_newFrame) { FRAMESTART = execTimer.now(); }
 
-            if (stagedImage(frameBuffer, resolution, fov, 1.f, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf) || showImageProgress) {
-                constructFrameManual(frameBuffer, resolution, toolgun::takeSnapshot);
-
-                FRAMEEND = execTimer.now();
-                auto exTime = FRAMEEND - FRAMESTART;
-                fps = (std::chrono::duration_cast<std::chrono::microseconds>(exTime).count() / 1000.f);
+            bool frameFinished = stagedImage(frameBuffer, resolution, fov, 1.f, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
+            if (frameFinished || showImageProgress) {
+                constructFrameManual(frameBuffer, resolution, (toolgun::takeSnapshot && frameFinished));
             }
+
+            FRAMEEND = execTimer.now();
+            auto exTime = FRAMEEND - FRAMESTART;
+            fps = (std::chrono::duration_cast<std::chrono::microseconds>(exTime).count() / 1000.f);
 
             return fps;
         }

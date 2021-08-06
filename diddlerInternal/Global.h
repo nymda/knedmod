@@ -61,6 +61,7 @@ typedef void(__fastcall* ConstructJoint) (uintptr_t joint);
 typedef void(__fastcall* AttachJoint) (void* a1, void* a2, void* a3, void* a4, void* a5);
 typedef int(__fastcall* ReadSubobjectsFromVox) (td::small_string* path, int* out);
 typedef void*(__fastcall* unknReadVoxData) (void* a1, void* a2);
+typedef __int64(__fastcall* updateShapeBody)(uintptr_t a1, uintptr_t a2);
 
 //joints
 typedef void(__fastcall* joinConstructor)(TDJoint* joint, Entity* parent);
@@ -134,8 +135,9 @@ namespace glb {
     extern initWire tdInitWire;
     extern attachJoint tdAttachJoint;
     extern updateJoint tdUpdateJoint;
+    extern updateShapeBody tdUpdateShapeBody;
 
-    extern 	interestingUpdateFunc tdUpdateFunc;
+    extern interestingUpdateFunc tdUpdateFunc;
     extern highlightShape oHighlightShape;
     extern outlineShape oOutlineShape;
     extern outlineBody oOutlineBody;
@@ -183,4 +185,26 @@ namespace glb {
     extern addContextItem oAddCItem;
 
     extern uintptr_t plankPatchFunction;
+}
+
+namespace math {
+    //gives the position of worldPosition in relation to parentPosition
+    glm::vec3 localisePosition(glm::quat parentRotation, glm::vec3 parentPosition, glm::vec3 worldPosition);
+
+    //gives the rotation of offsetRotation in relation to parentRotation
+    glm::quat localiseRotation(glm::quat parentRotation, glm::quat offsetRotation);
+
+    //gives the position of localPosition in relation to the world
+    glm::vec3 expandPosition(glm::quat parentRotation, glm::vec3 parentPosition, glm::vec3 localPosition);
+
+    //gives the rotation of worldRotation in relation to parentRotation
+    glm::quat expandRotation(glm::quat parentRotation, glm::quat worldRotation);
+    glm::vec3 v3_td2glm(td::Vec3 in);
+    glm::quat q_td2glm(td::Vec4 in);
+    td::Vec3 v3_glm2td(glm::vec3 in);
+    td::Vec4 q_glm2td(glm::quat in);
+}
+
+namespace utils {
+    void highlightBody(TDBody* body, float opacity);
 }

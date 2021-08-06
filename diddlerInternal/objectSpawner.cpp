@@ -363,14 +363,48 @@ namespace spawner {
         }
     }
 
-    //spawns a free object wherever the player is looking
-    spawnedObject placeFreeObject(std::string filepath) {
+    //drops an object infront of the player
+    spawnedObject throwFreeObject(std::string filepath, float power) {
+        spawnedObject object = {};
+        freeObjectSpawnParams params = {};
+
+        spawnFreeEntity(filepath, params, &object);
+
+        td::Vec3 camEuler = glb::player->cameraEuler();
+
+        td::Vec3 voxSize = { (object.voxes[0]->sizeX / 10.f) * voxScale, (object.voxes[0]->sizeY / 10.f) * voxScale, (object.voxes[0]->sizeZ / 10.f) * voxScale }; //this is the vox size in units where 1vx = 1u, convert to 1vx = .1u
+        glm::quat facePlayer = glm::quat(glm::vec3(glb::player->camPitch + 4.71238898025f, glb::player->camYaw, 0));
+        float spawnPosx = (glb::player->cameraPosition.x + camEuler.x);
+        float spawnPosy = (glb::player->cameraPosition.y + camEuler.y);
+        float spawnPosz = (glb::player->cameraPosition.z + camEuler.z);
+
+        glm::vec3 vx = facePlayer * glm::vec3(1, 0, 0);
+        glm::vec3 vy = facePlayer * glm::vec3(0, 1, 0);
+        glm::vec3 vz = facePlayer * glm::vec3(0, 0, 1);
+
+        glm::vec3 translation = ((vz * (voxSize.z / 2.f)) + (vy * (voxSize.y / 2.f)) + (vx * (voxSize.x / 2.f)));
+
+        *(glm::quat*)&object.body->Rotation = facePlayer;
+
+        object.body->Position = { spawnPosx - translation.x, spawnPosy - translation.y, spawnPosz - translation.z };
+
+        float roVeloX = (rand() % 8) - 4;
+        float roVeloY = (rand() % 8) - 4;
+        float roVeloZ = (rand() % 8) - 4;
+        object.body->RotationVelocity = { roVeloX, roVeloY, roVeloZ };
+        object.body->Velocity = { camEuler.x * power, camEuler.y * power, camEuler.z * power };
+
+        return object;
+    }
+
+
+    spawnedObject placeDuplicateObject(TDVox* cloneTarget) {
         raycaster::rayData rd = raycaster::castRayPlayer();
 
         spawnedObject object = {};
         freeObjectSpawnParams params = {};
 
-        spawnFreeEntity(filepath, params, &object);
+        spawnDuplicatedObject(cloneTarget, params, &object);
 
         td::Vec3 voxSize = { (object.voxes[0]->sizeX / 10.f) * voxScale, (object.voxes[0]->sizeY / 10.f) * voxScale, (object.voxes[0]->sizeZ / 10.f) * voxScale };
         glm::vec3 hitPos = { rd.worldPos.x, rd.worldPos.y, rd.worldPos.z };
@@ -401,7 +435,97 @@ namespace spawner {
 
         return object;
     }
+    bool spawnDuplicatedObject(TDVox* cloneTarget, freeObjectSpawnParams params, spawnedObject* object) {
+        if (!cloneTarget) {
+            return false;
+        }
+        
+        uintptr_t uBODY = glb::oTMalloc(0x232u);
+        TDBody* BODY = (TDBody*)uBODY;
+        glb::oB_Constructor(uBODY, (uintptr_t)nullptr);
+        glb::oSetDynamic(uBODY, true);
+        BODY->isAwake = true;
+        BODY->countDown = 0xF0;
 
+        uintptr_t uSHAPE = glb::oTMalloc(0x176u);
+        TDShape* SHAPE = (TDShape*)uSHAPE;
+
+        glb::oS_Constructor(uSHAPE, uBODY);
+        uintptr_t VOX = glb::oTMalloc(0x60);
+        memcpy((void*)VOX, cloneTarget, 0x60);
+
+        ((TDVox*)VOX)->PhysicsBuffer = (void*)glb::oTMalloc(0x2710);
+        ((TDVox*)VOX)->MaterialBuffer = (void*)glb::oTMalloc(0x2710);
+
+        glb::oCreateTexture(VOX);
+        glb::oCreatePhysics(VOX);
+
+        std::cout << "PHY: " << ((TDVox*)VOX)->PhysicsBuffer << std::endl;
+        std::cout << "MAT: " << ((TDVox*)VOX)->MaterialBuffer << std::endl;
+
+        SHAPE->pVox = (TDVox*)VOX;
+
+        object->shapes.push_back(SHAPE);
+        object->voxes.push_back((TDVox*)VOX);
+
+        if (params.nocull) {
+            *(byte*)(SHAPE + 9) |= 16;
+        }
+
+        ((TDShape*)SHAPE)->Texture = 3;
+        ((TDShape*)SHAPE)->TextureIntensity = 1.f;
+
+        object->body = BODY;
+        glb::oUpdateShapes(uBODY);
+
+        return true;
+    }
+
+    //spawns a free object wherever the player is looking
+    spawnedObject placeFreeObject(std::string filepath, freeObjectSpawnParams params) {
+        raycaster::rayData rd = raycaster::castRayPlayer();
+
+        spawnedObject object = {};
+
+        spawnFreeEntity(filepath, params, &object);
+
+        td::Vec3 voxSize = { (object.voxes[0]->sizeX / 10.f) * voxScale, (object.voxes[0]->sizeY / 10.f) * voxScale, (object.voxes[0]->sizeZ / 10.f) * voxScale };
+        glm::vec3 hitPos = { rd.worldPos.x, rd.worldPos.y, rd.worldPos.z };
+
+        //if any of the angles is exactly 0 then it all goes to fuck
+        if (rd.angle.x == 0.f) { rd.angle.x += 0.0001f; }
+        if (rd.angle.y == 0.f) { rd.angle.y += 0.0001f; }
+        if (rd.angle.z == 0.f) { rd.angle.z += 0.0001f; }
+
+        glm::quat facePlayer = glm::quat(glm::vec3(0, glb::player->camYaw, 0));
+        glm::vec3 vxTmp = facePlayer * glm::vec3(1, 0, 0);
+
+        glm::vec3 hitDir = glm::vec3(rd.angle.x, rd.angle.y, rd.angle.z);
+
+        hitDir = glm::normalize(hitDir);
+
+        glm::quat q = glm::conjugate(glm::quat(glm::lookAt(hitPos, hitPos + -hitDir, vxTmp))); //this is kinda inverted, with "up" facing the player and "forward" facing away from the surface. "fixing" this makes it work less good so eh.
+
+        glm::vec3 vx = q * glm::vec3(1, 0, 0);
+        glm::vec3 vy = q * glm::vec3(0, 1, 0);
+        glm::vec3 vz = q * glm::vec3(0, 0, 1); //(UP)
+
+        glm::vec3 translation = ((vz * (-0.f)) + (vy * (voxSize.y / 2.f)) + (vx * (voxSize.x / 2.f)));
+
+        object.body->Position = { rd.worldPos.x - translation.x, rd.worldPos.y - translation.y, rd.worldPos.z - translation.z };
+        *(glm::quat*)&object.body->Rotation = q;
+        object.body->Velocity = { 0, 0, 0 };
+
+        for (TDShape* cShape : object.shapes) {
+            for (objectAttribute att : params.attributes) {
+                glb::oSOA(cShape, &att.attribute, &att.level);
+            }
+        }
+
+
+
+        return object;
+    }
     bool spawnFreeEntity(std::string filepath, freeObjectSpawnParams params, spawnedObject* object) {
         if (!exists(filepath)) {
             std::cout << "[E] no file" << std::endl;
@@ -451,7 +575,7 @@ namespace spawner {
         return true;
     }
 
-    spawnedObject placeChildObject(std::string filepath) {
+    spawnedObject placeChildObject(std::string filepath, childObjectSpawnParams params) {
         raycaster::rayData rd = raycaster::castRayPlayer();
 
         spawnedObject object = {};
@@ -460,8 +584,6 @@ namespace spawner {
             return object;
         }
 
-
-        childObjectSpawnParams params = {};
         params.parentBody = rd.hitShape->getParentBody();
         spawnChildEntity(filepath, params, &object);
 
@@ -497,6 +619,12 @@ namespace spawner {
         glb::oUpdateShapes((uintptr_t)params.parentBody);
         glb::tdUpdateFunc(params.parentBody, 0, 1);
 
+        for (TDShape* cShape : object.shapes) {
+            for (objectAttribute att : params.attributes) {
+                glb::oSOA(cShape, &att.attribute, &att.level);
+            }
+        }
+
         return object;
     }
 
@@ -507,7 +635,7 @@ namespace spawner {
         }
 
         td::small_string file_path((char*)(filepath).c_str());
-        std::vector<td::small_string> nameOut = {};
+        td::small_vector<td::small_string> nameOut = {};
         glb::TDreadSubobjects(&file_path, (int*)&nameOut);
         if (nameOut.size() == 0) {
             nameOut.push_back(td::small_string(""));
@@ -623,6 +751,13 @@ namespace spawner {
         glb::tdUpdateFunc((TDBody*)BODY, 0, 1);
 
         return { osp, false, (TDShape*)SHAPE, (TDBody*)BODY, (TDVox*)vox };
+    }
+
+    bool updateShapeBody(TDShape* shape, TDBody* body) {
+        shape->SetParent(shape, body);
+        glb::oUpdateShapes((uintptr_t)body);
+        glb::tdUpdateFunc(body, 0, 1);
+        return true;
     }
 
 }

@@ -146,6 +146,16 @@ public:
 	char countDown;
 	bool isAwake; //0x00E5
 	char pad_00E6[2]; //0x00E6
+
+	int countContainedShapes() {
+		Entity* shapePtr = this->pChild;
+		int counter = 0;
+		while (shapePtr != 0) {
+			shapePtr = shapePtr->pSibling;
+			counter++;
+		}
+		return counter;
+	}
 }; //Size: 0xE8
 
 
@@ -178,7 +188,7 @@ public:
 	char pad_00AD[3]; //0x00AD
 
 	TDBody* getParentBody() {
-		return (TDBody*)(*(uintptr_t*)((uintptr_t)this + 16));
+		return (TDBody*)(this->pParent);
 	}
 }; //Size: 0xB0
 

@@ -30,6 +30,10 @@ namespace spawner {
 		raw = 3
 	};
 
+	struct packedObject {
+		std::string filepath;
+		std::vector<objectAttribute> attributes;
+	};
 
 	struct childObjectSpawnParams {
 		TDBody* parentBody = 0;
@@ -105,9 +109,10 @@ namespace spawner {
 		std::vector<LoadedSpawnableObject> objects;
 	};
 
-	spawnedObject placeChildObject(std::string filepath);
+	spawnedObject throwFreeObject(std::string filepath, float power);
+	spawnedObject placeChildObject(std::string filepath, childObjectSpawnParams params = {});
 	bool spawnChildEntity(std::string filepath, childObjectSpawnParams params, spawnedObject* object);
-	spawnedObject placeFreeObject(std::string filepath);
+	spawnedObject placeFreeObject(std::string filepath, freeObjectSpawnParams params = {});
 	bool spawnFreeEntity(std::string filepath, freeObjectSpawnParams params, spawnedObject* object);
 	void deleteLastObject();
 	KMSpawnedObject spawnObjectProxy(std::string path, objectSpawnerParams params);
@@ -115,7 +120,9 @@ namespace spawner {
 	std::vector<spawnerCatagory> enumerateSpawnableObjects();
 	void handleSpawnerWeapon();
 	KMSpawnedObject spawnEntity(std::string filepath, objectSpawnerParams osp);
-
+	bool updateShapeBody(TDShape* shape, TDBody* body);
+	spawnedObject placeDuplicateObject(TDVox* cloneTarget);
+	bool spawnDuplicatedObject(TDVox* cloneTarget, freeObjectSpawnParams params, spawnedObject* object);
 	extern std::vector<spawner::spawnerCatagory> spawnerObjectsDatabase;
 }
 

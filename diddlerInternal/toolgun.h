@@ -8,19 +8,20 @@ namespace toolgun {
 
     enum class tgSettings : int {
         spawner = 0,
-        minigun = 1,
-        explosion = 2,
-        flamethrower = 3,
-        remover = 4,
-        setAtttibute = 5,
-        destroyer = 6,
-        debugObject = 7,
-        leafblower = 8,
-        slicer = 9,
-        camera = 10,
-        rope = 11,
-        destructionGrid = 12,
-        testing = 13
+        weld = 1,
+        rope = 2,
+        minigun = 3,
+        explosion = 4,
+        flamethrower = 5,
+        remover = 6,
+        setAtttibute = 7,
+        destroyer = 8,
+        debugObject = 9,
+        leafblower = 10,
+        slicer = 11,
+        camera = 12,
+        destructionGrid = 13,
+        testing = 14
     };
 
     struct targetDbgInfo {

@@ -1,6 +1,6 @@
 #include "global.h"
 #include "TDObjects.h"
-
+#include <glm/gtx/quaternion.hpp>
 
 namespace glb {
 
@@ -32,6 +32,7 @@ namespace glb {
 	setShapeParentBody oSetShapeParentBody;
 	unknReadVoxData oIUnReadVox;
 	isActiveWindow oIsActive;
+	updateShapeBody tdUpdateShapeBody;
 
 	joinConstructor tdConstructJoint;
 	initBall tdInitBall;
@@ -91,4 +92,53 @@ namespace glb {
 	uintptr_t plankPatchFunction;
 }
 
+namespace math {
+	//gives the position of worldPosition in relation to parentPosition
+	glm::vec3 localisePosition(glm::quat parentRotation, glm::vec3 parentPosition, glm::vec3 worldPosition) {
+		glm::mat4 RotationMatrix = glm::toMat4(parentRotation);
+		glm::vec3 localPos = glm::vec3((glm::inverse(RotationMatrix)) * -glm::vec4(parentPosition.x - worldPosition.x, parentPosition.y - worldPosition.y, parentPosition.z - worldPosition.z, 0.f));
+		return localPos;
+	}
 
+	//gives the rotation of offsetRotation in relation to parentRotation
+	glm::quat localiseRotation(glm::quat parentRotation, glm::quat offsetRotation) {
+		return glm::inverse(parentRotation) * offsetRotation;
+	}
+
+	//gives the position of localPosition in relation to the world
+	glm::vec3 expandPosition(glm::quat parentRotation, glm::vec3 parentPosition, glm::vec3 localPosition) {
+		glm::mat4 RotationMatrix = glm::toMat4(parentRotation);
+		return parentPosition + glm::vec3(RotationMatrix * glm::vec4(localPosition.x, localPosition.y, localPosition.z, 0.f));
+	}
+
+	//gives the rotation of worldRotation in relation to parentRotation
+	glm::quat expandRotation(glm::quat parentRotation, glm::quat worldRotation) {
+		return parentRotation * worldRotation;
+	}
+
+	glm::vec3 v3_td2glm(td::Vec3 in) {
+		return glm::vec3(in.x, in.y, in.z);
+	}
+
+	glm::quat q_td2glm(td::Vec4 in) {
+		return *(glm::quat*)&in;
+	}
+
+	td::Vec3 v3_glm2td(glm::vec3 in) {
+		return { in.x, in.y, in.z };
+	}
+
+	td::Vec4 q_glm2td(glm::quat in) {
+		return *(td::Vec4*)(&in);
+	}
+}
+
+namespace utils {
+	void highlightBody(TDBody* body, float opacity) {
+		Entity* shapePtr = body->pChild;
+		while (shapePtr != 0) {
+			glb::oHighlightShape(glb::renderer, (TDShape*)shapePtr, opacity);
+			shapePtr = shapePtr->pSibling;
+		}
+	}
+}

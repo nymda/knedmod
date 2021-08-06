@@ -55,6 +55,7 @@ void sigscanItems() {
     glb::tdInitWire = (initWire)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x56\x41\x57\x48\x8D\x68\xC1\x48\x81\xEC\xD0\x00\x00\x00\x48\xC7\x45\x1F\xFE\xFF\xFF\xFF\x48\x89\x58\x08\x48", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::tdInitBall = (initBall)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x30\x48\x89\x51\x28\x48\x8B\xF1\x4C\x89\x41\x30\x49\x8B\xF8\x48\x8D\x4A", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::tdUpdateFunc = (interestingUpdateFunc)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x20\x48\x8B\x59\x20\x41\x0F\xB6\xF8\x0F\xB6\xF2\x48\x85\xDB\x74\x20\x90", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    glb::tdUpdateShapeBody = (updateShapeBody)mem::FindPattern((PBYTE)"\x4C\x8B\xC1\x48\x8B\x49\x10\x48\x8B\x41\x20\x49\x3B\xC0\x75\x0A\x49\x8B\x40\x18\x48\x89\x41\x20\xEB\x21\x48\x85\xC0\x74\x1C\x90", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     //sadly cant sigscan for this, yet
     //0x0041CB00 requires further investigation - looks like a table of pointers for various game functions
 
@@ -121,6 +122,8 @@ void sigscanItems() {
     std::cout << "oIUnReadVox          : " << std::hex << glb::oIUnReadVox << std::endl;
     std::cout << "oIsActiveWindow      : " << std::hex << glb::oIsActive << std::endl;
     std::cout << "plank spawn          : " << std::hex << glb::plankPatchFunction << std::endl;
+    std::cout << "update shape body    : " << std::hex << glb::tdUpdateShapeBody << std::endl;
+
     std::cout << std::endl;
     std::cout << "[Object Addresses:         ]" << std::endl;
     std::cout << "Game               : " << std::hex << glb::TDOL << std::endl;

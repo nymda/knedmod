@@ -376,6 +376,24 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::Separator();
 			}
 
+			if (ImGui::Button("Rope", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::rope; };
+			if (selectedToolgunTool == (int)toolgun::tgSettings::rope) {
+				ImGui::Separator();
+				ImGui::Text("Rope tab");
+				ImGui::SliderFloat("Slack", &toolgun::ropeSlack, -10.f, 10.f, "%.1f");
+				ImGui::SliderFloat("Stretchyness", &toolgun::ropeStrength, 0.f, 10.f, "%.1f");
+				ImGui::SliderFloat("Max stretch", &toolgun::ropeMaxStretch, 0.f, 10.f, "%.1f");
+				ImGui::ColorPicker4("Colour", (float*)&toolgun::ropeColor);
+				ImGui::Separator();
+			}
+
+			if (ImGui::Button("Weld", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::weld; };
+			if (selectedToolgunTool == (int)toolgun::tgSettings::weld) {
+				ImGui::Separator();
+				ImGui::Text("Weld tab");
+				ImGui::Separator();
+			}
+
 			ImGui::SetNextItemWidth(ImGui::GetWindowWidth());
 			if (ImGui::Button("Minigun", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::minigun; };
 			if (selectedToolgunTool == (int)toolgun::tgSettings::minigun) {
@@ -485,17 +503,6 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::Separator();
 			}
 
-			if (ImGui::Button("Rope", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::rope; };
-			if (selectedToolgunTool == (int)toolgun::tgSettings::rope) {
-				ImGui::Separator();
-				ImGui::Text("Rope tab");
-				ImGui::SliderFloat("Slack", &toolgun::ropeSlack, -10.f, 10.f, "%.1f");
-				ImGui::SliderFloat("Stretchyness", &toolgun::ropeStrength, 0.f, 10.f, "%.1f");
-				ImGui::SliderFloat("Max stretch", &toolgun::ropeMaxStretch, 0.f, 10.f, "%.1f");
-				ImGui::ColorPicker4("Colour", (float*)&toolgun::ropeColor);
-				ImGui::Separator();
-			}
-
 			if (ImGui::Button("testing", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::testing; };
 			if (selectedToolgunTool == (int)toolgun::tgSettings::testing) {
 				ImGui::Separator();
@@ -548,13 +555,6 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				}
 				ImGui::SliderFloat("Cracker power", &c4::firecrackerExplosionSize, 0.f, 5.f, "%.1f");
 
-				if (ImGui::Button("Spawn physCamera")) {
-					physCamera::spawnCameraObject();
-				}
-				if (ImGui::Button("Destroy physCamera")) {
-					physCamera::destroyCamera();
-				}
-
 				if (ImGui::Checkbox("Everything can burn", &fireSpreadMod::isFireModEnabled)) {
 					fireSpreadMod::toggleFireMod();
 				}
@@ -568,7 +568,33 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 
 			if (ImGui::CollapsingHeader("c4")) {
 				ImGui::Checkbox("Global C4 detonation", &mods::c4_global_detonation);
-				ImGui::SliderInt("C4 size", &c4::selectedBombSizeInt, 1, 4);
+				ImGui::SliderInt("C4 size", &c4::selectedBombSizeInt, 1, 3);
+			}
+
+			if (ImGui::CollapsingHeader("physCamera")) {
+				if (ImGui::Button("Spawn physCamera")) {
+					physCamera::spawnCameraObject();
+				}
+				if (ImGui::Button("Destroy physCamera")) {
+					physCamera::destroyCamera();
+				}
+				ImGui::Separator();
+				ImGui::SliderInt("Resolution", &toolgun::cameraResolution, 32, 512);
+				ImGui::SliderFloat("FOV", &toolgun::cameraFov, 1.f, 10.f, "%.1f");
+				ImGui::Checkbox("Monochrome", &camera::mono);
+				ImGui::Checkbox("Enable transparency", &camera::transparency);
+				ImGui::Checkbox("Save image", &toolgun::takeSnapshot);
+				ImGui::Checkbox("(Staged) show progress", &camera::showImageProgress);
+				ImGui::SliderInt("(Staged) max pixels / frame", &camera::staged_maxPixelsPerFrame, 100, 10000);
+				if (ImGui::RadioButton("Interlaced", camera::mode == camera::cameraMode::interlaced)) {
+					camera::mode = camera::cameraMode::interlaced;
+				}
+				if (ImGui::RadioButton("Staged", camera::mode == camera::cameraMode::staged)) {
+					camera::mode = camera::cameraMode::staged;
+				}
+				if (ImGui::RadioButton("Fullframe", camera::mode == camera::cameraMode::fullframe)) {
+					camera::mode = camera::cameraMode::fullframe;
+				}
 			}
 
 			if (ImGui::CollapsingHeader("environment (buggy)")) {

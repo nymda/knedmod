@@ -51,6 +51,10 @@ namespace raycaster {
         td::Vec4 worldPos = { outDist, camPos.x + (euler.x * outDist),  camPos.y + (euler.y * outDist),  camPos.z + (euler.z * outDist) };
         td::Vec3 worldPosV3 = { worldPos.x, worldPos.y, worldPos.z };
 
+        if (oShape) {
+            rdp.successful = true;
+        }
+
         rdp.distance = outDist;
         rdp.worldPos = worldPosV3;
         rdp.angle = output;

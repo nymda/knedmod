@@ -33,6 +33,7 @@ namespace raycaster {
 	};
 
 	struct rayData {
+		bool successful = false;
 		float distance;
 		td::Vec3 worldPos;
 		td::Vec3 angle;
