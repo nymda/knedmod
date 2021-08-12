@@ -38,6 +38,7 @@ float teleportTargetPosition[3] = { 0, 0, 0 };
 int selectedTab = 0;
 
 ImColor ropeColorBuffer = ImColor(255, 255, 255);
+const char* tgName = "toolgun";
 
 LRESULT APIENTRY hWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -69,15 +70,23 @@ LRESULT APIENTRY hWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			spawner::deleteLastObject();
 		}
 
-	case WM_MOUSEWHEEL:
-		if ((short)(HIWORD(wParam)) > 0 && (LOWORD(wParam) & MK_SHIFT)) {
-			spawner::voxScale += 0.05f;
-			lockoutScroll = true;
+		if (wParam == VK_LEFT || wParam == VK_RIGHT) {
+			if (memcmp(glb::player->heldItemName, tgName, 8) == 0) {
+				spawner::switchRotationStep(wParam);
+			}
 		}
-		if ((short)(HIWORD(wParam)) < 0 && (LOWORD(wParam) & MK_SHIFT)) {
-			spawner::voxScale -= 0.05f;
-			if (spawner::voxScale < 0.0f) { spawner::voxScale = 0.05f; }
-			lockoutScroll = true;
+
+	case WM_MOUSEWHEEL:
+		if (memcmp(glb::player->heldItemName, tgName, 8) == 0) {
+			if ((short)(HIWORD(wParam)) > 0 && (LOWORD(wParam) & MK_SHIFT)) {
+				spawner::voxScale += 0.05f;
+				lockoutScroll = true;
+			}
+			if ((short)(HIWORD(wParam)) < 0 && (LOWORD(wParam) & MK_SHIFT)) {
+				spawner::voxScale -= 0.05f;
+				if (spawner::voxScale < 0.0f) { spawner::voxScale = 0.05f; }
+				lockoutScroll = true;
+			}
 		}
 	}
 

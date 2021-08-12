@@ -109,6 +109,8 @@ namespace spawner {
 		std::vector<LoadedSpawnableObject> objects;
 	};
 
+	void switchRotationStep(WPARAM wParam);
+	void drawSpawngunObjectOutline(TDVox* currentVox, raycaster::rayData rd);
 	spawnedObject throwFreeObject(std::string filepath, float power);
 	spawnedObject placeChildObject(std::string filepath, childObjectSpawnParams params = {});
 	bool spawnChildEntity(std::string filepath, childObjectSpawnParams params, spawnedObject* object);

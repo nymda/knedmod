@@ -188,6 +188,9 @@ namespace glb {
 }
 
 namespace math {
+
+    const float pi = 3.1415926535f;
+
     //gives the position of worldPosition in relation to parentPosition
     glm::vec3 localisePosition(glm::quat parentRotation, glm::vec3 parentPosition, glm::vec3 worldPosition);
 

@@ -171,77 +171,9 @@ namespace toolgun {
                 osp.animate = true;
 
                 if (method == spawngunMethod::placed) {
-
                     if (currentSpawngunObject.voxObject) {
-
-                        td::Color boxColour = { 1.f, 1.f, 1.f, 1.f };
-                        if (trunc(1000. * spawner::voxScale) != trunc(1000. * 1.f)) {
-                            boxColour = { 1.f, 0.55f, 0.f, 1.f };
-                        }
-
-
-                        float voxSizeX = (currentSpawngunObject.voxObject->sizeX / 10.f) * spawner::voxScale;
-                        float voxSizeY = (currentSpawngunObject.voxObject->sizeY / 10.f) * spawner::voxScale;
-                        float voxSizeZ = (currentSpawngunObject.voxObject->sizeZ / 10.f) * spawner::voxScale;
-
-                        td::Vec3 oSize = { voxSizeX, voxSizeY, voxSizeZ};
-                        glm::vec3 hitPos = { rd.worldPos.x, rd.worldPos.y, rd.worldPos.z };
-
-                        glm::quat facePlayer = glm::quat(glm::vec3(4.71238898025f, glb::player->camYaw, 0));
-                        glm::vec3 vxTmp = facePlayer * glm::vec3(-1, 0, 0);
-
-                        glm::vec3 hitDir = glm::vec3(rd.angle.x, rd.angle.y, rd.angle.z);
-
-                        hitDir = glm::normalize(hitDir);
-
-                        glm::quat q = glm::conjugate(glm::quat(glm::lookAt(hitPos, hitPos + hitDir, vxTmp))); //this is kinda inverted, with "up" facing the player and "forward" facing away from the surface. "fixing" this makes it work less good so eh.
-
-                        glm::vec3 vx = q * glm::vec3(-1, 0, 0);
-                        glm::vec3 vy = q * glm::vec3(0, -1, 0);
-                        glm::vec3 vz = q * glm::vec3(0, 0, -1); //(UP)
-
-                        glm::vec3 translationFBL = ((vz * 0.f) + (vy * (voxSizeY * 0.5f)) + (vx * (voxSizeX * 0.5f)));
-                        glm::vec3 translationBBR = ((vz * 0.f) - (vy * (voxSizeY * 0.5f)) - (vx * (voxSizeX * 0.5f)));
-                        glm::vec3 translationBBL = ((vz * 0.f) - (vy * (voxSizeY * 0.5f)) + (vx * (voxSizeX * 0.5f)));
-                        glm::vec3 translationFBR = ((vz * 0.f) + (vy * (voxSizeY * 0.5f)) - (vx * (voxSizeX * 0.5f)));
-
-
-                        glm::vec3 translationFTL = ((vz * (voxSizeZ * -1.f)) + (vy * (voxSizeY * 0.5f)) + (vx * (voxSizeX * 0.5f)));
-                        glm::vec3 translationBTR = ((vz * (voxSizeZ * -1.f)) - (vy * (voxSizeY * 0.5f)) - (vx * (voxSizeX * 0.5f)));
-                        glm::vec3 translationBTL = ((vz * (voxSizeZ * -1.f)) - (vy * (voxSizeY * 0.5f)) + (vx * (voxSizeX * 0.5f)));
-                        glm::vec3 translationFTR = ((vz * (voxSizeZ * -1.f)) + (vy * (voxSizeY * 0.5f)) - (vx * (voxSizeX * 0.5f)));
-
-
-                        td::Vec3 FBL = { target.x - translationFBL.x, target.y - translationFBL.y, target.z - translationFBL.z };
-                        td::Vec3 BBR = { target.x - translationBBR.x, target.y - translationBBR.y, target.z - translationBBR.z };
-                        td::Vec3 BBL = { target.x - translationBBL.x, target.y - translationBBL.y, target.z - translationBBL.z };
-                        td::Vec3 FBR = { target.x - translationFBR.x, target.y - translationFBR.y, target.z - translationFBR.z };
-
-
-                        td::Vec3 FTL = { target.x - translationFTL.x, target.y - translationFTL.y, target.z - translationFTL.z };
-                        td::Vec3 BTR = { target.x - translationBTR.x, target.y - translationBTR.y, target.z - translationBTR.z };
-                        td::Vec3 BTL = { target.x - translationBTL.x, target.y - translationBTL.y, target.z - translationBTL.z };
-                        td::Vec3 FTR = { target.x - translationFTR.x, target.y - translationFTR.y, target.z - translationFTR.z };
-
-                        //bottom square
-                        glb::oFDL(glb::renderer, FBL, FBR, boxColour, boxColour, false);
-                        glb::oFDL(glb::renderer, FBL, BBL, boxColour, boxColour, false);
-                        glb::oFDL(glb::renderer, BBL, BBR, boxColour, boxColour, false);
-                        glb::oFDL(glb::renderer, BBR, FBR, boxColour, boxColour, false);
-
-                        //top square
-                        glb::oFDL(glb::renderer, FTL, FTR, boxColour, boxColour, false);
-                        glb::oFDL(glb::renderer, FTL, BTL, boxColour, boxColour, false);
-                        glb::oFDL(glb::renderer, BTL, BTR, boxColour, boxColour, false);
-                        glb::oFDL(glb::renderer, BTR, FTR, boxColour, boxColour, false);
-
-                        //walls
-                        glb::oFDL(glb::renderer, FTL, FBL, boxColour, boxColour, false);
-                        glb::oFDL(glb::renderer, FTR, FBR, boxColour, boxColour, false);
-                        glb::oFDL(glb::renderer, BTL, BBL, boxColour, boxColour, false);
-                        glb::oFDL(glb::renderer, BTR, BBR, boxColour, boxColour, false);
+                        spawner::drawSpawngunObjectOutline(currentSpawngunObject.voxObject, rd);
                     }
-
                     osp.spawnType = spawner::objectSpawnType::placed;
                 }
                 else if (method == spawngunMethod::thrown) {

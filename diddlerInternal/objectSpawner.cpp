@@ -71,6 +71,10 @@ bool LoadTextureFromFile(const char* filename, GLuint* out_texture, int* out_wid
     return true;
 }
 
+float deg2rad(float deg) {
+    return (deg * math::pi) / 180;
+}
+
 //this code is more fragile than your average twitter liberal
 //DONT FUCKING TOUCH IT
 namespace spawner {
@@ -82,11 +86,121 @@ namespace spawner {
     std::vector<KMSpawnedObject> spawnList = {};
     KMSpawnedObject lastSpawnedObject{};
     td::Color white{ 1.f, 1.f, 1.f, 1.f };
+    td::Color red{ 1.f, 0.f, 0.f, 1.f };
+
     bool spawnOnce = true;
 
     bool freeMode = true;
     bool childMode = false;
     bool thrownMode = false;
+
+    float objectPlacementRotationSteps[] = { 0.f, 45.f, 90.f, 135.f, 180.f, 225.f, 270.f, 315.f };
+    int currentRotationStep = 0;
+
+    void switchRotationStep(WPARAM wParam) {
+        if (wParam == VK_LEFT) {
+            currentRotationStep += 1;
+        }
+        else if (wParam == VK_RIGHT) {
+            currentRotationStep -= 1;
+        }
+
+        if (currentRotationStep > 8) {
+            currentRotationStep = 1;
+        }
+        else if (currentRotationStep < 1) {
+            currentRotationStep = 8;
+        }
+    }
+
+    void drawSpawngunObjectOutline(TDVox* currentVox, raycaster::rayData rd) {
+        td::Vec3 target = rd.worldPos;
+
+        td::Color boxColour = { 1.f, 1.f, 1.f, 1.f };
+        std::cout << spawner::voxScale << std::endl;
+
+        if (trunc(1000. * spawner::voxScale) != trunc(1000. * 1.f)) {
+            boxColour = { 1.f, 0.55f, 0.f, 1.f };
+        }
+
+        float voxSizeX = (currentVox->sizeX / 10.f) * spawner::voxScale;
+        float voxSizeY = (currentVox->sizeY / 10.f) * spawner::voxScale;
+        float voxSizeZ = (currentVox->sizeZ / 10.f) * spawner::voxScale;
+
+        td::Vec3 oSize = { voxSizeX, voxSizeY, voxSizeZ };
+        glm::vec3 hitPos = { rd.worldPos.x, rd.worldPos.y, rd.worldPos.z };
+
+        glm::quat facePlayer = glm::quat(glm::vec3(4.71238898025f, glb::player->camYaw + (deg2rad(objectPlacementRotationSteps[currentRotationStep])), 0));
+        glm::vec3 vxTmp = facePlayer * glm::vec3(-1, 0, 0);
+
+        glm::vec3 hitDir = glm::vec3(rd.angle.x, rd.angle.y, rd.angle.z);
+
+        hitDir = glm::normalize(hitDir);
+
+        glm::quat q = glm::conjugate(glm::quat(glm::lookAt(hitPos, hitPos + hitDir, vxTmp))); //this is kinda inverted, with "up" facing the player and "forward" facing away from the surface. "fixing" this makes it work less good so eh.
+
+        glm::vec3 vx = q * glm::vec3(-1, 0, 0);
+        glm::vec3 vy = q * glm::vec3(0, -1, 0);
+        glm::vec3 vz = q * glm::vec3(0, 0, -1); //(UP)
+
+        glm::vec3 translationFBL = ((vz * 0.f) + (vy * (voxSizeY * 0.5f)) + (vx * (voxSizeX * 0.5f)));
+        glm::vec3 translationBBR = ((vz * 0.f) - (vy * (voxSizeY * 0.5f)) - (vx * (voxSizeX * 0.5f)));
+        glm::vec3 translationBBL = ((vz * 0.f) - (vy * (voxSizeY * 0.5f)) + (vx * (voxSizeX * 0.5f)));
+        glm::vec3 translationFBR = ((vz * 0.f) + (vy * (voxSizeY * 0.5f)) - (vx * (voxSizeX * 0.5f)));
+
+        glm::vec3 translationFTL = ((vz * (voxSizeZ * -1.f)) + (vy * (voxSizeY * 0.5f)) + (vx * (voxSizeX * 0.5f)));
+        glm::vec3 translationBTR = ((vz * (voxSizeZ * -1.f)) - (vy * (voxSizeY * 0.5f)) - (vx * (voxSizeX * 0.5f)));
+        glm::vec3 translationBTL = ((vz * (voxSizeZ * -1.f)) - (vy * (voxSizeY * 0.5f)) + (vx * (voxSizeX * 0.5f)));
+        glm::vec3 translationFTR = ((vz * (voxSizeZ * -1.f)) + (vy * (voxSizeY * 0.5f)) - (vx * (voxSizeX * 0.5f)));
+
+        //glm::vec3 translationCEN = ((vz * (voxSizeZ * -1.f)) + (vy * (voxSizeY * 0.5f)) + (vx * (voxSizeX * 0)));
+
+        glm::vec3 translationFTRI = ((vz * (voxSizeZ * -0.25f)) + (vy * (voxSizeY * 0.25f)) - (vx * (voxSizeX * 0.5f)));
+        glm::vec3 translationFBRI = ((vz * (voxSizeZ * -0.75f)) + (vy * (voxSizeY * 0.25f)) - (vx * (voxSizeX * 0.5f)));
+        glm::vec3 translationBTRI = ((vz * (voxSizeZ * -0.25f)) - (vy * (voxSizeY * 0.25f)) - (vx * (voxSizeX * 0.5f)));
+        glm::vec3 translationBBRI = ((vz * (voxSizeZ * -0.75f)) - (vy * (voxSizeY * 0.25f)) - (vx * (voxSizeX * 0.5f)));
+
+        td::Vec3 FBL = { target.x - translationFBL.x, target.y - translationFBL.y, target.z - translationFBL.z };
+        td::Vec3 BBR = { target.x - translationBBR.x, target.y - translationBBR.y, target.z - translationBBR.z };
+        td::Vec3 BBL = { target.x - translationBBL.x, target.y - translationBBL.y, target.z - translationBBL.z };
+        td::Vec3 FBR = { target.x - translationFBR.x, target.y - translationFBR.y, target.z - translationFBR.z };
+
+        td::Vec3 FTL = { target.x - translationFTL.x, target.y - translationFTL.y, target.z - translationFTL.z };
+        td::Vec3 BTR = { target.x - translationBTR.x, target.y - translationBTR.y, target.z - translationBTR.z };
+        td::Vec3 BTL = { target.x - translationBTL.x, target.y - translationBTL.y, target.z - translationBTL.z };
+        td::Vec3 FTR = { target.x - translationFTR.x, target.y - translationFTR.y, target.z - translationFTR.z };
+
+        td::Vec3 FTRI = { target.x - translationFTRI.x, target.y - translationFTRI.y, target.z - translationFTRI.z };
+        td::Vec3 FBRI = { target.x - translationFBRI.x, target.y - translationFBRI.y, target.z - translationFBRI.z };
+        td::Vec3 BTRI = { target.x - translationBTRI.x, target.y - translationBTRI.y, target.z - translationBTRI.z };
+        td::Vec3 BBRI = { target.x - translationBBRI.x, target.y - translationBBRI.y, target.z - translationBBRI.z };
+
+        //td::Vec3 frontcenter = { target.x - translationCEN.x, target.y - translationCEN.y, target.z - translationCEN.z };
+
+        //bottom square
+        glb::oFDL(glb::renderer, FBL, FBR, boxColour, boxColour, false);
+        glb::oFDL(glb::renderer, FBL, BBL, boxColour, boxColour, false);
+        glb::oFDL(glb::renderer, BBL, BBR, boxColour, boxColour, false);
+        glb::oFDL(glb::renderer, BBR, FBR, boxColour, boxColour, false);
+
+        //top square
+        glb::oFDL(glb::renderer, FTL, FTR, boxColour, boxColour, false);
+        glb::oFDL(glb::renderer, FTL, BTL, boxColour, boxColour, false);
+        glb::oFDL(glb::renderer, BTL, BTR, boxColour, boxColour, false);
+        glb::oFDL(glb::renderer, BTR, FTR, boxColour, boxColour, false);
+
+        //walls
+        glb::oFDL(glb::renderer, FTL, FBL, boxColour, boxColour, false);
+        glb::oFDL(glb::renderer, FTR, FBR, boxColour, boxColour, false);
+        glb::oFDL(glb::renderer, BTL, BBL, boxColour, boxColour, false);
+        glb::oFDL(glb::renderer, BTR, BBR, boxColour, boxColour, false);
+
+        //front square
+        glb::oFDL(glb::renderer, FTRI, BTRI, red, red, false);
+        glb::oFDL(glb::renderer, FBRI, BBRI, red, red, false);
+        glb::oFDL(glb::renderer, FBRI, FTRI, red, red, false);
+        glb::oFDL(glb::renderer, BBRI, BTRI, red, red, false);
+    }
 
     KMSpawnedObject spawnObjectProxy(std::string path, objectSpawnerParams params) {
         KMSpawnedObject lsp = spawnEntity(path, params);
@@ -373,7 +487,7 @@ namespace spawner {
         td::Vec3 camEuler = glb::player->cameraEuler();
 
         td::Vec3 voxSize = { (object.voxes[0]->sizeX / 10.f) * voxScale, (object.voxes[0]->sizeY / 10.f) * voxScale, (object.voxes[0]->sizeZ / 10.f) * voxScale }; //this is the vox size in units where 1vx = 1u, convert to 1vx = .1u
-        glm::quat facePlayer = glm::quat(glm::vec3(glb::player->camPitch + 4.71238898025f, glb::player->camYaw, 0));
+        glm::quat facePlayer = glm::quat(glm::vec3(glb::player->camPitch + 4.71238898025f, glb::player->camYaw + (deg2rad(objectPlacementRotationSteps[currentRotationStep])), 0));
         float spawnPosx = (glb::player->cameraPosition.x + camEuler.x);
         float spawnPosy = (glb::player->cameraPosition.y + camEuler.y);
         float spawnPosz = (glb::player->cameraPosition.z + camEuler.z);
@@ -497,7 +611,7 @@ namespace spawner {
         if (rd.angle.y == 0.f) { rd.angle.y += 0.0001f; }
         if (rd.angle.z == 0.f) { rd.angle.z += 0.0001f; }
 
-        glm::quat facePlayer = glm::quat(glm::vec3(0, glb::player->camYaw, 0));
+        glm::quat facePlayer = glm::quat(glm::vec3(0, glb::player->camYaw + (deg2rad(objectPlacementRotationSteps[currentRotationStep])), 0));
         glm::vec3 vxTmp = facePlayer * glm::vec3(1, 0, 0);
 
         glm::vec3 hitDir = glm::vec3(rd.angle.x, rd.angle.y, rd.angle.z);
@@ -594,7 +708,7 @@ namespace spawner {
         if (rd.angle.y == 0.f) { rd.angle.y += 0.0001f; }
         if (rd.angle.z == 0.f) { rd.angle.z += 0.0001f; }
         
-        glm::quat facePlayer = glm::quat(glm::vec3(0, glb::player->camYaw, 0));
+        glm::quat facePlayer = glm::quat(glm::vec3(0, glb::player->camYaw + (deg2rad(objectPlacementRotationSteps[currentRotationStep])), 0));
         glm::vec3 vxTmp = facePlayer * glm::vec3(1, 0, 0);
 
         glm::vec3 hitDir = glm::vec3(rd.angle.x, rd.angle.y, rd.angle.z);
