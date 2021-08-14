@@ -42,12 +42,14 @@ namespace spawner {
 		std::vector<objectAttribute> attributes;
 		bool nocull = false;
 		bool animate = false;
+		bool useUserRotation = false;
 	};
 
 	struct freeObjectSpawnParams {
 		std::vector<objectAttribute> attributes;
 		bool nocull = false;
 		bool animate = false;
+		bool useUserRotation = false;
 	};
 
 	struct objectSpawnerParams {

@@ -70,7 +70,7 @@ LRESULT APIENTRY hWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			spawner::deleteLastObject();
 		}
 
-		if (wParam == VK_LEFT || wParam == VK_RIGHT) {
+		if (wParam == VK_LEFT || wParam == VK_RIGHT || wParam == VK_UP || wParam == VK_DOWN) {
 			if (memcmp(glb::player->heldItemName, tgName, 8) == 0) {
 				spawner::switchRotationStep(wParam);
 			}

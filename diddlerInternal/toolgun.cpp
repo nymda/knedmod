@@ -194,11 +194,15 @@ namespace toolgun {
                         if (spawner::freeMode) {
                             spawner::freeObjectSpawnParams params = {};
                             params.attributes = currentSpawngunObject.attributes;
+                            params.useUserRotation = true;
+                            params.nocull = true;
                             spawner::placeFreeObject(currentSpawngunObject.voxPath, params);
                         }
                         else if (spawner::childMode) {
                             spawner::childObjectSpawnParams params = {};
                             params.attributes = currentSpawngunObject.attributes;
+                            params.useUserRotation = true;
+                            params.nocull = true;
                             spawner::placeChildObject(currentSpawngunObject.voxPath, params);
                         }
 
