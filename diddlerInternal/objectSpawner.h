@@ -52,6 +52,13 @@ namespace spawner {
 		bool useUserRotation = false;
 	};
 
+	struct thrownObjectSpawnParams {
+		std::vector<objectAttribute> attributes;
+		float power = 0.f;
+		bool nocull = false;
+		bool animate = false;
+	};
+
 	struct objectSpawnerParams {
 		TDBody* parentBody = 0;
 		td::Vec3 parentBodyoffset = { 0, 0, 0 };
@@ -113,7 +120,7 @@ namespace spawner {
 
 	void switchRotationStep(WPARAM wParam);
 	void drawSpawngunObjectOutline(TDVox* currentVox, raycaster::rayData rd);
-	spawnedObject throwFreeObject(std::string filepath, float power);
+	spawnedObject throwFreeObject(std::string filepath, thrownObjectSpawnParams params);
 	spawnedObject placeChildObject(std::string filepath, childObjectSpawnParams params = {});
 	bool spawnChildEntity(std::string filepath, childObjectSpawnParams params, spawnedObject* object);
 	spawnedObject placeFreeObject(std::string filepath, freeObjectSpawnParams params = {});

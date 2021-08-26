@@ -49,8 +49,8 @@ namespace dotProjector {
         float maxDist = 0.f;
 
         //draw from left to right, bottom to top. This matches openGLs pixel format. 
-        for (int y = resolution; y > 0; y--) {
-            for (int x = 0; x < resolution; x++) {
+        for (int y = 0; y < resolution; y++) {
+            for (int x = resolution; x > 0; x--) {
 
                 //slightly eh implementation of Stochastic Sampling. Thanks Josh!
                 float pxSize = (fov / resolution);

@@ -18,6 +18,7 @@
 #include "Harop.h"
 #include "objectTranslationTest.h"
 #include "Firespread.h"
+#include "physMonitor.h"
 
 #pragma comment(lib, "glew32s.lib")
 
@@ -77,7 +78,7 @@ LRESULT APIENTRY hWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 
 	case WM_MOUSEWHEEL:
-		if (memcmp(glb::player->heldItemName, tgName, 8) == 0) {
+		if (memcmp(glb::player->heldItemName, tgName, 8) == 0 && selectedToolgunTool == (int)toolgun::tgSettings::spawner) {
 			if ((short)(HIWORD(wParam)) > 0 && (LOWORD(wParam) & MK_SHIFT)) {
 				spawner::voxScale += 0.05f;
 				lockoutScroll = true;
@@ -111,17 +112,22 @@ bool hwCursor(int x, int y) {
 
 void onSwapBuffersInit()
 {
-	glewInit(); // initialize glew
-	ImGui::CreateContext(); // create ImGui's context
-	ImGui_ImplWin32_Init(glb::gWnd);
-	const char* glsl_version = "#version 130";
-	ImGui_ImplOpenGL3_Init(glsl_version);
+
+	if (!ImGui::GetCurrentContext()) {
+		std::cout << "CREATING IMGUI CONTEXT" << std::endl;
+		glewInit(); // initialize glew
+		ImGui::CreateContext(); // create ImGui's context
+		ImGui_ImplWin32_Init(glb::gWnd);
+		const char* glsl_version = "#version 130";
+		ImGui_ImplOpenGL3_Init(glsl_version);
+	}
+
+
 }
 
 void initHIDsHook() {
 	HMODULE u32 = GetModuleHandle(L"user32.dll");
 	glb::ocursor = (hk_SetCursorPos)GetProcAddress(u32, "SetCursorPos");
-
 
 	oWndProc = reinterpret_cast<WNDPROC>(SetWindowLongPtrW(glb::gWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(hWndProc)));
 
@@ -174,6 +180,30 @@ void showWelcomeMessage() {
 	ImGui::End();
 }
 
+byte* pixelBuffer;
+int lightness = 0;
+void devLiveScreens() {
+	//if (!camera::alt_texture) {
+	//	return;
+	//}
+
+	//if (!pixelBuffer) {
+	//	pixelBuffer = (byte*)glb::oTMalloc((640 * 480) * 4);
+	//}
+
+	//if (lightness > 200) {
+	//	lightness = 0;
+	//}
+	//lightness++;
+
+	//std::cout << "L: " << std::to_string(lightness) << std::endl;
+
+	//FillMemory(pixelBuffer, (640 * 480) * 4, lightness);
+
+
+}
+
+int newRes = 100;
 bool hwglSwapBuffers(_In_ HDC hDc)
 {
 	std::call_once(swapBuffersInit, onSwapBuffersInit);
@@ -197,6 +227,8 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 	ImGui::NewFrame();
 	ImGuiIO* IO = &ImGui::GetIO();
 	IO->MouseDrawCursor = glb::displayMenu;
+
+	//devLiveScreens();
 
 	if (lidar::enabled) {
 		lidar::drawLidarWindow(displayInfoLabelSizeY);
@@ -296,35 +328,56 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			collapse = 32;
 		}
 		for (spawner::spawnerCatagory catigory : spawner::spawnerObjectsDatabase) {
-			if (ImGui::CollapsingHeader(catigory.name.c_str(), collapse)) {
-				ImGui::Columns(5);
-				for (spawner::LoadedSpawnableObject lso : catigory.objects) {
-					if (filter.PassFilter(lso.basePath.c_str())) {
-						ImGui::Text(lso.objectName.c_str());
+			
 
-						ImGui::SetNextItemWidth(25);
-						ImGui::Image((void*)lso.imageTexture, ImVec2(ImGui::GetColumnWidth() - 15, ImGui::GetColumnWidth() - 15));
+			ImGui::Columns(8);
+			for (spawner::LoadedSpawnableObject lso : catigory.objects) {
+				if (filter.PassFilter(lso.basePath.c_str())) {
+					if (counter % 8 == 0) {
+						ImGui::Separator();
+					}
 
-
-						if (ImGui::Button(std::string("Spawn##" + std::to_string(counter)).c_str(), { ImGui::GetColumnWidth() - 15, 20 })) {
-							spawner::objectSpawnerParams thisOSP = {};
-							thisOSP.attributes = lso.attributes;
-							thisOSP.animate = true;
-							spawnObjectProxy(lso.voxPath, thisOSP);
-						}
-						if (ImGui::Button(std::string("Spawn with toolgun##" + std::to_string(counter)).c_str(), { ImGui::GetColumnWidth() - 15, 20 })) {
+					//ImGui::Text(lso.objectName.c_str());
+					//ImGui::SetNextItemWidth(25);
+					
+					if (ImGui::ImageButton((void*)lso.imageTexture, ImVec2(ImGui::GetColumnWidth() - 23, ImGui::GetColumnWidth() - 23))) {
+						spawner::freeObjectSpawnParams params = {};
+						params.attributes = lso.attributes;
+						params.useUserRotation = false;
+						params.nocull = true;
+						spawner::placeFreeObject(lso.voxPath, params);
+					}
+					if (ImGui::IsItemHovered())
+					{
+						ImGui::BeginTooltip();
+						ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+						ImGui::TextUnformatted(lso.objectName.c_str());
+						ImGui::PopTextWrapPos();
+						ImGui::EndTooltip();
+					}
+					if (ImGui::BeginPopupContextItem())
+					{
+						if (ImGui::Selectable("Spawn with toolgun")) {
 							toolgun::currentsetting = toolgun::tgSettings::spawner;
 							selectedToolgunTool = 0;
 							toolgun::currentSpawngunObject = lso;
 						}
-
-						//ImGui::Separator();
-						ImGui::NextColumn();
+						ImGui::EndPopup();
 					}
+
+
+
+
+					ImGui::NextColumn();
 					counter++;
 				}
-				ImGui::Columns(1);
+
 			}
+			//ImGui::Columns(1);
+			
+			//if (ImGui::CollapsingHeader(catigory.name.c_str(), collapse)) {
+
+			//}
 		}
 
 		ImGui::EndChild();
@@ -458,13 +511,6 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::Separator();
 			}
 
-			if (ImGui::Button("DebugObject", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::debugObject; };
-			if (selectedToolgunTool == (int)toolgun::tgSettings::debugObject) {
-				ImGui::Separator();
-				ImGui::Text("DebugObject tab");
-				ImGui::Separator();
-			}
-
 			if (ImGui::Button("Leafblower", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::leafblower; };
 			if (selectedToolgunTool == (int)toolgun::tgSettings::leafblower) {
 				ImGui::Separator();
@@ -512,7 +558,14 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::Separator();
 			}
 
-			if (ImGui::Button("testing", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::testing; };
+			if (ImGui::Button("DebugObject", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::debugObject; };
+			if (selectedToolgunTool == (int)toolgun::tgSettings::debugObject) {
+				ImGui::Separator();
+				ImGui::Text("DebugObject tab");
+				ImGui::Separator();
+			}
+
+			if (ImGui::Button("testing (dev stuff dont use)", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::testing; };
 			if (selectedToolgunTool == (int)toolgun::tgSettings::testing) {
 				ImGui::Separator();
 				ImGui::Text("Testing tab");
@@ -553,6 +606,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 						lantern::spawnLantern();
 					}
 
+
 					ImGui::SliderFloat("pointSize", &lantern::a1, 0.1f, 255.f, "%.2f");
 					ImGui::SliderFloat("shadows", &lantern::a2, 0.1f, 255.f, "%.2f");
 					ImGui::SliderFloat("brightness", &lantern::a3, 0.1f, 255.f, "%.2f");
@@ -583,6 +637,9 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			if (ImGui::CollapsingHeader("physCamera")) {
 				if (ImGui::Button("Spawn physCamera")) {
 					physCamera::spawnCameraObject();
+				}
+				if (ImGui::Button("Spawn physMonitor")) {
+					physMonitor::spawnMonitor();
 				}
 				if (ImGui::Button("Destroy physCamera")) {
 					physCamera::destroyCamera();
@@ -620,6 +677,17 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				if (ImGui::Button("All lights on")) {
 					for (TDLight* tdl : *(glb::scene->m_Lights)) {
 						((TDLight*)tdl)->m_Enabled = true;
+					}
+				}
+
+				ImGui::SliderInt("New res", &newRes, 1, 1024);
+
+				if (ImGui::Button("List screens")) {
+					for (TDScreen* tds : *(glb::scene->m_Screens)) {
+
+						//((TDScreen*)tds)->m_Resolution = { newRes, newRes };
+						//glb::tdUpdateScreen(((TDScreen*)tds));
+						std::cout << "Screen @ " << ((TDScreen*)tds) << " RES: " << &((TDScreen*)tds)->m_Resolution << " SIZE: " << std::to_string(((TDScreen*)tds)->m_Resolution.x) << " : " << std::to_string(((TDScreen*)tds)->m_Resolution.y) << " SCRIPT: " << (TDScreen*)tds->m_Script->c_str() << std::endl;
 					}
 				}
 

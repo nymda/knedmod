@@ -62,6 +62,14 @@ typedef void(__fastcall* AttachJoint) (void* a1, void* a2, void* a3, void* a4, v
 typedef int(__fastcall* ReadSubobjectsFromVox) (td::small_string* path, int* out);
 typedef void*(__fastcall* unknReadVoxData) (void* a1, void* a2);
 typedef __int64(__fastcall* updateShapeBody)(uintptr_t a1, uintptr_t a2);
+typedef __int64(__fastcall* constructScreen)(TDScreen* a1, uintptr_t a2);
+typedef __int64(__fastcall* unknGraphicsInitFunction)(void* a1);
+
+//a1: GAME + 0xA8
+//a2: small_string* containing path
+//a3: small_string* containing path with "RAW:" at the start
+//a4: small_string* containing the resource type (can be blank but not null)
+typedef void*(__fastcall* validatePath)(void* special, td::small_string* path, td::small_string* path_technical, td::small_string* type);
 
 //joints
 typedef void(__fastcall* joinConstructor)(TDJoint* joint, Entity* parent);
@@ -90,6 +98,9 @@ typedef void(__fastcall* TFree)(uintptr_t mem);
 typedef void(__fastcall* spreadFire)(__int64 a1, float v2);
 typedef void(__fastcall* addContextItem)(char* a1, int a2, int a3, float* a4);
 typedef bool(__fastcall* isActiveWindow)(void* a1);
+typedef bool(__fastcall* createTextureThing)(void* texture, void* pixelBuffer, bool a3);
+typedef void(__fastcall* updateScreen)(TDScreen* screen);
+
 //td maths
 typedef __int64(__fastcall* apiQuatEuler)(float* a1, float* a2);
 typedef __int64(__fastcall* interestingUpdateFunc)(TDBody* body, __int8 a2, __int8 a3);
@@ -114,6 +125,9 @@ namespace glb {
     extern validateFileExistance oValidate;
     extern doQuicksave oDoQuicksave;
     extern doQuickload oDoQuickload;
+    extern createTextureThing oCreateTextureThing;
+    extern unknGraphicsInitFunction oUnknGraphicsInitFunction;
+    extern validatePath oValidatePath;
 
     extern TDObjectList* TDOL;
     extern TDPlayer* player;
@@ -136,6 +150,8 @@ namespace glb {
     extern attachJoint tdAttachJoint;
     extern updateJoint tdUpdateJoint;
     extern updateShapeBody tdUpdateShapeBody;
+    extern constructScreen tdConstructScreen;
+    extern updateScreen tdUpdateScreen;
 
     extern interestingUpdateFunc tdUpdateFunc;
     extern highlightShape oHighlightShape;

@@ -70,7 +70,7 @@ namespace missile {
                         pixelOffset += 4;
                     }
                 }
-                camera::constructFrameManual(pixelsColor, res, false);
+                camera::constructFrameManual(pixelsColor, res, res, 0x1908, false);
                 camera::drawCameraWindow(0.f);
                 deadCameraframes--;
             }
@@ -80,7 +80,7 @@ namespace missile {
                     frameBuffer = new byte[(toolgun::cameraResolution * toolgun::cameraResolution) * 4];
                 }
                 camera::interlacedImage(frameBuffer, toolgun::cameraResolution, flip, fov, 1.f, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
-                camera::constructFrameManual(frameBuffer, toolgun::cameraResolution, false);
+                camera::constructFrameManual(frameBuffer, toolgun::cameraResolution, toolgun::cameraResolution, 0x1908, false);
                 camera::drawCameraWindow(0.f);
             }
             return; 
@@ -114,7 +114,7 @@ namespace missile {
         rcf.m_IgnoredShapes.push_back(launchedMissile.obj.shape);
 
         camera::interlacedImage(frameBuffer, toolgun::cameraResolution, flip, fov, 1.f, (glm::quat*)&launchedMissile.obj.body->Rotation, { centerpoint.x, centerpoint.y, centerpoint.z }, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
-        camera::constructFrameManual(frameBuffer, toolgun::cameraResolution, false);
+        camera::constructFrameManual(frameBuffer, toolgun::cameraResolution, toolgun::cameraResolution, 0x1908, false);
 
     }
 

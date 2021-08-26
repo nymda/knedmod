@@ -91,7 +91,7 @@ namespace physCamera {
                         pixelOffset += 4;
                     }
                 }
-                camera::constructFrameManual(pixelsColor, res, false);
+                camera::constructFrameManual(pixelsColor, res, res, 0x1908, false);
                 camera::drawCameraWindow(fps);
                 deadCameraframes--;
             }
@@ -147,8 +147,8 @@ namespace physCamera {
         }
 
         flip = !flip;
-        camera::interlacedImage(frameBuffer, toolgun::cameraResolution, flip, fov, 1.f, &bodyQuat, { centerpoint.x, centerpoint.y, centerpoint.z }, { -1, 0, 0 }, { cameraUp.x, cameraUp.y, cameraUp.z }, &rcf);
-        camera::constructFrameManual(frameBuffer, toolgun::cameraResolution, false);
+        camera::interlacedImage(frameBuffer, toolgun::cameraResolution, flip, fov, 1.f, &bodyQuat, { centerpoint.x, centerpoint.y, centerpoint.z }, { -1, 0, 0 }, { -cameraUp.x, -cameraUp.y, -cameraUp.z }, &rcf);
+        camera::constructFrameManual(frameBuffer, toolgun::cameraResolution, toolgun::cameraResolution, 0x1908, false);
 
         FRAMEEND = execTimer.now();
         auto exTime = FRAMEEND - FRAMESTART;

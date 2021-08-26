@@ -25,6 +25,12 @@
 #include "movementLoop.h"
 #include "focusHook.h"
 #include "noclip.h"
+#include <Psapi.h>
+#include "windows.h"
+#include "Psapi.h"
+#include "Shlwapi.h"
+
+#pragma comment(lib, "psapi.lib")
 
 FILE* makeConsole() {
     AllocConsole();
@@ -42,6 +48,38 @@ FILE* makeConsole() {
     return f;
 }
 
+DWORD currentPID = 0;
+const wchar_t* tdName = L"Teardown";
+
+BOOL CALLBACK enumWndwsCallback(HWND hWnd, LPARAM lParam) {
+
+    int length = GetWindowTextLength(hWnd);
+    if (length == 0) {
+        return TRUE;
+    }
+
+    wchar_t* buffer;
+    buffer = new wchar_t[length + 1];
+    memset(buffer, 0, (length + 1) * sizeof(wchar_t));
+
+    GetWindowText(hWnd, buffer, length + 1);
+
+    DWORD lpdwProcessId;
+    GetWindowThreadProcessId(hWnd, &lpdwProcessId);
+
+    if (lpdwProcessId == currentPID && memcmp(tdName, buffer, 1) == 0) {
+        glb::gWnd = hWnd;
+    }
+
+    return true;
+}
+
+bool getTeardownHwnd() {
+    currentPID = GetCurrentProcessId();
+    EnumWindows(enumWndwsCallback, NULL);
+    return 0;
+}
+
 DWORD WINAPI main(HMODULE hModule)
 {
     glb::hMdl = hModule;
@@ -55,11 +93,21 @@ DWORD WINAPI main(HMODULE hModule)
     std::cout << "" << std::endl;
     std::cout << "" << std::endl;
 
-    glb::gWnd = FindWindow(0, L"Teardown");
+    //glb::gWnd = FindWindow(0, L"Teardown");
+    //
+    //wchar_t buffer[MAX_PATH] = { 0 };
+    //DWORD procID;
+    //GetWindowThreadProcessId(glb::gWnd, &procID);
+    //HINSTANCE Pr = (HINSTANCE)OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, NULL, procID);
+    //int FNlen = GetModuleFileNameEx(Pr, 0, buffer, MAX_PATH);
+    //CloseHandle(Pr);
+    //std::wcout << "M NAME: " << buffer << std::endl;
+
     HANDLE mainHandleDebug = GetModuleHandle(L"teardownsteamless.exe");
     HANDLE mainHandleSteam = GetModuleHandle(L"teardown.exe");
+    getTeardownHwnd();
 
-    std::cout << "[I] GWND           : " << glb::gWnd << std::endl;
+    std::cout << "[I] HWND           : " << glb::gWnd << std::endl;
     std::cout << "[I] mainHandleDebug: " << mainHandleDebug << std::endl;
     std::cout << "[I] mainHandleSteam: " << mainHandleSteam << std::endl;
 

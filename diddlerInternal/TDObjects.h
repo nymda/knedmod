@@ -1,6 +1,8 @@
 #pragma once
 #include "Global.h"
 #include "TDFuncs.h"
+#include "maths.h"
+#include <glm/gtc/quaternion.hpp>
 
 //thanks nahu for the entity structures
 
@@ -334,6 +336,39 @@ public:
 	float m_Foam;		//0x036C
 }; //Size: 0x370
 
+class TDScreen : public Entity {
+public:
+	td::Vec3 Position;
+	td::Vec4 Rotation;
+	glm::vec2 m_Size;
+	float m_Bulge;
+	glm::ivec2 m_Resolution;
+	td::small_string* m_Script;
+	bool m_Enabled;
+	bool m_Interactive; uint8_t pad_68[2];
+	float m_Emissive;
+	float m_FxRaster;
+	float m_FxChromaticAbberation;
+	float m_FxNoise;
+	float m_FxGlitch;
+	int32_t field_80;
+	uint8_t gap84[2228];
+	int32_t field_938;
+	uint8_t gap93C[60];
+	int32_t field_978;
+	uint8_t gap97C[508];
+	int64_t field_B78;
+	uint8_t field_B80[56]; // This is a Buffer instance
+	uint8_t field_BB8[32]; // This is AnotherBuffer instance
+	glm::mat4x4 m_Matrix;
+	uint8_t gapBFC[64];
+	int64_t field_C58;
+	int64_t field_C60;
+	int64_t field_C68;
+	uint8_t gapC70[4];
+	int32_t field_C74;
+};
+
 class TDScene {
 public:
 	char pad_0008[136];									//0x0008
@@ -356,7 +391,7 @@ public:
 	td::small_vector<void*>* m_Joints;						//0x0250
 	td::small_vector<void*>* m_Vehicles;					//0x0258
 	td::small_vector<void*>* m_Wheels;						//0x0260
-	td::small_vector<void*>* m_Screens;						//0x0268
+	td::small_vector<TDScreen*>* m_Screens;						//0x0268
 	td::small_vector<void*>* m_Triggers;					//0x0270
 	td::small_vector<void*>* m_Scripts;					//0x0278
 	char pad_0280[664];									//0x0280
@@ -449,3 +484,4 @@ public:
 	char pad_0358[80];				//0x0358
 	td::small_string m_TempPath;	//0x03A8
 };
+

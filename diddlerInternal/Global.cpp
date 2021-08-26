@@ -33,6 +33,11 @@ namespace glb {
 	unknReadVoxData oIUnReadVox;
 	isActiveWindow oIsActive;
 	updateShapeBody tdUpdateShapeBody;
+	createTextureThing oCreateTextureThing;
+	constructScreen tdConstructScreen;
+	updateScreen tdUpdateScreen;
+	unknGraphicsInitFunction oUnknGraphicsInitFunction;
+	validatePath oValidatePath;
 
 	joinConstructor tdConstructJoint;
 	initBall tdInitBall;

@@ -108,10 +108,9 @@ namespace toolgun {
     td::Vec3 worldPos1 = {};
     td::Vec3 worldPos2 = {};
 
-    //duplicator specific items
+    //weld specific items
     bool weldStageOne = true;
     bool weldAttackOnce = true;
-    TDVox* duplicationBuffer = 0;
 
     TDShape* weldTargetShape1 = 0;
     TDBody* weldTargetBody1 = 0;
@@ -121,6 +120,9 @@ namespace toolgun {
     td::Vec3 weldSecondPos = {};
     TDBody* postCompletionBody = 0;
     float postCompletionHighlight = 1.f;
+
+    //duplicator specific items
+    TDShape* duplicationShape = 0;
 
     void handleToolgun() {
 
@@ -166,28 +168,12 @@ namespace toolgun {
                 td::Vec3 target = rd.worldPos;
                 //drawCube({ target.x, target.y, target.z }, 0.05, white);
 
-                spawner::objectSpawnerParams osp{};
-                osp.attributes = currentSpawngunObject.attributes;
-                osp.animate = true;
-
-                if (method == spawngunMethod::placed) {
-                    if (currentSpawngunObject.voxObject) {
-                        spawner::drawSpawngunObjectOutline(currentSpawngunObject.voxObject, rd);
-                    }
-                    osp.spawnType = spawner::objectSpawnType::placed;
-                }
-                else if (method == spawngunMethod::thrown) {
-                    osp.spawnType = spawner::objectSpawnType::thrown;
-                    td::Vec3 camEul = glb::player->cameraEuler();
-                    osp.rotateFacePlayer = true;
-                    osp.startVelocity = { glb::player->velocity.x + (camEul.x * thrownObjectVelocityMultiplier), glb::player->velocity.y + (camEul.y * thrownObjectVelocityMultiplier) ,glb::player->velocity.z + (camEul.z * thrownObjectVelocityMultiplier) };
+                if (spawner::freeMode || spawner::childMode) {
+                    spawner::drawSpawngunObjectOutline(currentSpawngunObject.voxObject, rd);
                 }
 
                 if (glb::player->isAttacking) {
-                    if (constSpawn) {
-                        spawnOnce = true;
-                    }
-                    if (spawnOnce) {
+                    if (spawnOnce || constSpawn) {
                         spawnOnce = false;
                         //spawner::KMSpawnedObject last = spawnObjectProxy(currentSpawngunObject.voxPath, osp);
                         
@@ -204,6 +190,13 @@ namespace toolgun {
                             params.useUserRotation = true;
                             params.nocull = true;
                             spawner::placeChildObject(currentSpawngunObject.voxPath, params);
+                        }
+                        else if (spawner::thrownMode) {
+                            spawner::thrownObjectSpawnParams params = {};
+                            params.attributes = currentSpawngunObject.attributes;
+                            params.power = toolgun::thrownObjectVelocityMultiplier;
+                            params.nocull = true;
+                            spawner::throwFreeObject(currentSpawngunObject.voxPath, params);
                         }
 
 
@@ -628,33 +621,89 @@ namespace toolgun {
 			else if (currentsetting == tgSettings::testing) {
 			    raycaster::rayData rd = raycaster::castRayPlayer();
 			    drawCube(rd.worldPos, 0.02f, white);
-				if (glb::player->isAttacking) {
+
+                if (duplicationShape) {
+                    glb::oOutlineShape(glb::renderer, duplicationShape, &blue, 1.f);
+                }
+
+                if (glb::player->isAttacking || glb::player->isAttackingSecondary) {
 				    if (testingAttackOnce) {
                         testingAttackOnce = false;
                         if (rd.successful) {
-                            TDShape* targetShape = rd.hitShape;
+                            if (glb::player->isAttackingSecondary) {
+                                duplicationShape = rd.hitShape;
+                            }
+                            else if (glb::player->isAttacking && duplicationShape) {
+                                uintptr_t uBODY = glb::oTMalloc(0x232u);
+                                TDBody* BODY = (TDBody*)uBODY;
+                                glb::oB_Constructor(uBODY, (uintptr_t)nullptr);
+                                glb::oSetDynamic(uBODY, true);
+                                BODY->isAwake = true;
+                                BODY->countDown = 0xF0;
 
-                            td::Vec3 oBodyWorldPos = (rd.hitShape->getParentBody()->Position);
-                            td::Vec4 oBodyWorldRot = (rd.hitShape->getParentBody()->Rotation);
+                                uintptr_t uSHAPE = glb::oTMalloc(0x176u);
+                                TDShape* SHAPE = (TDShape*)uSHAPE;
 
-                            td::Vec3 oShapePosOffset = (rd.hitShape->pOffset);
-                            td::Vec4 oShapeRotOffset = (rd.hitShape->rOffset);
+                                glb::oS_Constructor(uSHAPE, uBODY);
 
-                            uintptr_t newBody = glb::oTMalloc(0x232u);
-                            glb::oB_Constructor((uintptr_t)newBody, (uintptr_t)nullptr);
-                            glb::oSetDynamic((uintptr_t)newBody, true);
+                                td::small_string spawnGoatP1 = td::small_string("vox\\Default\\brick_wood\\object.vox");
+                                td::small_string spawnGoatP2 = td::small_string("");
 
-                            (*(TDBody*)&newBody).isAwake = true;
-                            (*(TDBody*)&newBody).countDown = 0xF0;
+                                uintptr_t vox_goat = glb::oSpawnVox(&spawnGoatP1, &spawnGoatP2, 1.f);
+                                uintptr_t matBufferCopy = glb::oTMalloc(1024);
+                                uintptr_t phyBufferCopy = glb::oTMalloc(1024);
 
-                            (*(TDBody*)&newBody).Position = oBodyWorldPos;
-                            (*(TDBody*)&newBody).Rotation = oBodyWorldRot;
-                            targetShape->pOffset = oShapePosOffset;
-                            targetShape->rOffset = oShapeRotOffset;
+          
 
-                            glb::tdUpdateShapeBody((uintptr_t)targetShape, (uintptr_t)newBody);
-                            glb::oUpdateShapes((uintptr_t)newBody);
-                            glb::tdUpdateFunc((TDBody*)newBody, 0, 1);
+                                memcpy((void*)vox_goat, (void*)duplicationShape->pVox, sizeof(TDVox));
+
+                                memcpy((void*)matBufferCopy, (void*)duplicationShape->pVox->MaterialBuffer, 1024);
+
+                                memcpy((void*)phyBufferCopy, (void*)duplicationShape->pVox->PhysicsBuffer, 1024);
+
+                                TDVox* voxCopied = (TDVox*)vox_goat;
+                                *(uintptr_t*)&voxCopied->MaterialBuffer = (uintptr_t)matBufferCopy;
+                                *(uintptr_t*)&voxCopied->PhysicsBuffer = (uintptr_t)phyBufferCopy;
+
+                                glb::oCreateTexture(vox_goat);
+                                glb::oCreatePhysics(vox_goat);
+
+                                SHAPE->pVox = voxCopied;
+
+                                glb::oUpdateShapes(uBODY);
+
+                                //
+
+                                td::Vec3 voxSize = { (voxCopied->sizeX / 10.f) * 1.f, (voxCopied->sizeY / 10.f) * 1.f, (voxCopied->sizeZ / 10.f) * 1.f };
+                                glm::vec3 hitPos = { rd.worldPos.x, rd.worldPos.y, rd.worldPos.z };
+
+                                if (rd.angle.x == 0.f) { rd.angle.x += 0.0001f; }
+                                if (rd.angle.y == 0.f) { rd.angle.y += 0.0001f; }
+                                if (rd.angle.z == 0.f) { rd.angle.z += 0.0001f; }
+
+                                glm::quat facePlayer = glm::quat(glm::vec3(0, glb::player->camYaw, 0));
+                                glm::vec3 vxTmp = facePlayer * glm::vec3(1, 0, 0);
+
+                                glm::vec3 hitDir = glm::vec3(rd.angle.x, rd.angle.y, rd.angle.z);
+
+                                hitDir = glm::normalize(hitDir);
+
+                                glm::quat q = glm::conjugate(glm::quat(glm::lookAt(hitPos, hitPos + -hitDir, vxTmp))); //this is kinda inverted, with "up" facing the player and "forward" facing away from the surface. "fixing" this makes it work less good so eh.
+
+                                glm::vec3 vx = q * glm::vec3(1, 0, 0);
+                                glm::vec3 vy = q * glm::vec3(0, 1, 0);
+                                glm::vec3 vz = q * glm::vec3(0, 0, 1); //(UP)
+
+                                glm::vec3 translation = ((vz * (-0.f)) + (vy * (voxSize.y / 2.f)) + (vx * (voxSize.x / 2.f)));
+
+                                BODY->Position = { rd.worldPos.x - translation.x, rd.worldPos.y - translation.y, rd.worldPos.z - translation.z };
+                                *(glm::quat*)&BODY->Rotation = q;
+                                BODY->Velocity = { 0, 0, 0 };
+
+                                duplicationShape = SHAPE;
+                            }
+
+
                         }
 					}
 				}

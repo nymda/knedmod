@@ -22,7 +22,7 @@ namespace mods {
 	bool godmode = true;
 	bool c4_global_detonation = false;
 	bool removeWalls = false;
-	bool dontLockWhenOutOfFocus = false;
+	bool dontLockWhenOutOfFocus = true;
 	bool isGameFocused = false;
 
 	void execMods() {

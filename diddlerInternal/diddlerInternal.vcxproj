@@ -131,8 +131,8 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalLibraryDirectories>C:\cppIncludes\Glew\lib\Release\x64;C:\cppIncludes\detours;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>detours.lib;opengl32.lib;glu32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\cppIncludes\Glew\lib\Release\x64;C:\cppIncludes\detours;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.19041.0\um\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Psapi.Lib;detours.lib;opengl32.lib;glu32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <DelayLoadDLLs>
       </DelayLoadDLLs>
     </Link>
@@ -193,6 +193,7 @@
     <ClInclude Include="objectSpawner.h" />
     <ClInclude Include="objectTranslationTest.h" />
     <ClInclude Include="physCamera.h" />
+    <ClInclude Include="physMonitor.h" />
     <ClInclude Include="Raycaster.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stb_image.h" />
@@ -243,6 +244,7 @@
     <ClCompile Include="objectSpawner.cpp" />
     <ClCompile Include="objectTranslationTest.cpp" />
     <ClCompile Include="physCamera.cpp" />
+    <ClCompile Include="physMonitor.cpp" />
     <ClCompile Include="Raycaster.cpp" />
     <ClCompile Include="TDFuncs.cpp" />
     <ClCompile Include="Global.cpp" />

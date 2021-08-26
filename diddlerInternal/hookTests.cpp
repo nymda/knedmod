@@ -2,6 +2,8 @@
 #include "types.h"
 #include "Global.h"
 #include <cfloat>
+#include "camera.h"
+#include "objectSpawner.h"
 
 std::vector<TDShape*> knownShapes = {};
 bool init = true;
@@ -360,11 +362,48 @@ void hkCreateBallJoint(TDJoint* joint, TDShape* shape1, TDShape* shape2, td::Vec
 
 uintptr_t hkMalloc(size_t bytes) {
     uintptr_t newPtr = glb::oTMalloc(bytes);
-    if (bytes == 112) {
+    if (bytes > 1024) {
         std::cout << "Allocated memory sized " << std::to_string(bytes) << "B at " << std::hex << newPtr << std::endl;
     }
 
     return newPtr;
+}
+
+__int64 hkUnknownGraphicsThing(void* a1) {
+    std::cout << "UGT: " << ((td::small_string*)a1)->c_str() << std::endl;
+    return glb::oUnknGraphicsInitFunction(a1);
+}
+
+__int64 hkcreateTextureThing(void* texture, void* pixelBuffer, bool a3) {
+
+
+    int formatSwitch = *(int*)texture;
+    int format;
+
+    if (formatSwitch == 1) {
+        format = 0x1903;
+        std::cout << "TEXTURE: " << texture << " PXBUFFER: " << pixelBuffer << " X: " << std::to_string(((int*)texture)[1]) << " Y: " << std::to_string(((int*)texture)[2]) << " FORM: RED" << std::endl;
+    }
+    else if (formatSwitch == 2) {
+        format = 0x1907;
+        std::cout << "TEXTURE: " << texture << " PXBUFFER: " << pixelBuffer << " X: " << std::to_string(((int*)texture)[1]) << " Y: " << std::to_string(((int*)texture)[2]) << " FORM: RGBA" << std::endl;
+    }
+    else if (formatSwitch == 3) {
+        format = 0x1908;
+        std::cout << "TEXTURE: " << texture << " PXBUFFER: " << pixelBuffer << " X: " << std::to_string(((int*)texture)[1]) << " Y: " << std::to_string(((int*)texture)[2]) << " FORM: RGB" << std::endl;
+    }
+
+    if (((int*)texture)[1] == 0x280) {
+        //find the openGL texture for the TV
+        camera::alt_texture = texture;
+    }
+
+    return glb::oCreateTextureThing(texture, pixelBuffer, a3);
+}
+
+void hkGlTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void* pixels) {
+    std::cout << "glTexImage2D" << std::endl;
+    return glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
 }
 
 __int64 hkUpdateShapeBody(uintptr_t a1, uintptr_t a2) {
@@ -374,16 +413,35 @@ __int64 hkUpdateShapeBody(uintptr_t a1, uintptr_t a2) {
     return glb::tdUpdateShapeBody(a1, a2);
 }
 
+void* hkValidatePath(void* special, td::small_string* path, td::small_string* path_technical, td::small_string* type) {
+
+    const char* ignoreStrings[] = { "regular.ttf", "bold.ttf", "menu.ogg" };
+    const char* thisStr = path_technical->c_str();
+    bool swtch = true;
+
+    for (const char* thiChp : ignoreStrings) {
+        if (strcmp(thiChp, thisStr) == 0) {
+            swtch = false;
+        }
+    }
+
+    void* returns = glb::oValidatePath(glb::game + 0xA8, path, path_technical, type);
+
+    return returns;
+}
+
 void initTestHook() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    //DetourAttach(&(PVOID&)glb::tdUpdateShapeBody, hkUpdateShapeBody);
+    DetourAttach(&(PVOID&)glb::oCreateTextureThing, hkcreateTextureThing);
+    //DetourAttach(&(PVOID&)glb::oValidatePath, hkValidatePath);
     DetourTransactionCommit();
 }
 
 void terminateTestHook() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    //DetourDetach(&(PVOID&)glb::tdUpdateShapeBody, hkUpdateShapeBody);
+    DetourDetach(&(PVOID&)glb::oCreateTextureThing, hkcreateTextureThing);
+    //DetourDetach(&(PVOID&)glb::oValidatePath, hkValidatePath);
     DetourTransactionCommit();
 }

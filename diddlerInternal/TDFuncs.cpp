@@ -56,6 +56,12 @@ void sigscanItems() {
     glb::tdInitBall = (initBall)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x30\x48\x89\x51\x28\x48\x8B\xF1\x4C\x89\x41\x30\x49\x8B\xF8\x48\x8D\x4A", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::tdUpdateFunc = (interestingUpdateFunc)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x20\x48\x8B\x59\x20\x41\x0F\xB6\xF8\x0F\xB6\xF2\x48\x85\xDB\x74\x20\x90", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::tdUpdateShapeBody = (updateShapeBody)mem::FindPattern((PBYTE)"\x4C\x8B\xC1\x48\x8B\x49\x10\x48\x8B\x41\x20\x49\x3B\xC0\x75\x0A\x49\x8B\x40\x18\x48\x89\x41\x20\xEB\x21\x48\x85\xC0\x74\x1C\x90", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    glb::oCreateTextureThing = (createTextureThing)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x50\x48\x8B\xF2\x48\x8B\xD9\x8B\x51\x0C\x41\x0F\xB6\xF8\xB9\xE1\x0D\x00", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    glb::tdConstructScreen = (constructScreen)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x4C\x8B\xC2\x48\x8B\xD9\xBA\x07\x00\x00\x00\xE8\x6A\x77\x05\x00\xC7\x43\x4C\xCD\xCC\xCC\x3D\x48\x8D\x05", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    glb::tdUpdateScreen = (updateScreen)mem::FindPattern((PBYTE)"\x48\x89\x4C\x24\x08\x55\x53\x56\x57\x41\x54\x41\x55\x41\x56\x41\x57\x48\x8D\xAC\x24\x98\xD7\xFF\xFF\xB8\x68\x29\x00\x00\xE8\x9D", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    glb::oUnknGraphicsInitFunction = (unknGraphicsInitFunction)mem::FindPattern((PBYTE)"\x80\x79\x0F\x00\x74\x03\x48\x8B\x09\xE9\xBA\x7D\x14\x00", "xxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    glb::oValidatePath = (validatePath)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x56\x41\x57\x48\x8D\x68\xA1\x48\x81\xEC\x90\x00\x00\x00\x48\xC7\x45\xDF\xFE\xFF\xFF\xFF\x48\x89\x58\x08\x48", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+
     //sadly cant sigscan for this, yet
     //0x0041CB00 requires further investigation - looks like a table of pointers for various game functions
 
@@ -69,6 +75,11 @@ void sigscanItems() {
 
     std::cout << "" << std::endl;
     std::cout << "[Function Addresses:       ]" << std::endl;
+    std::cout << "oValidatePath        : " << std::hex << glb::oValidatePath << std::endl;
+    std::cout << "oUnknGrapInitFunc    : " << std::hex << glb::oUnknGraphicsInitFunction << std::endl;
+    std::cout << "oCreateTextureThing  : " << std::hex << glb::oCreateTextureThing << std::endl;
+    std::cout << "tdConstructScreen    : " << std::hex << glb::tdConstructScreen << std::endl;
+    std::cout << "tdUpdateScreen       : " << std::hex << glb::tdUpdateScreen << std::endl;
     std::cout << "tdConstructJoint     : " << std::hex << glb::tdConstructJoint << std::endl;
     std::cout << "tdInitBall           : " << std::hex << glb::tdInitBall << std::endl;
     std::cout << "tdInitHinge          : " << std::hex << glb::tdInitHinge << std::endl;

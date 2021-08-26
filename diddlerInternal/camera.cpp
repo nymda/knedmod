@@ -15,7 +15,9 @@
 typedef unsigned int uint;
 
 namespace camera {
-    GLuint image_texture;
+    void* image_texture;
+    void* alt_texture;
+
     bool isinit = false;
     bool colourMode = true;
     bool mono = false;
@@ -67,8 +69,8 @@ namespace camera {
     }
 
     void initTexture() {
-        glGenTextures(1, &image_texture);
-        glBindTexture(GL_TEXTURE_2D, image_texture);
+        glGenTextures(1, (GLuint*)image_texture);
+        glBindTexture(GL_TEXTURE_2D, (GLuint)image_texture);
     }
 
     void interlacedImage(byte* frameBuffer, int resolution, bool flip, float fov, float aspect, glm::quat* camRotation, td::Vec3 camPosition, td::Vec3 forwardVector, td::Vec3 upVector, RaycastFilter* filter) {
@@ -88,7 +90,7 @@ namespace camera {
         bool interlace = flip;
 
         //draw from left to right, bottom to top. This matches openGLs pixel format. 
-        for (int y = resolution; y > 0; y--) {
+        for (int y = 0; y < resolution; y++) {
             interlace = !interlace;
 
             if (interlace) {
@@ -96,7 +98,7 @@ namespace camera {
                 continue;
             }
 
-            for (int x = 0; x < resolution; x++) {
+            for (int x = resolution; x > 0; x--) {
                 //slightly eh implementation of Stochastic Sampling. Thanks Josh!
                 float pxSize = (fov / resolution);
                 float comX = (fov / 2.f) - (x * pxSize) + randFloat(-(pxSize / 3.f), (pxSize / 3.f));
@@ -371,17 +373,27 @@ namespace camera {
         free(rgbFrameBuffer);
     }
 
-    void constructFrameManual(byte* pixels, int resolution, bool saveSnapshot) {
+    void PIPCAM(byte* pixels, int resolutionX, int resolutionY) {
+        *(int*)camera::alt_texture = 3;
+        ((int*)camera::alt_texture)[1] = resolutionX;
+        ((int*)camera::alt_texture)[2] = resolutionY;
+
+        glb::oCreateTextureThing(camera::alt_texture, pixels, false);
+    }
+
+    void constructFrameManual(byte* pixels, int resolutionX, int resolutionY, int format, bool saveSnapshot) {
 
         if (!pixels) {
             return;
         }
 
+        //PIPCAM(pixels, resolutionX, resolutionY);
+        //return;
+
         if (!isinit) {
             initTexture();
         }
 
-        // Setup filtering parameters for display
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // This is required on WebGL for non power-of-two textures
@@ -392,12 +404,15 @@ namespace camera {
         glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
         #endif
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, resolution, resolution, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)pixels);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, resolutionX, resolutionY, 0, format, GL_UNSIGNED_BYTE, (void*)pixels);
+
 
         if (saveSnapshot) {
-            createBitmap((DWORD*)pixels, resolution);
+            createBitmap((DWORD*)pixels, resolutionX);
         }
     }
+
+
 
     float fps = 0;
 
@@ -465,8 +480,8 @@ namespace camera {
 
             FRAMESTART = execTimer.now();
 
-            interlacedImage(frameBuffer, resolution, flip, fov, 1.f, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
-            constructFrameManual(frameBuffer, resolution, toolgun::takeSnapshot);
+            interlacedImage(frameBuffer, resolution, flip, fov, 1.f, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, -1, 0 }, &rcf);
+            constructFrameManual(frameBuffer, resolution, resolution, 0x1908, toolgun::takeSnapshot);
 
             FRAMEEND = execTimer.now();
             auto exTime = FRAMEEND - FRAMESTART;
@@ -478,7 +493,7 @@ namespace camera {
 
             bool frameFinished = stagedImage(frameBuffer, resolution, fov, 1.f, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
             if (frameFinished || showImageProgress) {
-                constructFrameManual(frameBuffer, resolution, (toolgun::takeSnapshot && frameFinished));
+                constructFrameManual(frameBuffer, resolution, resolution, 0x1908, (toolgun::takeSnapshot && frameFinished));
             }
 
             FRAMEEND = execTimer.now();
@@ -490,7 +505,7 @@ namespace camera {
         else if (mode == cameraMode::fullframe) {
             FRAMESTART = execTimer.now();
 
-            dotProjector::pixelResponse* response = dotProjector::projectDotMatrix(resolution, fov, 1.f, true, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
+            dotProjector::pixelResponse* response = dotProjector::projectDotMatrix(resolution, fov, 1.f, true, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, -1, 0 }, &rcf);
             constructColourFrame(response, resolution, true, toolgun::takeSnapshot);
 
             FRAMEEND = execTimer.now();

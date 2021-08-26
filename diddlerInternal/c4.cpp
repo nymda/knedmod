@@ -73,9 +73,12 @@ namespace c4 {
                     }
                     else {
                         const char* currentPath = bombSizeStr[selectedBombSizeInt - 1];
-                        spawner::spawnedObject object = spawner::throwFreeObject(currentPath, 20.f);
-                        glb::setObjectAttribute(object.shapes[0], "unbreakable", "");
-                        glb::setObjectAttribute(object.shapes[0], "nocull", "");
+
+                        spawner::thrownObjectSpawnParams params = {};
+                        params.attributes.push_back({ "unbreakable", "" });
+                        params.power = 20.f;
+                        params.nocull = true;
+                        spawner::spawnedObject object = spawner::throwFreeObject(currentPath, params);
                         explosiveObjects.push_back({ object,  bombSizePowers[selectedBombSizeInt - 1] });
                     }
 

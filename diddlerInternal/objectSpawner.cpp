@@ -98,7 +98,8 @@ namespace spawner {
     float objectPlacementRotationSteps_H[] = { 0.f, 45.f, 90.f, 135.f, 180.f, 225.f, 270.f, 315.f };
     float objectPlacementRotationSteps_V[] = { 0.f, 90.f, 180.f, 270.f };
     int currentRotationStep_H = 0;
-    int currentRotationStep_V = 0;
+    int currentRotationStep_V1 = 0;
+    int currentRotationStep_V2 = 0;
 
     //ew
     void switchRotationStep(WPARAM wParam) {
@@ -110,29 +111,51 @@ namespace spawner {
         }
 
         if (wParam == VK_UP) {
-            currentRotationStep_V += 1;
+            if (currentRotationStep_H == 0 || currentRotationStep_H == 4) {
+                currentRotationStep_V1 += 1;
+            }
+            else if (currentRotationStep_H == 2 || currentRotationStep_H == 6) {
+                currentRotationStep_V2 += 1;
+            }
         }
         else if (wParam == VK_DOWN) {
-            currentRotationStep_V -= 1;
+            if (currentRotationStep_H == 0 || currentRotationStep_H == 4) {
+                currentRotationStep_V1 -= 1;
+            }
+            else if (currentRotationStep_H == 2 || currentRotationStep_H == 6) {
+                currentRotationStep_V2 -= 1;
+            }
         }
 
 
-        if (currentRotationStep_H > 8) {
-            currentRotationStep_H = 1;
+        if (currentRotationStep_H > 7) {
+            currentRotationStep_H = 0;
         }
-        else if (currentRotationStep_H < 1) {
-            currentRotationStep_H = 8;
+        else if (currentRotationStep_H < 0) {
+            currentRotationStep_H = 7;
         }
 
-        if (currentRotationStep_V > 4) {
-            currentRotationStep_V = 1;
+        if (currentRotationStep_V1 > 3) {
+            currentRotationStep_V1 = 0;
         }
-        else if (currentRotationStep_V < 1) {
-            currentRotationStep_V = 4;
+        else if (currentRotationStep_V1 < 0) {
+            currentRotationStep_V1 = 3;
         }
+
+        if (currentRotationStep_V2 > 3) {
+            currentRotationStep_V2 = 0;
+        }
+        else if (currentRotationStep_V2 < 0) {
+            currentRotationStep_V2 = 3;
+        }
+
+        std::cout << "H: " << currentRotationStep_H << " V1: " << currentRotationStep_V1 << " V2: " << currentRotationStep_V2 << std::endl;
+
     }
 
-    td::Vec3 getClippingTranslation(TDVox* currentVox, raycaster::rayData rd) {
+    
+
+    td::Vec3 getClippingTranslation(TDVox* currentVox, raycaster::rayData rd, bool useUserRotation) {
         td::Vec3 target = rd.worldPos;
 
         td::Color boxColour = { 0.f, 1.f, 0.f, 1.f };
@@ -154,8 +177,11 @@ namespace spawner {
         glm::quat q = glm::conjugate(glm::quat(glm::lookAt(hitPos, hitPos + hitDir, vxTmp))); //this is kinda inverted, with "up" facing the player and "forward" facing away from the surface. "fixing" this makes it work less good so eh.
         glm::quat q_flat = q;
 
-        glm::quat rotOffset = glm::quat(glm::vec3(0.f, -(deg2rad(objectPlacementRotationSteps_V[currentRotationStep_V])), -(deg2rad(objectPlacementRotationSteps_H[currentRotationStep_H]))));
-        q = q * rotOffset;
+        if (useUserRotation) {
+            glm::quat rotOffset = glm::quat(glm::vec3(-(deg2rad(objectPlacementRotationSteps_V[currentRotationStep_V2])), -(deg2rad(objectPlacementRotationSteps_V[currentRotationStep_V1])), -(deg2rad(objectPlacementRotationSteps_H[currentRotationStep_H]))));
+            q = q * rotOffset;
+        }
+
 
 
         glm::vec3 vx = q * glm::vec3(-1, 0, 0);
@@ -229,7 +255,7 @@ namespace spawner {
 
     void drawSpawngunObjectOutline(TDVox* currentVox, raycaster::rayData rd) {
 
-        glm::vec3 clippingOffset = math::v3_td2glm(getClippingTranslation(currentVox, rd));
+        glm::vec3 clippingOffset = math::v3_td2glm(getClippingTranslation(currentVox, rd, true));
 
 
         td::Vec3 target = rd.worldPos;
@@ -257,7 +283,8 @@ namespace spawner {
         glm::quat q = glm::conjugate(glm::quat(glm::lookAt(hitPos, hitPos + hitDir, vxTmp))); //this is kinda inverted, with "up" facing the player and "forward" facing away from the surface. "fixing" this makes it work less good so eh.
         glm::quat q_flat = q;
 
-        glm::quat rotOffset = glm::quat(glm::vec3(0.f, -(deg2rad(objectPlacementRotationSteps_V[currentRotationStep_V])), -(deg2rad(objectPlacementRotationSteps_H[currentRotationStep_H]))));
+        glm::quat rotOffset = glm::quat(glm::vec3(-(deg2rad(objectPlacementRotationSteps_V[currentRotationStep_V2])), -(deg2rad(objectPlacementRotationSteps_V[currentRotationStep_V1])), -(deg2rad(objectPlacementRotationSteps_H[currentRotationStep_H]))));
+        //glm::quat rotOffset = getCurrentRotationOffset(true);
         q = q * rotOffset;
 
         glm::vec3 vx = q * glm::vec3(-1, 0, 0);
@@ -652,11 +679,14 @@ namespace spawner {
     }
 
     //drops an object infront of the player
-    spawnedObject throwFreeObject(std::string filepath, float power) {
+    spawnedObject throwFreeObject(std::string filepath, thrownObjectSpawnParams params) {
         spawnedObject object = {};
-        freeObjectSpawnParams params = {};
+        freeObjectSpawnParams parsedParams = {};
+        parsedParams.attributes = params.attributes;
+        parsedParams.nocull = params.nocull;
+        parsedParams.useUserRotation = false;
 
-        spawnFreeEntity(filepath, params, &object);
+        spawnFreeEntity(filepath, parsedParams, &object);
 
         td::Vec3 camEuler = glb::player->cameraEuler();
 
@@ -680,7 +710,13 @@ namespace spawner {
         float roVeloY = (rand() % 8) - 4;
         float roVeloZ = (rand() % 8) - 4;
         object.body->RotationVelocity = { roVeloX, roVeloY, roVeloZ };
-        object.body->Velocity = { camEuler.x * power, camEuler.y * power, camEuler.z * power };
+        object.body->Velocity = { camEuler.x * params.power, camEuler.y * params.power, camEuler.z * params.power };
+
+        for (TDShape* cShape : object.shapes) {
+            for (objectAttribute att : params.attributes) {
+                glb::oSOA(cShape, &att.attribute, &att.level);
+            }
+        }
 
         return object;
     }
@@ -794,7 +830,7 @@ namespace spawner {
         glm::quat q_flat = q;
 
         if (params.useUserRotation) {
-            glm::quat rotOffset = glm::quat(glm::vec3(0.f, (deg2rad(objectPlacementRotationSteps_V[currentRotationStep_V])), (deg2rad(objectPlacementRotationSteps_H[currentRotationStep_H]))));
+            glm::quat rotOffset = glm::quat(glm::vec3((deg2rad(objectPlacementRotationSteps_V[currentRotationStep_V2])), (deg2rad(objectPlacementRotationSteps_V[currentRotationStep_V1])), (deg2rad(objectPlacementRotationSteps_H[currentRotationStep_H]))));
             q = q * rotOffset;
         }
 
@@ -806,9 +842,7 @@ namespace spawner {
         glm::vec3 vy_f = q_flat * glm::vec3(0, 1, 0);
         glm::vec3 vz_f = q_flat * glm::vec3(0, 0, 1); //(UP)
 
-        //glm::vec3 translation = ((vz * (-0.f)) + ((vy * (voxSize.y / 2.f)) + (vx * (voxSize.x / 2.f))));
-
-        td::Vec3 clippingOffset = getClippingTranslation(object.voxes[0], rd);
+        td::Vec3 clippingOffset = getClippingTranslation(object.voxes[0], rd, params.useUserRotation);
 
         glm::vec3 translation = ((vz * ((voxSize.z / (2.f)))) + ((vy * (voxSize.y / 2.f)) + (vx * (voxSize.x / 2.f))));
         glm::vec3 clippingTranslation = (vz_f * clippingOffset.z) + (vy_f * clippingOffset.y) + (vx_f * clippingOffset.x);
@@ -836,6 +870,10 @@ namespace spawner {
 
         uintptr_t uBODY = glb::oTMalloc(0x232u);
         TDBody* BODY = (TDBody*)uBODY;
+
+        std::cout << "===== Spawning debug =====" << std::endl;
+        std::cout << "Body:  0x" << std::hex << BODY << std::endl;
+
         glb::oB_Constructor(uBODY, (uintptr_t)nullptr);
         glb::oSetDynamic(uBODY, true);
         BODY->isAwake = true;
@@ -860,11 +898,14 @@ namespace spawner {
 
             SHAPE->pVox = (TDVox*)VOX;
 
+            std::cout << "Shape: 0x" << std::hex << SHAPE << std::endl;
+            std::cout << "Vox:   0x" << std::hex << (TDVox*)VOX << std::endl;
+
             object->shapes.push_back(SHAPE);
             object->voxes.push_back((TDVox*)VOX);
 
             if (params.nocull) {
-                *(byte*)(SHAPE + 9) |= 16;
+                glb::setObjectAttribute(SHAPE, "nocull", "");
             }
 
             ((TDShape*)SHAPE)->Texture = 3;
@@ -910,7 +951,7 @@ namespace spawner {
         glm::quat q_flat = q;
 
         if (params.useUserRotation) {
-            glm::quat rotOffset = glm::quat(glm::vec3(0.f, (deg2rad(objectPlacementRotationSteps_V[currentRotationStep_V])), (deg2rad(objectPlacementRotationSteps_H[currentRotationStep_H]))));
+            glm::quat rotOffset = glm::quat(glm::vec3((deg2rad(objectPlacementRotationSteps_V[currentRotationStep_V2])), (deg2rad(objectPlacementRotationSteps_V[currentRotationStep_V1])), (deg2rad(objectPlacementRotationSteps_H[currentRotationStep_H]))));
             q = q * rotOffset;
         }
 
@@ -922,7 +963,7 @@ namespace spawner {
         glm::vec3 vy_f = q_flat * glm::vec3(0, 1, 0);
         glm::vec3 vz_f = q_flat * glm::vec3(0, 0, 1); //(UP)
 
-        td::Vec3 clippingOffset = getClippingTranslation(object.voxes[0], rd);
+        td::Vec3 clippingOffset = getClippingTranslation(object.voxes[0], rd, params.useUserRotation);
 
         glm::vec3 translation = ((vz * ((voxSize.z / (2.f)))) + ((vy * (voxSize.y / 2.f)) + (vx * (voxSize.x / 2.f))));
         glm::vec3 clippingTranslation = (vz_f * clippingOffset.z) + (vy_f * clippingOffset.y) + (vx_f * clippingOffset.x);
@@ -958,6 +999,9 @@ namespace spawner {
             nameOut.push_back(td::small_string(""));
         }
 
+        std::cout << "===== Spawning debug =====" << std::endl;
+        std::cout << "Body:  0x" << std::hex << (TDBody*)params.parentBody << std::endl;
+
         for (td::small_string sub_path : nameOut) {
             uintptr_t uSHAPE = glb::oTMalloc(0x176u);
             TDShape* SHAPE = (TDShape*)uSHAPE;
@@ -973,8 +1017,11 @@ namespace spawner {
             object->shapes.push_back(SHAPE);
             object->voxes.push_back((TDVox*)VOX);
 
+            std::cout << "Shape: 0x" << std::hex << SHAPE << std::endl;
+            std::cout << "Vox:   0x" << std::hex << (TDVox*)VOX << std::endl;
+
             if (params.nocull) {
-                *(byte*)(SHAPE + 9) |= 16;
+                glb::setObjectAttribute(SHAPE, "nocull", "");
             }
 
             ((TDShape*)SHAPE)->Texture = 3;
