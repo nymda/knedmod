@@ -61,6 +61,13 @@ void sigscanItems() {
     glb::tdUpdateScreen = (updateScreen)mem::FindPattern((PBYTE)"\x48\x89\x4C\x24\x08\x55\x53\x56\x57\x41\x54\x41\x55\x41\x56\x41\x57\x48\x8D\xAC\x24\x98\xD7\xFF\xFF\xB8\x68\x29\x00\x00\xE8\x9D", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::oUnknGraphicsInitFunction = (unknGraphicsInitFunction)mem::FindPattern((PBYTE)"\x80\x79\x0F\x00\x74\x03\x48\x8B\x09\xE9\xBA\x7D\x14\x00", "xxxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::oValidatePath = (validatePath)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x56\x41\x57\x48\x8D\x68\xA1\x48\x81\xEC\x90\x00\x00\x00\x48\xC7\x45\xDF\xFE\xFF\xFF\xFF\x48\x89\x58\x08\x48", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    glb::oLoadResource = (loadResource)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x54\x41\x55\x41\x56\x41\x57\x48\x8D\x68\xA1\x48\x81\xEC\x90\x00\x00\x00\x48\xC7\x45\xD7\xFE\xFF\xFF\xFF\x48", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    glb::tdInitScreenSecondary = (initScreenSecondary)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x57\x48\x83\xEC\x20\x48\x8B\xDA\x48\x8B\xF9\xE8\x3B\xA7\xFD\xFF\x48\x8D\x57\x28\x48\x8B\xCB\xE8\x4F\x94\x01", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+
+    glb::osub_140105F30 = (sub_140105F30)mem::FindPattern((PBYTE)"\x48\x8B\x41\x10\x48\x85\xC0\x74\x18\x0F\x1F\x80\x00\x00\x00\x00", "xxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    glb::osub_140146470 = (sub_140146470)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x4C\x8D\x41\x28\x48\x8B\xDA\x48\x8B\x49", "xxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    glb::osub_140032EA0 = (sub_140032EA0)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x48\x89\x58\x08\x48\x89\x68\x10\x48\x89\x70\x18\x57", "xxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+
 
     //sadly cant sigscan for this, yet
     //0x0041CB00 requires further investigation - looks like a table of pointers for various game functions
@@ -75,6 +82,11 @@ void sigscanItems() {
 
     std::cout << "" << std::endl;
     std::cout << "[Function Addresses:       ]" << std::endl;
+    std::cout << "tdInitScreenSec      : " << std::hex << glb::tdInitScreenSecondary << std::endl;
+    std::cout << "loadResource         : " << std::hex << glb::oLoadResource << std::endl;
+    std::cout << "sub_140105F30        : " << std::hex << glb::osub_140105F30 << std::endl;
+    std::cout << "sub_140146470        : " << std::hex << glb::osub_140146470 << std::endl;
+    std::cout << "sub_140032EA0        : " << std::hex << glb::osub_140032EA0 << std::endl;
     std::cout << "oValidatePath        : " << std::hex << glb::oValidatePath << std::endl;
     std::cout << "oUnknGrapInitFunc    : " << std::hex << glb::oUnknGraphicsInitFunction << std::endl;
     std::cout << "oCreateTextureThing  : " << std::hex << glb::oCreateTextureThing << std::endl;

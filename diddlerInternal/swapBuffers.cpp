@@ -19,6 +19,8 @@
 #include "objectTranslationTest.h"
 #include "Firespread.h"
 #include "physMonitor.h"
+#include "constClock.h"
+#include "console.h"
 
 #pragma comment(lib, "glew32s.lib")
 
@@ -48,33 +50,42 @@ LRESULT APIENTRY hWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	switch (uMsg)
 	{
 	case WM_KEYDOWN:
-		if (wParam == VK_F1 || wParam == VK_INSERT)
-		{
-			glb::displayMenu = !glb::displayMenu;
-			return true;
-		}
+		if (!console::consoleOpen) {
+			if (wParam == VK_F1 || wParam == VK_INSERT)
+			{
+				glb::displayMenu = !glb::displayMenu;
+				return true;
+			}
 
-		if (wParam == 0x49) { //I
-			killInfoBoxCounter++;
-			if (killInfoBoxCounter > 5) {
-				displayInfoLabel = false;
-				glb::displayMenu = true;
-				killInfoBoxCounter = 0;
+			if (wParam == 0x49) { //I
+				killInfoBoxCounter++;
+				if (killInfoBoxCounter > 5) {
+					displayInfoLabel = false;
+					glb::displayMenu = true;
+					killInfoBoxCounter = 0;
+				}
+			}
+
+			if (wParam == mods::noclipKey && !glb::displayMenu) {
+				noclip::ToggleNoclip();
+			}
+
+			if (wParam == 0x5A) { //Z
+				spawner::deleteLastObject();
+			}
+
+			if (wParam == VK_LEFT || wParam == VK_RIGHT || wParam == VK_UP || wParam == VK_DOWN) {
+				if (memcmp(glb::player->heldItemName, tgName, 8) == 0) {
+					spawner::switchRotationStep(wParam);
+				}
 			}
 		}
 
-		if (wParam == mods::noclipKey && !glb::displayMenu) {
-			noclip::ToggleNoclip();
-		}
+	
 
-		if (wParam == 0x5A) { //Z
-			spawner::deleteLastObject();
-		}
-
-		if (wParam == VK_LEFT || wParam == VK_RIGHT || wParam == VK_UP || wParam == VK_DOWN) {
-			if (memcmp(glb::player->heldItemName, tgName, 8) == 0) {
-				spawner::switchRotationStep(wParam);
-			}
+		if (wParam == VK_OEM_3 || wParam == 0xDF) {
+			console::consoleOpen = !console::consoleOpen;
+			console::firstFocus = true;
 		}
 
 	case WM_MOUSEWHEEL:
@@ -93,7 +104,7 @@ LRESULT APIENTRY hWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
 
-	if (glb::displayMenu || lockoutScroll)
+	if (glb::displayMenu || lockoutScroll || console::consoleOpen)
 	{
 		return true;
 	}
@@ -103,16 +114,16 @@ LRESULT APIENTRY hWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 bool hwCursor(int x, int y) {
 
-	if (glb::displayMenu || !mods::isGameFocused) {
+	if (glb::displayMenu || !mods::isGameFocused || console::consoleOpen) {
 		return false;
 	}
 
 	return glb::ocursor(x, y);
 }
 
+bool terminator = true;
 void onSwapBuffersInit()
 {
-
 	if (!ImGui::GetCurrentContext()) {
 		std::cout << "CREATING IMGUI CONTEXT" << std::endl;
 		glewInit(); // initialize glew
@@ -120,9 +131,36 @@ void onSwapBuffersInit()
 		ImGui_ImplWin32_Init(glb::gWnd);
 		const char* glsl_version = "#version 130";
 		ImGui_ImplOpenGL3_Init(glsl_version);
+
+		ImGuiStyle& style = ImGui::GetStyle();
+		style.Colors[ImGuiCol_WindowBg] = ImVec4(0.1f, 0.1f, 0.1f, 1.00f);
+		style.Colors[ImGuiCol_PopupBg] = ImVec4(0.1f, 0.1f, 0.1f, 0.85f);
+
+		style.Colors[ImGuiCol_FrameBg] = ImVec4(0.3f, 0.3f, 0.3f, 1.00f);
+		style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.4f, 0.4f, 0.4f, 1.00f);
+		style.Colors[ImGuiCol_FrameBgActive] = ImVec4(0.5f, 0.5f, 0.5f, 1.00f);
+
+		style.Colors[ImGuiCol_Tab] = ImVec4(0.3f, 0.3f, 0.3f, 1.00f);
+		style.Colors[ImGuiCol_TabHovered] = ImVec4(0.4f, 0.4f, 0.4f, 1.00f);
+		style.Colors[ImGuiCol_TabActive] = ImVec4(0.5f, 0.5f, 0.5f, 1.00f);
+
+		style.Colors[ImGuiCol_TitleBg] = ImVec4(0.3f, 0.3f, 0.3f, 1.00f);
+		style.Colors[ImGuiCol_TitleBgActive] = ImVec4(0.4f, 0.4f, 0.4f, 1.00f);
+		style.Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.2f, 0.2f, 0.2f, 1.00f);
+
+		style.Colors[ImGuiCol_Separator] = ImVec4(0.3f, 0.3f, 0.3f, 1.00f);
+		style.Colors[ImGuiCol_SeparatorHovered] = ImVec4(0.4f, 0.4f, 0.4f, 1.00f);
+		style.Colors[ImGuiCol_SeparatorActive] = ImVec4(0.5f, 0.5f, 0.5f, 1.00f);
+
+		style.Colors[ImGuiCol_Button] = ImVec4(0.4f, 0.4f, 0.4f, 1.00f);
+		style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.5f, 0.5f, 0.5f, 1.00f);
+		style.Colors[ImGuiCol_ButtonActive] = ImVec4(0.6f, 0.6f, 0.6f, 1.00f);
+
+		style.Colors[ImGuiCol_SliderGrab] = ImVec4(0.5f, 0.5f, 0.5f, 1.00f);
+		style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.6f, 0.6f, 0.6f, 1.00f);
+
+		style.Colors[ImGuiCol_CheckMark] = ImVec4(0.6f, 0.6f, 0.6f, 1.00f);
 	}
-
-
 }
 
 void initHIDsHook() {
@@ -226,7 +264,8 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 	ImGuiIO* IO = &ImGui::GetIO();
-	IO->MouseDrawCursor = glb::displayMenu;
+	IO->MouseDrawCursor = (glb::displayMenu || console::consoleOpen);
+	console::drawConsole();
 
 	//devLiveScreens();
 
@@ -339,7 +378,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 
 					//ImGui::Text(lso.objectName.c_str());
 					//ImGui::SetNextItemWidth(25);
-					
+
 					if (ImGui::ImageButton((void*)lso.imageTexture, ImVec2(ImGui::GetColumnWidth() - 23, ImGui::GetColumnWidth() - 23))) {
 						spawner::freeObjectSpawnParams params = {};
 						params.attributes = lso.attributes;
@@ -638,9 +677,9 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				if (ImGui::Button("Spawn physCamera")) {
 					physCamera::spawnCameraObject();
 				}
-				if (ImGui::Button("Spawn physMonitor")) {
-					physMonitor::spawnMonitor();
-				}
+				//if (ImGui::Button("Spawn physMonitor")) {
+				//	physMonitor::spawnMonitor();
+				//}
 				if (ImGui::Button("Destroy physCamera")) {
 					physCamera::destroyCamera();
 				}
@@ -687,7 +726,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 
 						//((TDScreen*)tds)->m_Resolution = { newRes, newRes };
 						//glb::tdUpdateScreen(((TDScreen*)tds));
-						std::cout << "Screen @ " << ((TDScreen*)tds) << " RES: " << &((TDScreen*)tds)->m_Resolution << " SIZE: " << std::to_string(((TDScreen*)tds)->m_Resolution.x) << " : " << std::to_string(((TDScreen*)tds)->m_Resolution.y) << " SCRIPT: " << (TDScreen*)tds->m_Script->c_str() << std::endl;
+						std::cout << "Screen @ " << ((TDScreen*)tds) << " RES: " << &((TDScreen*)tds)->m_Resolution << " SIZE: " << std::to_string(((TDScreen*)tds)->m_Resolution.x) << " : " << std::to_string(((TDScreen*)tds)->m_Resolution.y) << " SCRIPT: " << (TDScreen*)tds->m_Script.c_str() << std::endl;
 					}
 				}
 
@@ -923,12 +962,12 @@ void terminateSwapBuffersHook() {
 	DetourUpdateThread(GetCurrentThread());
 	DetourDetach(&(PVOID&)glb::owglSwapBuffers, hwglSwapBuffers);
 	DetourTransactionCommit();
+
 }
 
 void initSwapBuffersHook() {
 	HMODULE OpenGL = GetModuleHandle(L"opengl32.dll");
 	glb::owglSwapBuffers = (twglSwapBuffers)GetProcAddress(OpenGL, "wglSwapBuffers");
-
 	DetourTransactionBegin();
 	DetourUpdateThread(GetCurrentThread());
 	DetourAttach(&(PVOID&)glb::owglSwapBuffers, hwglSwapBuffers);

@@ -338,12 +338,12 @@ public:
 
 class TDScreen : public Entity {
 public:
-	td::Vec3 Position;
-	td::Vec4 Rotation;
+	glm::vec3 Position;
+	glm::quat Rotation;
 	glm::vec2 m_Size;
 	float m_Bulge;
 	glm::ivec2 m_Resolution;
-	td::small_string* m_Script;
+	td::small_string m_Script;
 	bool m_Enabled;
 	bool m_Interactive; uint8_t pad_68[2];
 	float m_Emissive;

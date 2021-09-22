@@ -29,6 +29,7 @@
 #include "windows.h"
 #include "Psapi.h"
 #include "Shlwapi.h"
+#include "constClock.h"
 
 #pragma comment(lib, "psapi.lib")
 
@@ -134,6 +135,7 @@ DWORD WINAPI main(HMODULE hModule)
     initTestHook();
     initGodmodeHook();
     focusHook::initFocusHook();
+    //constClock::beginConstantClock(16.6f);
 
     //initMovementHook();
 
@@ -146,15 +148,16 @@ DWORD WINAPI main(HMODULE hModule)
                 }
 
                 ////undo hooks
+                terminateSwapBuffersHook();
                 fclose(cnsl);
                 FreeConsole();
 
-                terminateSwapBuffersHook();
                 terminateMovementHook();
                 terminateHIDsHook();
                 terminateTestHook();
                 terminateGodmodeHook();
                 focusHook::terminateFocusHook();
+                //constClock::endConstantClock();
 
                 //sleep
                 Sleep(250);

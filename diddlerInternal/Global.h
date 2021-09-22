@@ -64,6 +64,7 @@ typedef void*(__fastcall* unknReadVoxData) (void* a1, void* a2);
 typedef __int64(__fastcall* updateShapeBody)(uintptr_t a1, uintptr_t a2);
 typedef __int64(__fastcall* constructScreen)(TDScreen* a1, uintptr_t a2);
 typedef __int64(__fastcall* unknGraphicsInitFunction)(void* a1);
+typedef void*(__fastcall* initScreenSecondary)(void* a1, void* a2, void* a3);
 
 //a1: GAME + 0xA8
 //a2: small_string* containing path
@@ -100,6 +101,11 @@ typedef void(__fastcall* addContextItem)(char* a1, int a2, int a3, float* a4);
 typedef bool(__fastcall* isActiveWindow)(void* a1);
 typedef bool(__fastcall* createTextureThing)(void* texture, void* pixelBuffer, bool a3);
 typedef void(__fastcall* updateScreen)(TDScreen* screen);
+typedef void*(__fastcall* loadResource)(void* a1, void* a2, int a3);
+typedef void*(__fastcall* sub_140105F30)(TDScreen* screen, int a2);
+typedef void*(__fastcall* sub_140146470)(__int64 a1, __int64 a2);
+typedef void*(__fastcall* sub_140032EA0)(float* a1, __int64 a2, float* a3);
+
 
 //td maths
 typedef __int64(__fastcall* apiQuatEuler)(float* a1, float* a2);
@@ -128,6 +134,11 @@ namespace glb {
     extern createTextureThing oCreateTextureThing;
     extern unknGraphicsInitFunction oUnknGraphicsInitFunction;
     extern validatePath oValidatePath;
+    extern loadResource oLoadResource;
+
+    extern sub_140105F30 osub_140105F30;
+    extern sub_140146470 osub_140146470;
+    extern sub_140032EA0 osub_140032EA0;
 
     extern TDObjectList* TDOL;
     extern TDPlayer* player;
@@ -152,6 +163,7 @@ namespace glb {
     extern updateShapeBody tdUpdateShapeBody;
     extern constructScreen tdConstructScreen;
     extern updateScreen tdUpdateScreen;
+    extern initScreenSecondary tdInitScreenSecondary;
 
     extern interestingUpdateFunc tdUpdateFunc;
     extern highlightShape oHighlightShape;

@@ -430,18 +430,57 @@ void* hkValidatePath(void* special, td::small_string* path, td::small_string* pa
     return returns;
 }
 
+void* hk_sub_140105F30(TDScreen* screen, int a2) {
+    std::cout << "sub_140105F30: SCREEN: " << screen << " A2: " << a2 << std::endl;
+    return glb::osub_140105F30(screen, a2);
+}
+
+void* hk_sub_140146470(__int64 a1, __int64 a2) {
+    std::cout << "sub_140105F30: A1: " << a1 << " A2: " << a2 << std::endl;
+    return glb::osub_140146470(a1, a2);
+}
+
+void* hk_sub_140032EA0(float* a1, __int64 a2, float* a3) {
+    std::cout << "sub_140032EA0: A1: " << a1 << " A2: " << a2 << " A3: " << a3 << std::endl;
+    return glb::osub_140032EA0(a1, a2, a3);
+}
+
+void* hkLoadResource(void* a1, void* a2, int a3) {
+    std::cout << "A1: " << a1 << " A2 " << ((td::small_string*)a2)->c_str() << " A3: " << std::to_string(a3) << std::endl;
+    return glb::oLoadResource(a1, a2, a3);
+}
+
+__int64 hkInitScreen(TDScreen* a1, uintptr_t a2) {
+    std::cout << "[InitScreen1] Screen: " << a1 << " UN: " << a2 << std::endl;
+    return glb::tdConstructScreen(a1, a2);
+}
+
+void* hkInitScreenSecondary(void* a1, void* a2, void* a3) {
+    std::cout << "[InitScreen2] A1: " << a1 << " A2: " << a2 << " A3: " << a3 << std::endl;
+    return glb::tdInitScreenSecondary(a1, a2, 0);
+}
+
+void hkUpdateScreen(TDScreen* screen, void* a2) {
+    std::cout << "[UpdateScreen] Screen: " << screen << std::endl;
+    return glb::tdUpdateScreen(screen);
+}
+
 void initTestHook() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    DetourAttach(&(PVOID&)glb::oCreateTextureThing, hkcreateTextureThing);
-    //DetourAttach(&(PVOID&)glb::oValidatePath, hkValidatePath);
+    //DetourAttach(&(PVOID&)glb::oCreateTextureThing, hkcreateTextureThing);
+    //DetourAttach(&(PVOID&)glb::tdConstructScreen, hkInitScreen);
+    DetourAttach(&(PVOID&)glb::tdInitScreenSecondary, hkInitScreenSecondary);
+    DetourAttach(&(PVOID&)glb::tdUpdateScreen, hkUpdateScreen);
     DetourTransactionCommit();
 }
 
 void terminateTestHook() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    DetourDetach(&(PVOID&)glb::oCreateTextureThing, hkcreateTextureThing);
-    //DetourDetach(&(PVOID&)glb::oValidatePath, hkValidatePath);
+    //DetourDetach(&(PVOID&)glb::oCreateTextureThing, hkcreateTextureThing);
+    //DetourDetach(&(PVOID&)glb::tdConstructScreen, hkInitScreen);
+    DetourDetach(&(PVOID&)glb::tdInitScreenSecondary, hkInitScreenSecondary);
+    DetourDetach(&(PVOID&)glb::tdUpdateScreen, hkUpdateScreen);
     DetourTransactionCommit();
 }

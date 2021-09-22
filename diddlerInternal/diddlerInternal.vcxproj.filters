@@ -192,6 +192,12 @@
     <ClInclude Include="physMonitor.h">
       <Filter>Header Files\Mods</Filter>
     </ClInclude>
+    <ClInclude Include="constClock.h">
+      <Filter>Header Files\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="console.h">
+      <Filter>Header Files\Misc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -325,6 +331,12 @@
     </ClCompile>
     <ClCompile Include="physMonitor.cpp">
       <Filter>Source Files\Mods</Filter>
+    </ClCompile>
+    <ClCompile Include="constClock.cpp">
+      <Filter>Source Files\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="console.cpp">
+      <Filter>Source Files\misc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

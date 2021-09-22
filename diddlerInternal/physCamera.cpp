@@ -29,11 +29,11 @@ namespace physCamera {
 		//osp.unbreakable = true;
 		osp.nocull = true;
         if (useExistingParentBody) {
-            camera = spawner::placeChildObject("vox/Default/camera/object.vox");
+            camera = spawner::placeChildObject("KM_Vox/Default/camera/object.vox");
             glb::setObjectAttribute(camera.shapes[0], "nocull", "");
         }
         else {
-            camera = spawner::placeFreeObject("vox/Default/camera/object.vox");
+            camera = spawner::placeFreeObject("KM_Vox/Default/camera/object.vox");
             glb::setObjectAttribute(camera.shapes[0], "nocull", "");
         }
 		rcf.m_IgnoredShapes.push_back(camera.shapes[0]);
@@ -125,11 +125,11 @@ namespace physCamera {
         vy = bodyQuat * glm::vec3(0, 1, 0);
         vz = bodyQuat * glm::vec3(0, 0, 1); //(UP)
 
-        //find the "sensor" pos, statis translations are doodoo but whatever i dont care
+        //find the "sensor" pos, static translations are doodoo but whatever i dont care
         glm::vec3 centerpoint = offsetPos + ((vz * 0.15f) + (vy * 0.15f) + (vx * 0.15f));
         //drawCube({ centerpoint.x, centerpoint.y, centerpoint.z }, 0.05f, red);
 
-        deadCameraframes = 30;
+        deadCameraframes = 60;
         glm::vec3 cameraUp = bodyQuat * glm::vec3(0, 0, 1);;
 
         camera::drawCameraWindow(fps);

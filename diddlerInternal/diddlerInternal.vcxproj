@@ -166,6 +166,8 @@
     <ClInclude Include="c4.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="cameraManager.h" />
+    <ClInclude Include="console.h" />
+    <ClInclude Include="constClock.h" />
     <ClInclude Include="cutter.h" />
     <ClInclude Include="detours.h" />
     <ClInclude Include="detver.h" />
@@ -219,6 +221,8 @@
     <ClCompile Include="c4.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="cameraManager.cpp" />
+    <ClCompile Include="console.cpp" />
+    <ClCompile Include="constClock.cpp" />
     <ClCompile Include="cutter.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="dotProjector.cpp" />

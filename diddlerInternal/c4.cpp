@@ -8,9 +8,9 @@
 namespace c4 {
 
     static const char* bombSizeStr[] = {
-        "vox\\Default\\c4_small\\object.vox",
-        "vox\\Default\\c4_medium\\object.vox",
-        "vox\\Default\\c4_large\\object.vox"
+        "KM_Vox\\Default\\c4_small\\object.vox",
+        "KM_Vox\\Default\\c4_medium\\object.vox",
+        "KM_Vox\\Default\\c4_large\\object.vox"
     };
 
     static const int bombSizePowers[] = {

@@ -518,6 +518,7 @@ namespace spawner {
 
                     lastSpawnedObject.body->Position = { spawnPosx - translation.x,  spawnPosy - translation.y, spawnPosz - translation.z };
                     lastSpawnedObject.body->Velocity = lastSpawnedObject.params.startVelocity;
+                    lastSpawnedObject.body->Velocity = lastSpawnedObject.params.startVelocity;
                 }
                 else if(lastSpawnedObject.params.spawnType == objectSpawnType::placed) {
 
@@ -599,13 +600,13 @@ namespace spawner {
 
     std::vector<spawnerCatagory> enumerateSpawnableObjects() {
         std::vector<spawnerCatagory> returnObj = {};
-        for (const auto& file : fs::directory_iterator("vox"))
+        for (const auto& file : fs::directory_iterator("KM_Vox"))
         {
             int voxCount = 0;
 
-            // /\ iterate over each folder within [VOX]
+            // /\ iterate over each folder within [KM_Vox]
             std::string path = file.path().string();
-            std::string catig = path.substr(4, path.size() - 4);
+            std::string catig = path.substr(7, path.size() - 7);
             spawnerCatagory current;
             current.name = catig;
 

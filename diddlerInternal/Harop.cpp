@@ -27,7 +27,7 @@ namespace HaropDrone {
         spawner::objectSpawnerParams osp = {};
         //osp.unbreakable = true;
         osp.nocull = true;
-        camera = spawner::spawnObjectProxy("vox/Default/harop/object.vox", osp);
+        camera = spawner::spawnObjectProxy("KM_Vox/Default/harop/object.vox", osp);
         glb::setObjectAttribute(camera.shape, "explosive", "10");
 
         rcf.m_IgnoredBodies.push_back(camera.body);
