@@ -1,4 +1,8 @@
 #pragma once
+#include "objectSpawner.h"
+#include "camera.h"
+#include "threadedCamera.h"
+
 namespace toolgun {
 
     enum class spawngunMethod : int {
@@ -39,7 +43,11 @@ namespace toolgun {
         succ = 1,
         del = 2
     };
+
+    void updatePlayerCameraResolution();
     
+    extern int cameraResolutionX;
+    extern int cameraResolutionY;
     extern float ropeSlack;
     extern float ropeStrength;
     extern float ropeMaxStretch;
@@ -75,5 +83,6 @@ namespace toolgun {
     extern int slicer_resolution;
     extern spawner::LoadedSpawnableObject currentSpawngunObject;
     extern tgSettings currentsetting;
+    extern float cameraFps;
     void handleToolgun();
 }

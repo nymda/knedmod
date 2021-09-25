@@ -6,6 +6,7 @@
 #include "drawCube.h"
 #include "toolgun.h"
 #include "camera.h"
+#include "threadedCamera.h"
 
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_opengl3.h"
@@ -13,6 +14,7 @@
 #include "camera.h"
 #include "dotProjector.h"
 #include <glm/gtx/quaternion.hpp>
+
 
 namespace physCamera {
 
@@ -24,19 +26,22 @@ namespace physCamera {
 
     bool useExistingParentBody = false;
 
+    threadCamera::KMCamera* objCamera = 0;
+
 	void spawnCameraObject() {
+        if (objCamera) {
+            objCamera->destroy();
+        }
+
+        objCamera = new threadCamera::KMCamera(math::q_td2glm(glb::player->cameraQuat), math::v3_td2glm(glb::player->cameraPosition), { 0, 0, -1 }, { 0, -1, 0 }, toolgun::cameraResolutionX, toolgun::cameraResolutionY);
+        objCamera->cameraActive = false;
+
 		spawner::objectSpawnerParams osp = {};
-		//osp.unbreakable = true;
 		osp.nocull = true;
-        if (useExistingParentBody) {
-            camera = spawner::placeChildObject("KM_Vox/Default/camera/object.vox");
-            glb::setObjectAttribute(camera.shapes[0], "nocull", "");
-        }
-        else {
-            camera = spawner::placeFreeObject("KM_Vox/Default/camera/object.vox");
-            glb::setObjectAttribute(camera.shapes[0], "nocull", "");
-        }
-		rcf.m_IgnoredShapes.push_back(camera.shapes[0]);
+        camera = spawner::placeFreeObject("KM_Vox/Default/camera/object.vox");
+        glb::setObjectAttribute(camera.shapes[0], "nocull", "");
+
+        objCamera->rcf.m_IgnoredShapes.push_back(camera.shapes[0]);
 	}
 
 	bool genFilter = true;
@@ -44,10 +49,6 @@ namespace physCamera {
     float minDist = 1000.f;
     float maxDist = 0.f;
     int deadCameraframes = 0;
-
-    void destroyCamera() {
-        camera = {};
-    }
 
     float randFloat(float min, float max) {
         return min + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (max - min)));
@@ -62,45 +63,22 @@ namespace physCamera {
     std::chrono::high_resolution_clock execTimer;
     float fps = 0;
 
+    void destroyCamera() {
+        objCamera->destroy();
+        camera = {};
+    }
+
 	void updateCamera() {
-        FRAMESTART = execTimer.now();
-        int res = toolgun::cameraResolution;
-        float fov = toolgun::cameraFov;
-        int pixelOffset = 0;
-
-        if (camera.body == 0x00) {
-            return;
-        }
-
-        TDShape* cameraShape = camera.shapes[0];
         TDBody* cameraBody = camera.body;
-
-		if (!cameraBody || !cameraShape) { return; }
+        if (!cameraBody) { return; }
+        TDShape* cameraShape = camera.shapes[0];
+		if (!cameraShape) { return; }
+         
         if (cameraShape->isBroken) {
-            if (deadCameraframes > 0) {
-                free(pixelsColor);
-                pixelsColor = new byte[(res * res) * 4];
-
-                for (int y = res; y > 0; y--) {
-                    for (int x = 0; x < res; x++) {
-                        int shade = rand() % 255;
-                        pixelsColor[pixelOffset] = (byte)(shade);
-                        pixelsColor[pixelOffset + 1] = (byte)(shade);
-                        pixelsColor[pixelOffset + 2] = (byte)(shade);
-                        pixelsColor[pixelOffset + 3] = (byte)(255);
-                        pixelOffset += 4;
-                    }
-                }
-                camera::constructFrameManual(pixelsColor, res, res, 0x1908, false);
-                camera::drawCameraWindow(fps);
-                deadCameraframes--;
-            }
-            else {
-                destroyCamera();
-            }
-
+            destroyCamera();
             return;
         }
+
         if (cameraShape->getParentBody() != camera.body) {
             //if the physcamera object is stuck to something and the something becomes disconnected from its origional body, then update the physcameras offsets to its new body.
             camera.body = cameraShape->getParentBody();
@@ -127,31 +105,19 @@ namespace physCamera {
 
         //find the "sensor" pos, static translations are doodoo but whatever i dont care
         glm::vec3 centerpoint = offsetPos + ((vz * 0.15f) + (vy * 0.15f) + (vx * 0.15f));
-        //drawCube({ centerpoint.x, centerpoint.y, centerpoint.z }, 0.05f, red);
 
         deadCameraframes = 60;
         glm::vec3 cameraUp = bodyQuat * glm::vec3(0, 0, 1);;
 
-        camera::drawCameraWindow(fps);
+        objCamera->cameraActive = true;
+        objCamera->updateCameraSpecs(bodyQuat, centerpoint, { -1, 0, 0 }, -cameraUp);
+        threadCamera::drawCameraWndw(objCamera);
 
-        if (toolgun::cameraResolution != lastResolution || !frameBuffer) {
-            free(frameBuffer);
-            frameBuffer = new byte[(toolgun::cameraResolution * toolgun::cameraResolution) * 4];
-        }
-        lastResolution = toolgun::cameraResolution;
         if (camera::transparency) {
-            rcf.m_RejectTransparent = true;
+            objCamera->rcf.m_RejectTransparent = true;
         }
         else {
-            rcf.m_RejectTransparent = false;
+            objCamera->rcf.m_RejectTransparent = false;
         }
-
-        flip = !flip;
-        camera::interlacedImage(frameBuffer, toolgun::cameraResolution, flip, fov, 1.f, &bodyQuat, { centerpoint.x, centerpoint.y, centerpoint.z }, { -1, 0, 0 }, { -cameraUp.x, -cameraUp.y, -cameraUp.z }, &rcf);
-        camera::constructFrameManual(frameBuffer, toolgun::cameraResolution, toolgun::cameraResolution, 0x1908, false);
-
-        FRAMEEND = execTimer.now();
-        auto exTime = FRAMEEND - FRAMESTART;
-        fps = (std::chrono::duration_cast<std::chrono::microseconds>(exTime).count() / 1000.f);
 	}
 }

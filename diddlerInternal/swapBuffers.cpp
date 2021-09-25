@@ -125,7 +125,7 @@ bool terminator = true;
 void onSwapBuffersInit()
 {
 	if (!ImGui::GetCurrentContext()) {
-		std::cout << "CREATING IMGUI CONTEXT" << std::endl;
+		std::cout << "[i] Creating ImGui instance" << std::endl;
 		glewInit(); // initialize glew
 		ImGui::CreateContext(); // create ImGui's context
 		ImGui_ImplWin32_Init(glb::gWnd);
@@ -148,6 +148,10 @@ void onSwapBuffersInit()
 		style.Colors[ImGuiCol_TitleBgActive] = ImVec4(0.4f, 0.4f, 0.4f, 1.00f);
 		style.Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.2f, 0.2f, 0.2f, 1.00f);
 
+		style.Colors[ImGuiCol_Header] = ImVec4(0.3f, 0.3f, 0.3f, 1.00f);
+		style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.4f, 0.4f, 0.4f, 1.00f);
+		style.Colors[ImGuiCol_HeaderActive] = ImVec4(0.5f, 0.5f, 0.5f, 1.00f);
+
 		style.Colors[ImGuiCol_Separator] = ImVec4(0.3f, 0.3f, 0.3f, 1.00f);
 		style.Colors[ImGuiCol_SeparatorHovered] = ImVec4(0.4f, 0.4f, 0.4f, 1.00f);
 		style.Colors[ImGuiCol_SeparatorActive] = ImVec4(0.5f, 0.5f, 0.5f, 1.00f);
@@ -159,7 +163,7 @@ void onSwapBuffersInit()
 		style.Colors[ImGuiCol_SliderGrab] = ImVec4(0.5f, 0.5f, 0.5f, 1.00f);
 		style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.6f, 0.6f, 0.6f, 1.00f);
 
-		style.Colors[ImGuiCol_CheckMark] = ImVec4(0.6f, 0.6f, 0.6f, 1.00f);
+		style.Colors[ImGuiCol_CheckMark] = ImVec4(0.9f, 0.9f, 0.9f, 1.00f);
 	}
 }
 
@@ -578,22 +582,39 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			if (ImGui::Button("Camera", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::camera; };
 			if (selectedToolgunTool == (int)toolgun::tgSettings::camera) {
 				ImGui::Separator();
-				ImGui::SliderInt("Resolution", &toolgun::cameraResolution, 32, 512);
-				ImGui::SliderFloat("FOV", &toolgun::cameraFov, 1.f, 10.f, "%.1f");
-				ImGui::Checkbox("Monochrome", &camera::mono);
-				ImGui::Checkbox("Enable transparency", &camera::transparency);
-				ImGui::Checkbox("Save image", &toolgun::takeSnapshot);
-				ImGui::Checkbox("(Staged) show progress", &camera::showImageProgress);
-				ImGui::SliderInt("(Staged) max pixels / frame", &camera::staged_maxPixelsPerFrame, 100, 10000);
-				if (ImGui::RadioButton("Interlaced", camera::mode == camera::cameraMode::interlaced)) {
-					camera::mode = camera::cameraMode::interlaced;
+				ImGui::SliderInt("Resolution X", &toolgun::cameraResolutionX, 32, 512);
+				ImGui::SliderInt("Resolution Y", &toolgun::cameraResolutionY, 32, 512);
+				ImGui::SliderFloat("FOV", &toolgun::cameraFov, 1.f, 20.f, "%.1f");
+
+				if (ImGui::Button("Update")) {
+					for (threadCamera::KMCamera* kmc : threadCamera::gameCameras) {
+						kmc->setResolution(toolgun::cameraResolutionX, toolgun::cameraResolutionY);
+						kmc->fov = toolgun::cameraFov;
+					}
 				}
-				if (ImGui::RadioButton("Staged", camera::mode == camera::cameraMode::staged)) {
-					camera::mode = camera::cameraMode::staged;
+
+				if (ImGui::Button("Spawn physCamera")) {
+					physCamera::spawnCameraObject();
 				}
-				if (ImGui::RadioButton("Fullframe", camera::mode == camera::cameraMode::fullframe)) {
-					camera::mode = camera::cameraMode::fullframe;
+				if (ImGui::Button("Destroy physCamera")) {
+					physCamera::destroyCamera();
 				}
+
+
+				//ImGui::Checkbox("Monochrome", &camera::mono);
+				//ImGui::Checkbox("Enable transparency", &camera::transparency);
+				//ImGui::Checkbox("Save image", &toolgun::takeSnapshot);
+				//ImGui::Checkbox("(Staged) show progress", &camera::showImageProgress);
+				//ImGui::SliderInt("(Staged) max pixels / frame", &camera::staged_maxPixelsPerFrame, 100, 10000);
+				//if (ImGui::RadioButton("Interlaced", camera::mode == camera::cameraMode::interlaced)) {
+				//	camera::mode = camera::cameraMode::interlaced;
+				//}
+				//if (ImGui::RadioButton("Staged", camera::mode == camera::cameraMode::staged)) {
+				//	camera::mode = camera::cameraMode::staged;
+				//}
+				//if (ImGui::RadioButton("Fullframe", camera::mode == camera::cameraMode::fullframe)) {
+				//	camera::mode = camera::cameraMode::fullframe;
+				//}
 				ImGui::Separator();
 			}
 
@@ -673,34 +694,34 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::SliderInt("C4 size", &c4::selectedBombSizeInt, 1, 3);
 			}
 
-			if (ImGui::CollapsingHeader("physCamera")) {
-				if (ImGui::Button("Spawn physCamera")) {
-					physCamera::spawnCameraObject();
-				}
-				//if (ImGui::Button("Spawn physMonitor")) {
-				//	physMonitor::spawnMonitor();
-				//}
-				if (ImGui::Button("Destroy physCamera")) {
-					physCamera::destroyCamera();
-				}
-				ImGui::Separator();
-				ImGui::SliderInt("Resolution", &toolgun::cameraResolution, 32, 512);
-				ImGui::SliderFloat("FOV", &toolgun::cameraFov, 1.f, 10.f, "%.1f");
-				ImGui::Checkbox("Monochrome", &camera::mono);
-				ImGui::Checkbox("Enable transparency", &camera::transparency);
-				ImGui::Checkbox("Save image", &toolgun::takeSnapshot);
-				ImGui::Checkbox("(Staged) show progress", &camera::showImageProgress);
-				ImGui::SliderInt("(Staged) max pixels / frame", &camera::staged_maxPixelsPerFrame, 100, 10000);
-				if (ImGui::RadioButton("Interlaced", camera::mode == camera::cameraMode::interlaced)) {
-					camera::mode = camera::cameraMode::interlaced;
-				}
-				if (ImGui::RadioButton("Staged", camera::mode == camera::cameraMode::staged)) {
-					camera::mode = camera::cameraMode::staged;
-				}
-				if (ImGui::RadioButton("Fullframe", camera::mode == camera::cameraMode::fullframe)) {
-					camera::mode = camera::cameraMode::fullframe;
-				}
-			}
+			//if (ImGui::CollapsingHeader("physCamera")) {
+			//	if (ImGui::Button("Spawn physCamera")) {
+			//		physCamera::spawnCameraObject();
+			//	}
+			//	//if (ImGui::Button("Spawn physMonitor")) {
+			//	//	physMonitor::spawnMonitor();
+			//	//}
+			//	if (ImGui::Button("Destroy physCamera")) {
+			//		physCamera::destroyCamera();
+			//	}
+			//	ImGui::Separator();
+			//	ImGui::SliderInt("Resolution", &toolgun::cameraResolution, 32, 512);
+			//	ImGui::SliderFloat("FOV", &toolgun::cameraFov, 1.f, 10.f, "%.1f");
+			//	ImGui::Checkbox("Monochrome", &camera::mono);
+			//	ImGui::Checkbox("Enable transparency", &camera::transparency);
+			//	ImGui::Checkbox("Save image", &toolgun::takeSnapshot);
+			//	ImGui::Checkbox("(Staged) show progress", &camera::showImageProgress);
+			//	ImGui::SliderInt("(Staged) max pixels / frame", &camera::staged_maxPixelsPerFrame, 100, 10000);
+			//	if (ImGui::RadioButton("Interlaced", camera::mode == camera::cameraMode::interlaced)) {
+			//		camera::mode = camera::cameraMode::interlaced;
+			//	}
+			//	if (ImGui::RadioButton("Staged", camera::mode == camera::cameraMode::staged)) {
+			//		camera::mode = camera::cameraMode::staged;
+			//	}
+			//	if (ImGui::RadioButton("Fullframe", camera::mode == camera::cameraMode::fullframe)) {
+			//		camera::mode = camera::cameraMode::fullframe;
+			//	}
+			//}
 
 			if (ImGui::CollapsingHeader("environment (buggy)")) {
 				if (ImGui::Button("Set night")) {

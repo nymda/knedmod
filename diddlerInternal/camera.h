@@ -25,5 +25,5 @@ namespace camera {
 	float updateImageColour(int resolution, float fov);
 	void constructFrameManual(byte* pixels, int resolutionX, int resolutionY, int format, bool saveSnapshot);
 	void interlacedImage(byte* frameBuffer, int resolution, bool flip, float fov, float aspect, glm::quat* camRotation, td::Vec3 camPosition, td::Vec3 forwardVector, td::Vec3 upVector, RaycastFilter* filter);
-
+	void constructImageFromFramebuffer();
 }

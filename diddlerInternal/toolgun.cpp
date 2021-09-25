@@ -6,6 +6,7 @@
 #include "lantern.h"
 #include "maths.h"
 #include "camera.h"
+#include "threadedCamera.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -35,6 +36,7 @@ namespace toolgun {
     spawner::LoadedSpawnableObject currentSpawngunObject;
     bool constSpawn = false;
 
+    threadCamera::KMCamera* playerCamera = 0;
 
     //minigun specific vars
     int minigunBulletType = 0;
@@ -88,7 +90,9 @@ namespace toolgun {
     //camera specific items
     bool frameOnce = false;
     bool takeSnapshot = false;
-    int cameraResolution = 64;
+    int cameraResolution = 32; //old
+    int cameraResolutionX = 100;
+    int cameraResolutionY = 100;
     float cameraFov = 8.f;
     float cameraFps = 0.f;
 
@@ -123,6 +127,13 @@ namespace toolgun {
 
     //duplicator specific items
     TDShape* duplicationShape = 0;
+
+    void updatePlayerCameraResolution() {
+        if (playerCamera) {
+            playerCamera->setResolution(cameraResolutionX, cameraResolutionY);
+            playerCamera->fov = cameraFov;
+        }
+    }
 
     void handleToolgun() {
 
@@ -198,8 +209,6 @@ namespace toolgun {
                             params.nocull = true;
                             spawner::throwFreeObject(currentSpawngunObject.voxPath, params);
                         }
-
-
                     }
                 }
                 else {
@@ -458,13 +467,30 @@ namespace toolgun {
 
             }
             else if (currentsetting == tgSettings::camera) {
-                if ((glb::player->isAttacking == true && !glb::displayMenu) || !camera::staged_newFrame) {
-                    cameraFps = camera::updateImageColour(cameraResolution, cameraFov);
+
+                if (!playerCamera) {
+                    playerCamera = new threadCamera::KMCamera(math::q_td2glm(glb::player->cameraQuat), math::v3_td2glm(glb::player->cameraPosition), { 0, 0, -1 }, { 0, -1, 0 }, toolgun::cameraResolutionX, toolgun::cameraResolutionY);
+                    return;
+                }
+
+                if (glb::player->isAttacking && !glb::displayMenu) {
+                    playerCamera->cameraActive = true;
+                    playerCamera->updateCameraSpecs(math::q_td2glm(glb::player->cameraQuat), math::v3_td2glm(glb::player->cameraPosition), { 0, 0, -1 }, { 0, -1, 0 });
+                }
+                else {
+                    playerCamera->cameraActive = false;
+                }
+
+                threadCamera::drawCameraWndw(playerCamera);
+
+                /*if ((glb::player->isAttacking == true && !glb::displayMenu) || !camera::staged_newFrame) {
+                    toolgun::cameraFps = camera::updateImageColour(toolgun::cameraResolution, toolgun::cameraFov);
+
                 }
                 else {
                     camera::staged_newFrame = true;
                 }
-                camera::drawCameraWindow(cameraFps);
+                camera::drawCameraWindow(cameraFps);*/
             }
             else if (currentsetting == tgSettings::rope) {
                 raycaster::rayData rd = raycaster::castRayPlayer();

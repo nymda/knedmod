@@ -28,6 +28,23 @@ std::vector<std::string> splitCommand(std::string target)
 	return vstrings;
 }
 
+std::vector<std::string> splitPath(std::string target)
+{
+	std::replace(target.begin(), target.end(), '/', ' ');
+	std::replace(target.begin(), target.end(), '\\', ' ');
+	std::stringstream ss(target);
+	std::istream_iterator<std::string> begin(ss);
+	std::istream_iterator<std::string> end;
+	std::vector<std::string> vstrings(begin, end);
+
+	for (std::string& str : vstrings) {
+		str = std::string(str.c_str()); //need this or the last arg has random trailing spaces that you cant delete with string.erase
+
+	}
+
+	return vstrings;
+}
+
 struct consoleLine {
 	std::string text = "";
 	DWORD format = MSG_GENERIC;
@@ -128,7 +145,7 @@ struct comm_explode : public command {
 	DWORD exec(std::vector<std::string> args) override {
 		try {
 			if (args.size() < 4) {
-				throw std::invalid_argument(0);
+				return COMM_ERROR_ARGS;
 			}
 
 			float X;
@@ -169,7 +186,7 @@ struct comm_tp : public command {
 	DWORD exec(std::vector<std::string> args) override {
 		try {
 			if (args.size() < 4) {
-				throw std::invalid_argument(0);
+				return COMM_ERROR_ARGS;
 			}
 
 			float X;
@@ -188,8 +205,13 @@ struct comm_tp : public command {
 				Z = std::stof(args[3]);
 			}
 
-			td::Vec3 point = { X, Y, Z };
-			glb::player->position = point;
+			if (noclip::inNoclip) {
+				glb::player->cameraPosition = { X, Y, Z };
+			}
+			else {
+				glb::player->position = { X, Y, Z };
+			}
+
 			console::writeConsole("Teleported to: " + std::to_string(X) + ", " + std::to_string(Y) + ", " + std::to_string(Z), MSG_GENERIC);
 			return COMM_OK;
 		}
@@ -208,7 +230,7 @@ struct comm_spawn : public command {
 	DWORD exec(std::vector<std::string> args) override {
 		try {
 			if (args.size() < 2) {
-				throw std::invalid_argument(0);
+				return COMM_ERROR_ARGS;
 			}
 
 			std::filesystem::path f{ args[1] };
@@ -224,8 +246,12 @@ struct comm_spawn : public command {
 				return COMM_ERROR_EXEC;
 			}
 
+			raycaster::rayData rd = raycaster::castRayPlayer();
+
 			td::small_string ssPath = td::small_string(args[1].c_str());
 			spawner::placeFreeObject(args[1]);
+			std::vector<std::string> sPath = splitPath(args[1]);
+			console::writeConsole("Spawned " + sPath.back() + " @ " + std::to_string(rd.worldPos.x) + ", " + std::to_string(rd.worldPos.y) + ", " + std::to_string(rd.worldPos.z), MSG_GENERIC);
 
 			return COMM_OK;
 		}
@@ -244,7 +270,7 @@ struct comm_health : public command {
 	DWORD exec(std::vector<std::string> args) override {
 		try {
 			if (args.size() < 2) {
-				throw std::invalid_argument(0);
+				return COMM_ERROR_ARGS;
 			}
 
 			float H = std::stof(args[1]);

@@ -1162,7 +1162,7 @@ enum ImGuiCol_
     ImGuiCol_CheckMark,
     ImGuiCol_SliderGrab,
     ImGuiCol_SliderGrabActive,
-    ImGuiCol_Button,
+    ImGuiCol_Button, 
     ImGuiCol_ButtonHovered,
     ImGuiCol_ButtonActive,
     ImGuiCol_Header,                // Header* colors are used for CollapsingHeader, TreeNode, Selectable, MenuItem

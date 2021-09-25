@@ -4,13 +4,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include "cameraManager.h"
+#include "console.h"
 
 namespace noclip {
 
 	/*
-	* i hate making this stupid fucking function work, its such a fucking pain in the ass, why are there two things writing to Y that are at the same location, why does it do that
-	* why dont i just sigscan for the functions instead of doing this manually
-	* why do i hate myself
+	* VS might show an issue with glb::player being incomplete, but this does not prevent compilation
 	*/
 
 	bool enabled = false;
@@ -79,14 +78,16 @@ namespace noclip {
 			movementVector.z -= (cameraSideVector.z);
 		}
 
-		if (((GetAsyncKeyState(VK_SHIFT) >> 15) & 0x0001) == 0x0001) {
-			speed = 0.5f; //fast
-		}
-		else if (((GetAsyncKeyState(VK_CONTROL) >> 15) & 0x0001) == 0x0001) {
-			speed = 10.0f; //slow
-		}
-		else {
-			speed = 3.0f; //normal
+		if (!(glb::displayMenu || console::consoleOpen)) {
+			if (((GetAsyncKeyState(VK_SHIFT) >> 15) & 0x0001) == 0x0001) {
+				speed = 0.5f; //fast
+			}
+			else if (((GetAsyncKeyState(VK_CONTROL) >> 15) & 0x0001) == 0x0001) {
+				speed = 10.0f; //slow
+			}
+			else {
+				speed = 3.0f; //normal
+			}
 		}
 
 		movementVector.x = movementVector.x / speed;
@@ -99,14 +100,17 @@ namespace noclip {
 			camPos->z = camPos->z + movementVector.z;
 		}
 
-		if (((GetAsyncKeyState(VK_SPACE) >> 15) & 0x0001) == 0x0001) {
-			if (((GetAsyncKeyState(VK_SHIFT) >> 15) & 0x0001) == 0x0001) {
-				camPos->y = camPos->y + 2.5;
-			}
-			else {
-				camPos->y = camPos->y + 0.5;
+		if (!(glb::displayMenu || console::consoleOpen)) {
+			if (((GetAsyncKeyState(VK_SPACE) >> 15) & 0x0001) == 0x0001) {
+				if (((GetAsyncKeyState(VK_SHIFT) >> 15) & 0x0001) == 0x0001) {
+					camPos->y = camPos->y + 2.5;
+				}
+				else {
+					camPos->y = camPos->y + 0.5;
+				}
 			}
 		}
+
 
 		glb::player->position = { 0, 500, 0 };
 		glb::player->velocity = { 0, 0, 0 };

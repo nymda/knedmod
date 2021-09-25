@@ -198,6 +198,9 @@
     <ClInclude Include="console.h">
       <Filter>Header Files\Misc</Filter>
     </ClInclude>
+    <ClInclude Include="threadedCamera.h">
+      <Filter>Header Files\Mods</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -337,6 +340,9 @@
     </ClCompile>
     <ClCompile Include="console.cpp">
       <Filter>Source Files\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="threadedCamera.cpp">
+      <Filter>Source Files\Mods</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

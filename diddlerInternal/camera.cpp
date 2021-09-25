@@ -14,6 +14,10 @@
 
 typedef unsigned int uint;
 
+/*
+    Abandon all hope, ye who enter here
+*/
+
 namespace camera {
     void* image_texture;
     void* alt_texture;
@@ -458,6 +462,28 @@ namespace camera {
     std::chrono::steady_clock::time_point FRAMESTART;
     std::chrono::steady_clock::time_point FRAMEEND;
     float fpsFlt = 0;
+    bool frameFinished = false;
+    dotProjector::pixelResponse* lastResponse = 0;
+
+    void constructImageFromFramebuffer() {
+        if (mode == cameraMode::interlaced) {
+            if (frameBuffer) {
+                constructFrameManual(frameBuffer, lastResolution, lastResolution, 0x1908, toolgun::takeSnapshot);
+            }
+        }
+        else if (mode == cameraMode::staged) {
+            if (frameBuffer) {
+                if (frameFinished || showImageProgress) {
+                    constructFrameManual(frameBuffer, lastResolution, lastResolution, 0x1908, (toolgun::takeSnapshot && frameFinished));
+                }
+            }
+        }
+        else if (mode == cameraMode::fullframe) {
+            if (lastResponse) {
+                constructColourFrame(lastResponse, lastResolution, true, toolgun::takeSnapshot);
+            }
+        }
+    }
 
 
     float updateImageColour(int resolution, float fov) {
@@ -491,7 +517,7 @@ namespace camera {
         else if (mode == cameraMode::staged) {
             if (staged_newFrame) { FRAMESTART = execTimer.now(); }
 
-            bool frameFinished = stagedImage(frameBuffer, resolution, fov, 1.f, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
+            frameFinished = stagedImage(frameBuffer, resolution, fov, 1.f, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, 1, 0 }, &rcf);
             if (frameFinished || showImageProgress) {
                 constructFrameManual(frameBuffer, resolution, resolution, 0x1908, (toolgun::takeSnapshot && frameFinished));
             }
@@ -506,6 +532,7 @@ namespace camera {
             FRAMESTART = execTimer.now();
 
             dotProjector::pixelResponse* response = dotProjector::projectDotMatrix(resolution, fov, 1.f, true, (glm::quat*)&glb::player->cameraQuat, glb::player->cameraPosition, { 0, 0, -1 }, { 0, -1, 0 }, &rcf);
+            lastResponse = response;
             constructColourFrame(response, resolution, true, toolgun::takeSnapshot);
 
             FRAMEEND = execTimer.now();
@@ -515,4 +542,14 @@ namespace camera {
         }
         return 0.f;
     }
+
+    byte* frameBufferA;
+    byte* frameBufferB;
+    byte* frameBufferWrite;
+    byte* frameBufferDisplay;
+
+    void* frameTextureA;
+    void* frameTextureB;
+    void* frameTextureWrite;
+    void* frameTextureDisplay;
 }

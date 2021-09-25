@@ -104,20 +104,12 @@ DWORD WINAPI main(HMODULE hModule)
     //CloseHandle(Pr);
     //std::wcout << "M NAME: " << buffer << std::endl;
 
-    HANDLE mainHandleDebug = GetModuleHandle(L"teardownsteamless.exe");
-    HANDLE mainHandleSteam = GetModuleHandle(L"teardown.exe");
+    HANDLE mainHandle = GetModuleHandle(NULL);
     getTeardownHwnd();
 
     std::cout << "[I] HWND           : " << glb::gWnd << std::endl;
-    std::cout << "[I] mainHandleDebug: " << mainHandleDebug << std::endl;
-    std::cout << "[I] mainHandleSteam: " << mainHandleSteam << std::endl;
-
-    if (mainHandleSteam != 0) {
-        glb::moduleBase = (uintptr_t)mainHandleSteam;
-    }
-    else {
-        glb::moduleBase = (uintptr_t)mainHandleDebug;
-    }
+    std::cout << "[I] baseModuleHandle: " << mainHandle << std::endl;
+    glb::moduleBase = (uintptr_t)mainHandle;
 
     initSwapBuffersHook();
 
@@ -135,7 +127,7 @@ DWORD WINAPI main(HMODULE hModule)
     initTestHook();
     initGodmodeHook();
     focusHook::initFocusHook();
-    //constClock::beginConstantClock(16.6f);
+    constClock::beginConstantClock(16.6f);
 
     //initMovementHook();
 
@@ -157,7 +149,7 @@ DWORD WINAPI main(HMODULE hModule)
                 terminateTestHook();
                 terminateGodmodeHook();
                 focusHook::terminateFocusHook();
-                //constClock::endConstantClock();
+                constClock::endConstantClock();
 
                 //sleep
                 Sleep(250);
