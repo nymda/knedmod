@@ -234,6 +234,7 @@ namespace math {
     glm::quat q_td2glm(td::Vec4 in);
     td::Vec3 v3_glm2td(glm::vec3 in);
     td::Vec4 q_glm2td(glm::quat in);
+    float randFloat(float min, float max);
 }
 
 namespace utils {

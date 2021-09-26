@@ -5,7 +5,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include "drawCube.h"
-#include "toolgun.h"
 
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_opengl3.h"
@@ -25,17 +24,17 @@ namespace threadCamera {
 	class KMCamera {
 		int resolutionX = 160;
 		int resolutionY = 120;
-
 		int nextResolutionX = 160;
 		int nextResolutionY = 120;
 		bool bufferUpdateNeeded = false;
 		void* camTexture;
 		float lastFrameExecTime = 0.f;
-		bool cameraDestroyed = false;
 		bool switchDestroyBuffers = false;
 
 	public:
 		bool cameraActive = true;
+		bool cameraDestroyed = false;
+		int DCF = 0;
 
 		RaycastFilter rcf = { };
 
@@ -55,6 +54,7 @@ namespace threadCamera {
 		void* createImage();
 		void swapBuffers();
 		void setResolution(int X, int Y);
+		void setFov(float fov);
 		float updateImage();
 
 		float getFps();

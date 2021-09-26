@@ -163,6 +163,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="tgtBase.h" />
     <ClInclude Include="c4.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="cameraManager.h" />
@@ -213,6 +214,12 @@
     <ClInclude Include="mem.h" />
     <ClInclude Include="swapBuffers.h" />
     <ClInclude Include="TDObjects.h" />
+    <ClInclude Include="tgtCamera.h" />
+    <ClInclude Include="tgtExplode.h" />
+    <ClInclude Include="tgtMinigun.h" />
+    <ClInclude Include="tgtRope.h" />
+    <ClInclude Include="tgtSpawner.h" />
+    <ClInclude Include="tgtWeld.h" />
     <ClInclude Include="thirdperson.h" />
     <ClInclude Include="threadedCamera.h" />
     <ClInclude Include="toolgun.h" />
@@ -251,6 +258,11 @@
     <ClCompile Include="physCamera.cpp" />
     <ClCompile Include="physMonitor.cpp" />
     <ClCompile Include="Raycaster.cpp" />
+    <ClCompile Include="tgtCamera.cpp" />
+    <ClCompile Include="tgtExplode.cpp" />
+    <ClCompile Include="tgtMinigun.cpp" />
+    <ClCompile Include="tgtRope.cpp" />
+    <ClCompile Include="tgtSpawner.cpp" />
     <ClCompile Include="TDFuncs.cpp" />
     <ClCompile Include="Global.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
@@ -262,6 +274,7 @@
     <ClCompile Include="mem.cpp" />
     <ClCompile Include="swapBuffers.cpp" />
     <ClCompile Include="TDObjects.cpp" />
+    <ClCompile Include="tgtWeld.cpp" />
     <ClCompile Include="thirdperson.cpp" />
     <ClCompile Include="threadedCamera.cpp" />
     <ClCompile Include="toolgun.cpp" />

@@ -1,7 +1,27 @@
 #pragma once
 #include "objectSpawner.h"
-#include "camera.h"
-#include "threadedCamera.h"
+
+#include "tgtBase.h"
+#include "tgtSpawner.h"
+#include "tgtMinigun.h"
+#include "tgtWeld.h"
+#include "tgtRope.h"
+#include "tgtExplode.h"
+#include "tgtCamera.h"
+
+namespace nToolgun {
+    void init();
+    void runToolgun();
+
+    extern tgt_spawner* instance_spawner;
+    extern tgt_minigun* instance_minigun;
+    extern tgt_weld* instance_weld;
+    extern tgt_rope* instance_rope;
+    extern tgt_explode* instance_explode;
+    extern tgt_camera* instance_camera;
+
+    extern toolnames currentTool;
+}
 
 namespace toolgun {
 

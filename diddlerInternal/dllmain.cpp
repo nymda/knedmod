@@ -33,6 +33,15 @@
 
 #pragma comment(lib, "psapi.lib")
 
+/*
+
+    welcome to the knedmod source code.
+    i begun writing this program when i was incredibly new to c++
+    as a result it is almost exclusively bad programming practeces, spaghettified global variables and unmanagable mess. 
+    enjoy, and make sure vodka is on hand.
+
+*/
+
 FILE* makeConsole() {
     AllocConsole();
     std::wstring strW = L"DEBUG";

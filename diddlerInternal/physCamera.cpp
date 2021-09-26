@@ -29,13 +29,10 @@ namespace physCamera {
     threadCamera::KMCamera* objCamera = 0;
 
 	void spawnCameraObject() {
-        if (objCamera) {
-            objCamera->destroy();
-        }
-
-        objCamera = new threadCamera::KMCamera(math::q_td2glm(glb::player->cameraQuat), math::v3_td2glm(glb::player->cameraPosition), { 0, 0, -1 }, { 0, -1, 0 }, toolgun::cameraResolutionX, toolgun::cameraResolutionY);
-        objCamera->cameraActive = false;
-
+        if (!objCamera) {
+            objCamera = new threadCamera::KMCamera(math::q_td2glm(glb::player->cameraQuat), math::v3_td2glm(glb::player->cameraPosition), { 0, 0, -1 }, { 0, -1, 0 }, toolgun::cameraResolutionX, toolgun::cameraResolutionY);
+        }   
+        objCamera->cameraDestroyed = false;
 		spawner::objectSpawnerParams osp = {};
 		osp.nocull = true;
         camera = spawner::placeFreeObject("KM_Vox/Default/camera/object.vox");
@@ -69,19 +66,27 @@ namespace physCamera {
     }
 
 	void updateCamera() {
+        if (!objCamera) { return; }
+
+        if (objCamera->DCF < 60) {
+            threadCamera::drawCameraWndw(objCamera);
+        }
+
         TDBody* cameraBody = camera.body;
         if (!cameraBody) { return; }
         TDShape* cameraShape = camera.shapes[0];
 		if (!cameraShape) { return; }
          
         if (cameraShape->isBroken) {
-            destroyCamera();
+            objCamera->cameraDestroyed = true;
+            camera = {};
             return;
         }
 
         if (cameraShape->getParentBody() != camera.body) {
             //if the physcamera object is stuck to something and the something becomes disconnected from its origional body, then update the physcameras offsets to its new body.
             camera.body = cameraShape->getParentBody();
+            if (!camera.body) { return;  }
             glb::oUpdateShapes((uintptr_t)cameraBody);
             glb::tdUpdateFunc(cameraBody, 0, 1);
         }
@@ -111,7 +116,6 @@ namespace physCamera {
 
         objCamera->cameraActive = true;
         objCamera->updateCameraSpecs(bodyQuat, centerpoint, { -1, 0, 0 }, -cameraUp);
-        threadCamera::drawCameraWndw(objCamera);
 
         if (camera::transparency) {
             objCamera->rcf.m_RejectTransparent = true;

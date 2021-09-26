@@ -50,19 +50,19 @@ namespace constClock {
 	//this function runs at a constant speed, depending on the input mstime
 	void cUpdateFunction() {
 		for (threadCamera::KMCamera* kmc : threadCamera::gameCameras) {
-			if (kmc->isDestroyed()) {
-				removePosition.push_back(kmc);
-			}
-			else if (kmc->cameraActive) {
+			//if (kmc->isDestroyed()) {
+			//	removePosition.push_back(kmc);
+			//}
+			if (kmc->cameraActive) {
 				kmc->updateImage();
 			}
 		}
 
-		for (threadCamera::KMCamera* p : removePosition) {
-			threadCamera::gameCameras.erase(std::find(threadCamera::gameCameras.begin(), threadCamera::gameCameras.end(), p));
-		}
+		//for (threadCamera::KMCamera* p : removePosition) {
+		//	threadCamera::gameCameras.erase(std::find(threadCamera::gameCameras.begin(), threadCamera::gameCameras.end(), p));
+		//}
 
-		removePosition.clear();
+		//removePosition.clear();
 		//tp1 = tp2;
 		//tp2 = execTimer.now();
 		//std::cout << "Pulse time: " << std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(tp2 - tp1).count() / 1000.f) << std::endl;

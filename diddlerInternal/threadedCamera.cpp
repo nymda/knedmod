@@ -23,7 +23,7 @@ namespace threadCamera {
 
 	void drawCameraWndw(KMCamera* camera) {
 		if (!camera) { return; }
-		if (camera->isDestroyed()) { return; }
+		//if (camera->isDestroyed()) { return; }
 
 		ImGui::Begin("Camera");
 		ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -60,9 +60,9 @@ namespace threadCamera {
 
 	void KMCamera::updateCameraSpecs(glm::quat rot, glm::vec3 pos, glm::vec3 forwv, glm::vec3 upv) {
 
-		std::cout << "RW: " << std::to_string(rot.w) << " RX : " << std::to_string(rot.x) << " RY : " << std::to_string(rot.y) << " RZ : " << std::to_string(rot.z) << std::endl;
-		std::cout << "PX : " << std::to_string(pos.x) << " PY : " << std::to_string(pos.y) << " PZ : " << std::to_string(pos.z) << std::endl;
-		std::cout << "===" << std::endl;
+		//std::cout << "RW: " << std::to_string(rot.w) << " RX : " << std::to_string(rot.x) << " RY : " << std::to_string(rot.y) << " RZ : " << std::to_string(rot.z) << std::endl;
+		//std::cout << "PX : " << std::to_string(pos.x) << " PY : " << std::to_string(pos.y) << " PZ : " << std::to_string(pos.z) << std::endl;
+		//std::cout << "===" << std::endl;
 
 		rotation = rot;
 		position = pos;
@@ -71,9 +71,9 @@ namespace threadCamera {
 	}
 
 	void* KMCamera::createImage() {
-		if (cameraDestroyed) {
-			return 0;
-		}
+		//if (cameraDestroyed) {
+		//	return 0;
+		//}
 
 		glBindTexture(GL_TEXTURE_2D, (GLuint)camTexture);
 		glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
@@ -82,8 +82,6 @@ namespace threadCamera {
 	}
 
 	void KMCamera::swapBuffers() {
-		//std::cout << "SHOW: " << std::hex << bufferShow << " WRITE: " << std::hex << bufferWrite << std::endl;
-
 		pixel* tmp = bufferShow;
 		bufferShow = bufferWrite;
 		bufferWrite = tmp;
@@ -108,7 +106,7 @@ namespace threadCamera {
 	}
 
 	void KMCamera::destroy() {
-		switchDestroyBuffers = true;
+		cameraDestroyed = true;
 	}
 	
 	bool KMCamera::isDestroyed() {
@@ -116,31 +114,12 @@ namespace threadCamera {
 	}
 
 	float KMCamera::updateImage() {
-		if (switchDestroyBuffers) {
-			delete(bufferA);
-			delete(bufferB);
-			cameraDestroyed = true;
-		}
-
 		glm::quat thisFrameQuat = rotation;
 		glm::vec3 thisFramePosition = position;
 
 		float pxSizeX = (fov / resolutionX);
 		float pxSizeY = (fov / resolutionY);
 		int pxPointer = 0;
-
-		if (cameraDestroyed) {
-			//bufferShow = bufferA;
-			//for (int y = 0; y < resolutionY; y++) {
-			//	byte cShade = (byte)(rand() % 255);
-
-			//	for (int x = resolutionX; x > 0; x--) {
-			//		bufferWrite[pxPointer] = { (byte)cShade,(byte)cShade, (byte)cShade, 0xFF };
-			//		pxPointer++;
-			//	}
-			//}
-			return 0.f;
-		}
 
 		if (bufferUpdateNeeded) {
 			resolutionX = nextResolutionX;
@@ -156,6 +135,26 @@ namespace threadCamera {
 
 			FillMemory(bufferA, (resolutionX * resolutionY) * 4, 0x00);
 			FillMemory(bufferB, (resolutionX * resolutionY) * 4, 0x00);
+		}
+
+		if (cameraDestroyed) {
+			FRAMESTART = execTimer.now();
+			DCF++;
+			for (int y = 0; y < resolutionY; y++) {
+				for (int x = resolutionX; x > 0; x--) {
+					byte rLineShade = (byte)(rand() % 255);
+					bufferWrite[pxPointer] = { rLineShade, rLineShade, rLineShade, 0xFF };
+					pxPointer++;
+				}
+			}
+
+			swapBuffers();
+			FRAMEEND = execTimer.now();
+			lastFrameExecTime = (std::chrono::duration_cast<std::chrono::microseconds>(FRAMEEND - FRAMESTART).count() / 1000.f);
+			return lastFrameExecTime;
+		}
+		else {
+			DCF = 0;
 		}
 
 		FRAMESTART = execTimer.now();
@@ -197,6 +196,7 @@ namespace threadCamera {
 		swapBuffers();
 		FRAMEEND = execTimer.now();
 		lastFrameExecTime = (std::chrono::duration_cast<std::chrono::microseconds>(FRAMEEND - FRAMESTART).count() / 1000.f);
+		Sleep(1);
 		return lastFrameExecTime;
 	}
 

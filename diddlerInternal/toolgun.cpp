@@ -5,8 +5,6 @@
 #include "toolgun.h"
 #include "lantern.h"
 #include "maths.h"
-#include "camera.h"
-#include "threadedCamera.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -14,8 +12,81 @@
 #include "dotProjector.h"
 #include <glm/gtx/quaternion.hpp>
 
+#include "tgtBase.h"
+#include "tgtSpawner.h"
+#include "tgtMinigun.h"
+#include "tgtWeld.h"
+#include "tgtRope.h"
+#include "tgtExplode.h"
+#include "tgtCamera.h"
+
+namespace nToolgun {
+    const char* tgName = "toolgun";
+
+    //tool instances
+    tgt_spawner* instance_spawner = 0;
+    tgt_minigun* instance_minigun = 0;
+    tgt_weld* instance_weld = 0;
+    tgt_rope* instance_rope = 0;
+    tgt_explode* instance_explode = 0;
+    tgt_camera* instance_camera = 0;
+
+    toolnames currentTool = TOOL_SPAWNER;
+    bool isInit = false;
+
+    void init() {
+        instance_spawner = new tgt_spawner;
+        instance_minigun = new tgt_minigun;
+        instance_weld = new tgt_weld;
+        instance_rope = new tgt_rope;
+        instance_explode = new tgt_explode;
+        instance_camera = new tgt_camera;
+
+        isInit = true;
+    }
+
+    void runToolgun() {
+        if (!isInit) {
+            init();
+            return;
+        }
+
+        if (memcmp(glb::player->heldItemName, tgName, 8) == 0) {
+            switch (currentTool) {
+                case TOOL_SPAWNER:
+                    instance_spawner->exec();
+                    break;
+
+                case TOOL_MINIGUN:
+                    instance_minigun->exec();
+                    break;
+
+                case TOOL_WELD:
+                    instance_weld->exec();
+                    break;
+
+                case TOOL_ROPE:
+                    instance_rope->exec();
+                    break;
+
+                case TOOL_CLICKEXPLODE:
+                    instance_explode->exec();
+                    break;
+
+                case TOOL_CAMERA:
+                    instance_camera->exec();
+                    break;
+
+            }
+        }
+    }
+}
 
 namespace toolgun {
+
+    //this entire thing is an absolute fucking abomination
+    //what was i thinking putting this all in one file
+
     bool testingAttackOnce = true;
 
     bool spawnOnce = false;
@@ -35,8 +106,6 @@ namespace toolgun {
     bool createOrigionalSpawnObject = true;
     spawner::LoadedSpawnableObject currentSpawngunObject;
     bool constSpawn = false;
-
-    threadCamera::KMCamera* playerCamera = 0;
 
     //minigun specific vars
     int minigunBulletType = 0;
@@ -129,10 +198,10 @@ namespace toolgun {
     TDShape* duplicationShape = 0;
 
     void updatePlayerCameraResolution() {
-        if (playerCamera) {
-            playerCamera->setResolution(cameraResolutionX, cameraResolutionY);
-            playerCamera->fov = cameraFov;
-        }
+        //if (playerCamera) {
+        //    playerCamera->setResolution(cameraResolutionX, cameraResolutionY);
+        //    playerCamera->fov = cameraFov;
+        //}
     }
 
     void handleToolgun() {
@@ -175,94 +244,94 @@ namespace toolgun {
             playerIsHoldingToolgun = true;
 
             if (currentsetting == tgSettings::spawner) { //handle spawning objects with the toolgun
-                raycaster::rayData rd = raycaster::castRayPlayer();
-                td::Vec3 target = rd.worldPos;
-                //drawCube({ target.x, target.y, target.z }, 0.05, white);
+                //raycaster::rayData rd = raycaster::castRayPlayer();
+                //td::Vec3 target = rd.worldPos;
+                ////drawCube({ target.x, target.y, target.z }, 0.05, white);
 
-                if (spawner::freeMode || spawner::childMode) {
-                    spawner::drawSpawngunObjectOutline(currentSpawngunObject.voxObject, rd);
-                }
+                //if (spawner::freeMode || spawner::childMode) {
+                //    spawner::drawSpawngunObjectOutline(currentSpawngunObject.voxObject, rd);
+                //}
 
-                if (glb::player->isAttacking) {
-                    if (spawnOnce || constSpawn) {
-                        spawnOnce = false;
-                        //spawner::KMSpawnedObject last = spawnObjectProxy(currentSpawngunObject.voxPath, osp);
-                        
-                        if (spawner::freeMode) {
-                            spawner::freeObjectSpawnParams params = {};
-                            params.attributes = currentSpawngunObject.attributes;
-                            params.useUserRotation = true;
-                            params.nocull = true;
-                            spawner::placeFreeObject(currentSpawngunObject.voxPath, params);
-                        }
-                        else if (spawner::childMode) {
-                            spawner::childObjectSpawnParams params = {};
-                            params.attributes = currentSpawngunObject.attributes;
-                            params.useUserRotation = true;
-                            params.nocull = true;
-                            spawner::placeChildObject(currentSpawngunObject.voxPath, params);
-                        }
-                        else if (spawner::thrownMode) {
-                            spawner::thrownObjectSpawnParams params = {};
-                            params.attributes = currentSpawngunObject.attributes;
-                            params.power = toolgun::thrownObjectVelocityMultiplier;
-                            params.nocull = true;
-                            spawner::throwFreeObject(currentSpawngunObject.voxPath, params);
-                        }
-                    }
-                }
-                else {
-                    spawnOnce = true;
-                }
-            }
+                //if (glb::player->isAttacking) {
+                //    if (spawnOnce || constSpawn) {
+                //        spawnOnce = false;
+                //        //spawner::KMSpawnedObject last = spawnObjectProxy(currentSpawngunObject.voxPath, osp);
+                //        
+                //        if (spawner::freeMode) {
+                //            spawner::freeObjectSpawnParams params = {};
+                //            params.attributes = currentSpawngunObject.attributes;
+                //            params.useUserRotation = true;
+                //            params.nocull = true;
+                //            spawner::placeFreeObject(currentSpawngunObject.voxPath, params);
+                //        }
+                //        else if (spawner::childMode) {
+                //            spawner::childObjectSpawnParams params = {};
+                //            params.attributes = currentSpawngunObject.attributes;
+                //            params.useUserRotation = true;
+                //            params.nocull = true;
+                //            spawner::placeChildObject(currentSpawngunObject.voxPath, params);
+                //        }
+                //        else if (spawner::thrownMode) {
+                //            spawner::thrownObjectSpawnParams params = {};
+                //            params.attributes = currentSpawngunObject.attributes;
+                //            params.power = toolgun::thrownObjectVelocityMultiplier;
+                //            params.nocull = true;
+                //            spawner::throwFreeObject(currentSpawngunObject.voxPath, params);
+                //        }
+                //    }
+                //}
+                //else {
+                //    spawnOnce = true;
+                //}
+            } //done
             else if (currentsetting == tgSettings::minigun) {
-                if (glb::player->isAttacking) {
-                    float noiseX = 0;
-                    float noiseY = 0;
-                    float noiseZ = 0;
+                //if (glb::player->isAttacking) {
+                //    float noiseX = 0;
+                //    float noiseY = 0;
+                //    float noiseZ = 0;
 
-                    for (int i = 0; i < bulletsPerFrame; i++) {
-                        if (spreadVal > 0.f) {
-                            std::uniform_real_distribution<> noise(-spreadVal, spreadVal);
-                            noiseX = noise(eng);
-                            noiseY = noise(eng);
-                            noiseZ = noise(eng);
-                        }
+                //    for (int i = 0; i < bulletsPerFrame; i++) {
+                //        if (spreadVal > 0.f) {
+                //            std::uniform_real_distribution<> noise(-spreadVal, spreadVal);
+                //            noiseX = noise(eng);
+                //            noiseY = noise(eng);
+                //            noiseZ = noise(eng);
+                //        }
 
-                        td::Vec3 camPos = glb::player->cameraPosition;
-                        camPos = { camPos.x, camPos.y - 0.05f, camPos.z };
-                        td::Vec3 camRot = glb::player->cameraEuler();
-                        td::Vec3 shootPos = { camRot.x + noiseX, camRot.y + noiseY, camRot.z + noiseZ };
-                        glb::oPewpew(glb::scene, &camPos, &shootPos, minigunBulletType, 50000.f);
-                    }
-                }
+                //        td::Vec3 camPos = glb::player->cameraPosition;
+                //        camPos = { camPos.x, camPos.y - 0.05f, camPos.z };
+                //        td::Vec3 camRot = glb::player->cameraEuler();
+                //        td::Vec3 shootPos = { camRot.x + noiseX, camRot.y + noiseY, camRot.z + noiseZ };
+                //        glb::oPewpew(glb::scene, &camPos, &shootPos, minigunBulletType, 50000.f);
+                //    }
+                //}
             }
             else if (currentsetting == tgSettings::explosion) {
-                if (glb::player->isAttacking) {
-                    float noiseX = 0;
-                    float noiseY = 0;
-                    float noiseZ = 0;
+                //if (glb::player->isAttacking) {
+                //    float noiseX = 0;
+                //    float noiseY = 0;
+                //    float noiseZ = 0;
 
-                    for (int i = 0; i < EXbulletsPerFrame; i++) {
-                        if (EXspreadVal > 0.f) {
-                            std::uniform_real_distribution<> noise(-EXspreadVal, EXspreadVal);
-                            noiseX = noise(eng);
-                            noiseY = noise(eng);
-                            noiseZ = noise(eng);
-                        }
+                //    for (int i = 0; i < EXbulletsPerFrame; i++) {
+                //        if (EXspreadVal > 0.f) {
+                //            std::uniform_real_distribution<> noise(-EXspreadVal, EXspreadVal);
+                //            noiseX = noise(eng);
+                //            noiseY = noise(eng);
+                //            noiseZ = noise(eng);
+                //        }
 
-                        td::Vec3 camPos = glb::player->cameraPosition;
-                        td::Vec3 camRot = glb::player->cameraEuler();
+                //        td::Vec3 camPos = glb::player->cameraPosition;
+                //        td::Vec3 camRot = glb::player->cameraEuler();
 
-                        td::Vec3 shootPos = { camRot.x + noiseX, camRot.y + noiseY, camRot.z + noiseZ };
+                //        td::Vec3 shootPos = { camRot.x + noiseX, camRot.y + noiseY, camRot.z + noiseZ };
 
-                        RaycastFilter rcf{ 0 };
+                //        RaycastFilter rcf{ 0 };
 
-                        raycaster::rayData rd = raycaster::castRayManual(camPos, shootPos, &rcf);
-                        td::Vec3 target = rd.worldPos;
-                        glb::TDcreateExplosion((uintptr_t)glb::scene, &target, power);
-                    }
-                }
+                //        raycaster::rayData rd = raycaster::castRayManual(camPos, shootPos, &rcf);
+                //        td::Vec3 target = rd.worldPos;
+                //        glb::TDcreateExplosion((uintptr_t)glb::scene, &target, power);
+                //    }
+                //}
             }
             else if (currentsetting == tgSettings::flamethrower) {
                 RaycastFilter rcf = {};
@@ -468,20 +537,20 @@ namespace toolgun {
             }
             else if (currentsetting == tgSettings::camera) {
 
-                if (!playerCamera) {
-                    playerCamera = new threadCamera::KMCamera(math::q_td2glm(glb::player->cameraQuat), math::v3_td2glm(glb::player->cameraPosition), { 0, 0, -1 }, { 0, -1, 0 }, toolgun::cameraResolutionX, toolgun::cameraResolutionY);
-                    return;
-                }
+                //if (!playerCamera) {
+                //    playerCamera = new threadCamera::KMCamera(math::q_td2glm(glb::player->cameraQuat), math::v3_td2glm(glb::player->cameraPosition), { 0, 0, -1 }, { 0, -1, 0 }, toolgun::cameraResolutionX, toolgun::cameraResolutionY);
+                //    return;
+                //}
 
-                if (glb::player->isAttacking && !glb::displayMenu) {
-                    playerCamera->cameraActive = true;
-                    playerCamera->updateCameraSpecs(math::q_td2glm(glb::player->cameraQuat), math::v3_td2glm(glb::player->cameraPosition), { 0, 0, -1 }, { 0, -1, 0 });
-                }
-                else {
-                    playerCamera->cameraActive = false;
-                }
+                //if (glb::player->isAttacking && !glb::displayMenu) {
+                //    playerCamera->cameraActive = true;
+                //    playerCamera->updateCameraSpecs(math::q_td2glm(glb::player->cameraQuat), math::v3_td2glm(glb::player->cameraPosition), { 0, 0, -1 }, { 0, -1, 0 });
+                //}
+                //else {
+                //    playerCamera->cameraActive = false;
+                //}
 
-                threadCamera::drawCameraWndw(playerCamera);
+                //threadCamera::drawCameraWndw(playerCamera);
 
                 /*if ((glb::player->isAttacking == true && !glb::displayMenu) || !camera::staged_newFrame) {
                     toolgun::cameraFps = camera::updateImageColour(toolgun::cameraResolution, toolgun::cameraFov);
@@ -493,156 +562,156 @@ namespace toolgun {
                 camera::drawCameraWindow(cameraFps);*/
             }
             else if (currentsetting == tgSettings::rope) {
-                raycaster::rayData rd = raycaster::castRayPlayer();
-                drawCube(rd.worldPos, 0.02f, white);
-                if (ropeToolFirstPos) {
-                    if (glb::player->isAttacking) {
-                        if (ropeAttackOnce) {
-                            ropeAttackOnce = false;
-                            ropeFirstPos = rd.worldPos;
-                            shape1 = rd.hitShape;
-                            worldPos1 = rd.worldPos;
-                            ropeToolFirstPos = false;
-                        }
-                    }
-                    else {
-                        ropeAttackOnce = true;
-                    }
-                }
-                else {
-                    drawCube(ropeFirstPos, 0.02f, white);
-                    glb::oFDL(glb::renderer, ropeFirstPos, rd.worldPos, ropeColor, ropeColor, false);
-                    if (glb::player->isAttacking) {
-                        if (ropeAttackOnce) {
-                            ropeAttackOnce = false;
-                            ropeSecondPos = rd.worldPos;
-                            TDJoint* newJoint = (TDJoint*)glb::oTMalloc(208);
-                            glb::tdConstructJoint(newJoint, nullptr);
-                            shape2 = rd.hitShape;
-                            worldPos2 = rd.worldPos;
-                            glb::tdInitWire(newJoint, &ropeFirstPos, &ropeSecondPos, newJoint->m_Size, ropeColor, ropeSlack, ropeStrength, ropeMaxStretch);
-                            ropeToolFirstPos = true;
-                        }
-                    }
-                    else {
-                        ropeAttackOnce = true;
-                    }
-                }
+                //raycaster::rayData rd = raycaster::castRayPlayer();
+                //drawCube(rd.worldPos, 0.02f, white);
+                //if (ropeToolFirstPos) {
+                //    if (glb::player->isAttacking) {
+                //        if (ropeAttackOnce) {
+                //            ropeAttackOnce = false;
+                //            ropeFirstPos = rd.worldPos;
+                //            shape1 = rd.hitShape;
+                //            worldPos1 = rd.worldPos;
+                //            ropeToolFirstPos = false;
+                //        }
+                //    }
+                //    else {
+                //        ropeAttackOnce = true;
+                //    }
+                //}
+                //else {
+                //    drawCube(ropeFirstPos, 0.02f, white);
+                //    glb::oFDL(glb::renderer, ropeFirstPos, rd.worldPos, ropeColor, ropeColor, false);
+                //    if (glb::player->isAttacking) {
+                //        if (ropeAttackOnce) {
+                //            ropeAttackOnce = false;
+                //            ropeSecondPos = rd.worldPos;
+                //            TDJoint* newJoint = (TDJoint*)glb::oTMalloc(208);
+                //            glb::tdConstructJoint(newJoint, nullptr);
+                //            shape2 = rd.hitShape;
+                //            worldPos2 = rd.worldPos;
+                //            glb::tdInitWire(newJoint, &ropeFirstPos, &ropeSecondPos, newJoint->m_Size, ropeColor, ropeSlack, ropeStrength, ropeMaxStretch);
+                //            ropeToolFirstPos = true;
+                //        }
+                //    }
+                //    else {
+                //        ropeAttackOnce = true;
+                //    }
+                //}
             }
             else if (currentsetting == tgSettings::weld) {
-                raycaster::rayData rd = raycaster::castRayPlayer();
-                drawCube(rd.worldPos, 0.02f, white);
+            //    raycaster::rayData rd = raycaster::castRayPlayer();
+            //    drawCube(rd.worldPos, 0.02f, white);
 
-                if (weldStageOne) {
-                    if (glb::player->isAttacking) {
-                        if (weldAttackOnce) {
-                            weldAttackOnce = false;
+            //    if (weldStageOne) {
+            //        if (glb::player->isAttacking) {
+            //            if (weldAttackOnce) {
+            //                weldAttackOnce = false;
 
-                            //if (rd.successful) {
-                            //    std::cout << "Shape count: " << std::to_string(rd.hitShape->getParentBody()->countContainedShapes()) << std::endl;
-                            //}
+            //                //if (rd.successful) {
+            //                //    std::cout << "Shape count: " << std::to_string(rd.hitShape->getParentBody()->countContainedShapes()) << std::endl;
+            //                //}
 
-                            if (rd.successful) {
-                                weldTargetShape1 = rd.hitShape;
-                                weldTargetBody1 = rd.hitShape->getParentBody();
-                                weldStageOne = false;
-                            }
+            //                if (rd.successful) {
+            //                    weldTargetShape1 = rd.hitShape;
+            //                    weldTargetBody1 = rd.hitShape->getParentBody();
+            //                    weldStageOne = false;
+            //                }
 
-                        }
-                    }
-                    else {
-                        weldAttackOnce = true;
-                    }
-                }
-                else {
-                    if (glb::player->isAttacking) {
-                        if (weldAttackOnce) {
-                            weldAttackOnce = false;
+            //            }
+            //        }
+            //        else {
+            //            weldAttackOnce = true;
+            //        }
+            //    }
+            //    else {
+            //        if (glb::player->isAttacking) {
+            //            if (weldAttackOnce) {
+            //                weldAttackOnce = false;
 
-                            if (rd.successful) {
-                                weldTargetShape2 = rd.hitShape;
-                                weldTargetBody2 = rd.hitShape->getParentBody();
+            //                if (rd.successful) {
+            //                    weldTargetShape2 = rd.hitShape;
+            //                    weldTargetBody2 = rd.hitShape->getParentBody();
 
-                                if (weldTargetBody1 == weldTargetBody2 || weldTargetShape1 == weldTargetShape2) {
-                                    return;
-                                }
+            //                    if (weldTargetBody1 == weldTargetBody2 || weldTargetShape1 == weldTargetShape2) {
+            //                        return;
+            //                    }
 
-                                int body1ShapeCount = weldTargetBody1->countContainedShapes();
-                                int body2ShapeCount = weldTargetBody2->countContainedShapes();
-                                TDShape* cTargetShape = 0;
-                                TDBody* newBody = 0;
-                                TDBody* oldBody = 0;
+            //                    int body1ShapeCount = weldTargetBody1->countContainedShapes();
+            //                    int body2ShapeCount = weldTargetBody2->countContainedShapes();
+            //                    TDShape* cTargetShape = 0;
+            //                    TDBody* newBody = 0;
+            //                    TDBody* oldBody = 0;
 
-                                std::vector<TDShape*> scheduledShapes = {};
-                                int transferCounter = 0;
+            //                    std::vector<TDShape*> scheduledShapes = {};
+            //                    int transferCounter = 0;
 
-                                //decide which parent is kept
-                                if (body1ShapeCount > body2ShapeCount) {
-                                    //move shapes from body2 to body1
-                                    cTargetShape = (TDShape*)weldTargetBody2->pChild;
-                                    newBody = weldTargetBody1;
-                                    oldBody = weldTargetBody2;
-                                }
-                                else {
-                                    //move shapes from body1 to body2
-                                    cTargetShape = (TDShape*)weldTargetBody1->pChild;
-                                    newBody = weldTargetBody2;
-                                    oldBody = weldTargetBody1;
-                                }
+            //                    //decide which parent is kept
+            //                    if (body1ShapeCount > body2ShapeCount) {
+            //                        //move shapes from body2 to body1
+            //                        cTargetShape = (TDShape*)weldTargetBody2->pChild;
+            //                        newBody = weldTargetBody1;
+            //                        oldBody = weldTargetBody2;
+            //                    }
+            //                    else {
+            //                        //move shapes from body1 to body2
+            //                        cTargetShape = (TDShape*)weldTargetBody1->pChild;
+            //                        newBody = weldTargetBody2;
+            //                        oldBody = weldTargetBody1;
+            //                    }
 
-                                //iterate children on the doomed parent and schedule them for transfer
-                                while (cTargetShape != 0) {
-                                    std::cout << cTargetShape << " : " << entityTypeStr[(int)cTargetShape->Type-1] << std::endl;
-                                    if ((int)cTargetShape->Type == 2) {
-                                        scheduledShapes.push_back(cTargetShape);
-                                    }
-                                    else {
-                                        weldStageOne = true;
-                                        return;
-                                    }
-                                    cTargetShape = (TDShape*)cTargetShape->pSibling;
-                                }
+            //                    //iterate children on the doomed parent and schedule them for transfer
+            //                    while (cTargetShape != 0) {
+            //                        std::cout << cTargetShape << " : " << entityTypeStr[(int)cTargetShape->Type-1] << std::endl;
+            //                        if ((int)cTargetShape->Type == 2) {
+            //                            scheduledShapes.push_back(cTargetShape);
+            //                        }
+            //                        else {
+            //                            weldStageOne = true;
+            //                            return;
+            //                        }
+            //                        cTargetShape = (TDShape*)cTargetShape->pSibling;
+            //                    }
 
-                                //transfer all children to the new parent, destroy the old one
-                                for (TDShape* targetShape : scheduledShapes) {
-                                    transferCounter++;
+            //                    //transfer all children to the new parent, destroy the old one
+            //                    for (TDShape* targetShape : scheduledShapes) {
+            //                        transferCounter++;
 
-                                    glm::vec3 targetShapeWorldPosition = math::expandPosition(math::q_td2glm(targetShape->getParentBody()->Rotation), math::v3_td2glm(targetShape->getParentBody()->Position), math::v3_td2glm(targetShape->pOffset));
-                                    glm::quat targetShapeWorldrotation = math::expandRotation(math::q_td2glm(targetShape->getParentBody()->Rotation), math::q_td2glm(targetShape->rOffset));
-                                    glm::vec3 targetShapeNewPOffset = math::localisePosition(math::q_td2glm(newBody->Rotation), math::v3_td2glm(newBody->Position), targetShapeWorldPosition);
-                                    glm::quat targetShapeNewROffset = math::localiseRotation(math::q_td2glm(newBody->Rotation), targetShapeWorldrotation);
-                                    
-                                    glb::tdUpdateShapeBody((uintptr_t)targetShape, (uintptr_t)newBody);
-                                    targetShape->pOffset = { targetShapeNewPOffset.x, targetShapeNewPOffset.y, targetShapeNewPOffset.z };
-                                    *(glm::quat*)&targetShape->rOffset = targetShapeNewROffset;
-                                }
+            //                        glm::vec3 targetShapeWorldPosition = math::expandPosition(math::q_td2glm(targetShape->getParentBody()->Rotation), math::v3_td2glm(targetShape->getParentBody()->Position), math::v3_td2glm(targetShape->pOffset));
+            //                        glm::quat targetShapeWorldrotation = math::expandRotation(math::q_td2glm(targetShape->getParentBody()->Rotation), math::q_td2glm(targetShape->rOffset));
+            //                        glm::vec3 targetShapeNewPOffset = math::localisePosition(math::q_td2glm(newBody->Rotation), math::v3_td2glm(newBody->Position), targetShapeWorldPosition);
+            //                        glm::quat targetShapeNewROffset = math::localiseRotation(math::q_td2glm(newBody->Rotation), targetShapeWorldrotation);
+            //                        
+            //                        glb::tdUpdateShapeBody((uintptr_t)targetShape, (uintptr_t)newBody);
+            //                        targetShape->pOffset = { targetShapeNewPOffset.x, targetShapeNewPOffset.y, targetShapeNewPOffset.z };
+            //                        *(glm::quat*)&targetShape->rOffset = targetShapeNewROffset;
+            //                    }
 
-                                glb::oUpdateShapes((uintptr_t)newBody);
-                                glb::tdUpdateFunc(newBody, 0, 1);
-                                std::cout << "(WELD) Transfered " << std::to_string(transferCounter) << "shapes from " << std::hex << oldBody << " to " << newBody << std::endl;
-                                oldBody->Destroy(oldBody, true);
-                                scheduledShapes.clear();
-                                postCompletionBody = newBody;
+            //                    glb::oUpdateShapes((uintptr_t)newBody);
+            //                    glb::tdUpdateFunc(newBody, 0, 1);
+            //                    std::cout << "(WELD) Transfered " << std::to_string(transferCounter) << "shapes from " << std::hex << oldBody << " to " << newBody << std::endl;
+            //                    oldBody->Destroy(oldBody, true);
+            //                    scheduledShapes.clear();
+            //                    postCompletionBody = newBody;
 
-                                weldStageOne = true;
-                            }
-                        }
-                    }
-                    else {
-                        weldAttackOnce = true;
-                    }
-                }
+            //                    weldStageOne = true;
+            //                }
+            //            }
+            //        }
+            //        else {
+            //            weldAttackOnce = true;
+            //        }
+            //    }
 
-                if (postCompletionBody) {
-                    if (postCompletionHighlight > 0.f) {
-                        utils::highlightBody(postCompletionBody, postCompletionHighlight);
-                        postCompletionHighlight -= 0.1f;
-                    }
-                    else {
-                        postCompletionHighlight = 1.f;
-                        postCompletionBody = 0;
-                    }
-                }
+            //    if (postCompletionBody) {
+            //        if (postCompletionHighlight > 0.f) {
+            //            utils::highlightBody(postCompletionBody, postCompletionHighlight);
+            //            postCompletionHighlight -= 0.1f;
+            //        }
+            //        else {
+            //            postCompletionHighlight = 1.f;
+            //            postCompletionBody = 0;
+            //        }
+            //    }
             }
 			else if (currentsetting == tgSettings::testing) {
 			    raycaster::rayData rd = raycaster::castRayPlayer();

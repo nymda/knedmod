@@ -142,6 +142,10 @@ namespace math {
 	td::Vec4 q_glm2td(glm::quat in) {
 		return *(td::Vec4*)(&in);
 	}
+
+	float randFloat(float min, float max) {
+		return min + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (max - min)));
+	}
 }
 
 namespace utils {

@@ -37,6 +37,18 @@
     <Filter Include="Source Files\misc">
       <UniqueIdentifier>{de68cac9-28c1-4841-b1fc-2cd1f4641cdf}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\toolgunTools">
+      <UniqueIdentifier>{b0a172d0-0476-4d90-b4ca-90daf2051c89}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\toolgunTools">
+      <UniqueIdentifier>{c1f96240-de7e-490f-b9ea-880561577c77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Mods\deprecated">
+      <UniqueIdentifier>{60ee8e6b-219f-489f-8d62-b8efc966fe7f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Mods\deprecated">
+      <UniqueIdentifier>{1b07feb1-02d8-4ad3-8158-9eb2632f0e95}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mem.h">
@@ -93,9 +105,6 @@
     <ClInclude Include="Raycaster.h">
       <Filter>Header Files\TDAPI</Filter>
     </ClInclude>
-    <ClInclude Include="Jetpack.h">
-      <Filter>Header Files\Mods</Filter>
-    </ClInclude>
     <ClInclude Include="Mods.h">
       <Filter>Header Files\Mods</Filter>
     </ClInclude>
@@ -135,13 +144,7 @@
     <ClInclude Include="camera.h">
       <Filter>Header Files\Mods</Filter>
     </ClInclude>
-    <ClInclude Include="toolgun.h">
-      <Filter>Header Files\Mods</Filter>
-    </ClInclude>
     <ClInclude Include="lantern.h">
-      <Filter>Header Files\Mods</Filter>
-    </ClInclude>
-    <ClInclude Include="envOptions.h">
       <Filter>Header Files\Mods</Filter>
     </ClInclude>
     <ClInclude Include="miscPatches.h">
@@ -149,9 +152,6 @@
     </ClInclude>
     <ClInclude Include="movementLoop.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="missileLauncher.h">
-      <Filter>Header Files\Mods</Filter>
     </ClInclude>
     <ClInclude Include="memhandler.h">
       <Filter>Header Files</Filter>
@@ -171,26 +171,14 @@
     <ClInclude Include="physCamera.h">
       <Filter>Header Files\Mods</Filter>
     </ClInclude>
-    <ClInclude Include="Harop.h">
-      <Filter>Header Files\Mods</Filter>
-    </ClInclude>
     <ClInclude Include="dotProjector.h">
       <Filter>Header Files\TDAPI</Filter>
     </ClInclude>
     <ClInclude Include="objectTranslationTest.h">
       <Filter>Header Files\TDAPI</Filter>
     </ClInclude>
-    <ClInclude Include="Firespread.h">
-      <Filter>Header Files\Mods</Filter>
-    </ClInclude>
     <ClInclude Include="cameraManager.h">
       <Filter>Header Files\TDAPI</Filter>
-    </ClInclude>
-    <ClInclude Include="thirdperson.h">
-      <Filter>Header Files\Mods</Filter>
-    </ClInclude>
-    <ClInclude Include="physMonitor.h">
-      <Filter>Header Files\Mods</Filter>
     </ClInclude>
     <ClInclude Include="constClock.h">
       <Filter>Header Files\Misc</Filter>
@@ -200,6 +188,51 @@
     </ClInclude>
     <ClInclude Include="threadedCamera.h">
       <Filter>Header Files\Mods</Filter>
+    </ClInclude>
+    <ClInclude Include="tgtBase.h">
+      <Filter>Header Files\toolgunTools</Filter>
+    </ClInclude>
+    <ClInclude Include="tgtSpawner.h">
+      <Filter>Header Files\toolgunTools</Filter>
+    </ClInclude>
+    <ClInclude Include="Firespread.h">
+      <Filter>Header Files\Mods\deprecated</Filter>
+    </ClInclude>
+    <ClInclude Include="envOptions.h">
+      <Filter>Header Files\Mods\deprecated</Filter>
+    </ClInclude>
+    <ClInclude Include="Harop.h">
+      <Filter>Header Files\Mods\deprecated</Filter>
+    </ClInclude>
+    <ClInclude Include="Jetpack.h">
+      <Filter>Header Files\Mods\deprecated</Filter>
+    </ClInclude>
+    <ClInclude Include="missileLauncher.h">
+      <Filter>Header Files\Mods\deprecated</Filter>
+    </ClInclude>
+    <ClInclude Include="physMonitor.h">
+      <Filter>Header Files\Mods\deprecated</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdperson.h">
+      <Filter>Header Files\Mods\deprecated</Filter>
+    </ClInclude>
+    <ClInclude Include="toolgun.h">
+      <Filter>Header Files\toolgunTools</Filter>
+    </ClInclude>
+    <ClInclude Include="tgtMinigun.h">
+      <Filter>Header Files\toolgunTools</Filter>
+    </ClInclude>
+    <ClInclude Include="tgtWeld.h">
+      <Filter>Header Files\toolgunTools</Filter>
+    </ClInclude>
+    <ClInclude Include="tgtRope.h">
+      <Filter>Header Files\toolgunTools</Filter>
+    </ClInclude>
+    <ClInclude Include="tgtExplode.h">
+      <Filter>Header Files\toolgunTools</Filter>
+    </ClInclude>
+    <ClInclude Include="tgtCamera.h">
+      <Filter>Header Files\toolgunTools</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -242,9 +275,6 @@
     <ClCompile Include="Raycaster.cpp">
       <Filter>Source Files\TDAPI</Filter>
     </ClCompile>
-    <ClCompile Include="Jetpack.cpp">
-      <Filter>Source Files\Mods</Filter>
-    </ClCompile>
     <ClCompile Include="Mods.cpp">
       <Filter>Source Files\Mods</Filter>
     </ClCompile>
@@ -281,23 +311,11 @@
     <ClCompile Include="camera.cpp">
       <Filter>Source Files\Mods</Filter>
     </ClCompile>
-    <ClCompile Include="toolgun.cpp">
-      <Filter>Source Files\Mods</Filter>
-    </ClCompile>
-    <ClCompile Include="lantern.cpp">
-      <Filter>Source Files\Mods</Filter>
-    </ClCompile>
-    <ClCompile Include="envOptions.cpp">
-      <Filter>Source Files\Mods</Filter>
-    </ClCompile>
     <ClCompile Include="miscPatches.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="movementLoop.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="missileLauncher.cpp">
-      <Filter>Source Files\Mods</Filter>
     </ClCompile>
     <ClCompile Include="types.cpp">
       <Filter>Source Files</Filter>
@@ -314,9 +332,6 @@
     <ClCompile Include="physCamera.cpp">
       <Filter>Source Files\Mods</Filter>
     </ClCompile>
-    <ClCompile Include="Harop.cpp">
-      <Filter>Source Files\Mods</Filter>
-    </ClCompile>
     <ClCompile Include="dotProjector.cpp">
       <Filter>Source Files\TDAPI</Filter>
     </ClCompile>
@@ -329,12 +344,6 @@
     <ClCompile Include="cameraManager.cpp">
       <Filter>Source Files\TDAPI</Filter>
     </ClCompile>
-    <ClCompile Include="thirdperson.cpp">
-      <Filter>Source Files\Mods</Filter>
-    </ClCompile>
-    <ClCompile Include="physMonitor.cpp">
-      <Filter>Source Files\Mods</Filter>
-    </ClCompile>
     <ClCompile Include="constClock.cpp">
       <Filter>Source Files\misc</Filter>
     </ClCompile>
@@ -343,6 +352,48 @@
     </ClCompile>
     <ClCompile Include="threadedCamera.cpp">
       <Filter>Source Files\Mods</Filter>
+    </ClCompile>
+    <ClCompile Include="tgtSpawner.cpp">
+      <Filter>Source Files\toolgunTools</Filter>
+    </ClCompile>
+    <ClCompile Include="envOptions.cpp">
+      <Filter>Source Files\Mods\deprecated</Filter>
+    </ClCompile>
+    <ClCompile Include="Harop.cpp">
+      <Filter>Source Files\Mods\deprecated</Filter>
+    </ClCompile>
+    <ClCompile Include="Jetpack.cpp">
+      <Filter>Source Files\Mods\deprecated</Filter>
+    </ClCompile>
+    <ClCompile Include="lantern.cpp">
+      <Filter>Source Files\Mods\deprecated</Filter>
+    </ClCompile>
+    <ClCompile Include="missileLauncher.cpp">
+      <Filter>Source Files\Mods\deprecated</Filter>
+    </ClCompile>
+    <ClCompile Include="physMonitor.cpp">
+      <Filter>Source Files\Mods\deprecated</Filter>
+    </ClCompile>
+    <ClCompile Include="thirdperson.cpp">
+      <Filter>Source Files\Mods\deprecated</Filter>
+    </ClCompile>
+    <ClCompile Include="toolgun.cpp">
+      <Filter>Source Files\toolgunTools</Filter>
+    </ClCompile>
+    <ClCompile Include="tgtMinigun.cpp">
+      <Filter>Source Files\toolgunTools</Filter>
+    </ClCompile>
+    <ClCompile Include="tgtWeld.cpp">
+      <Filter>Source Files\toolgunTools</Filter>
+    </ClCompile>
+    <ClCompile Include="tgtRope.cpp">
+      <Filter>Source Files\toolgunTools</Filter>
+    </ClCompile>
+    <ClCompile Include="tgtExplode.cpp">
+      <Filter>Source Files\toolgunTools</Filter>
+    </ClCompile>
+    <ClCompile Include="tgtCamera.cpp">
+      <Filter>Source Files\toolgunTools</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
