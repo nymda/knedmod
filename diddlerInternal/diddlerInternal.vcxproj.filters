@@ -234,6 +234,36 @@
     <ClInclude Include="tgtCamera.h">
       <Filter>Header Files\toolgunTools</Filter>
     </ClInclude>
+    <ClInclude Include="tgtFlamethrower.h">
+      <Filter>Header Files\toolgunTools</Filter>
+    </ClInclude>
+    <ClInclude Include="tgtDamage.h">
+      <Filter>Header Files\toolgunTools</Filter>
+    </ClInclude>
+    <ClInclude Include="tgtRemove.h">
+      <Filter>Header Files\toolgunTools</Filter>
+    </ClInclude>
+    <ClInclude Include="tgtAttribute.h">
+      <Filter>Header Files\toolgunTools</Filter>
+    </ClInclude>
+    <ClInclude Include="tgtLeafblower.h">
+      <Filter>Header Files\toolgunTools</Filter>
+    </ClInclude>
+    <ClInclude Include="tgtSlice.h">
+      <Filter>Header Files\toolgunTools</Filter>
+    </ClInclude>
+    <ClInclude Include="tgtDebug.h">
+      <Filter>Header Files\toolgunTools</Filter>
+    </ClInclude>
+    <ClInclude Include="tgtDev.h">
+      <Filter>Header Files\toolgunTools</Filter>
+    </ClInclude>
+    <ClInclude Include="tgtIncludes.h">
+      <Filter>Header Files\toolgunTools</Filter>
+    </ClInclude>
+    <ClInclude Include="snapPoints.h">
+      <Filter>Header Files\Misc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -394,6 +424,33 @@
     </ClCompile>
     <ClCompile Include="tgtCamera.cpp">
       <Filter>Source Files\toolgunTools</Filter>
+    </ClCompile>
+    <ClCompile Include="tgtFlamethrower.cpp">
+      <Filter>Source Files\toolgunTools</Filter>
+    </ClCompile>
+    <ClCompile Include="tgtDamage.cpp">
+      <Filter>Source Files\toolgunTools</Filter>
+    </ClCompile>
+    <ClCompile Include="tgtRemove.cpp">
+      <Filter>Source Files\toolgunTools</Filter>
+    </ClCompile>
+    <ClCompile Include="tgtAttribute.cpp">
+      <Filter>Source Files\toolgunTools</Filter>
+    </ClCompile>
+    <ClCompile Include="tgtLeafblower.cpp">
+      <Filter>Source Files\toolgunTools</Filter>
+    </ClCompile>
+    <ClCompile Include="tgtSlice.cpp">
+      <Filter>Source Files\toolgunTools</Filter>
+    </ClCompile>
+    <ClCompile Include="tgtDebug.cpp">
+      <Filter>Source Files\toolgunTools</Filter>
+    </ClCompile>
+    <ClCompile Include="tgtDev.cpp">
+      <Filter>Source Files\toolgunTools</Filter>
+    </ClCompile>
+    <ClCompile Include="snapPoints.cpp">
+      <Filter>Source Files\misc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

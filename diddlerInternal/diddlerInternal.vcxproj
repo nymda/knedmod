@@ -163,6 +163,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="snapPoints.h" />
+    <ClInclude Include="tgtAttribute.h" />
     <ClInclude Include="tgtBase.h" />
     <ClInclude Include="c4.h" />
     <ClInclude Include="camera.h" />
@@ -215,9 +217,17 @@
     <ClInclude Include="swapBuffers.h" />
     <ClInclude Include="TDObjects.h" />
     <ClInclude Include="tgtCamera.h" />
+    <ClInclude Include="tgtDamage.h" />
+    <ClInclude Include="tgtDebug.h" />
+    <ClInclude Include="tgtDev.h" />
     <ClInclude Include="tgtExplode.h" />
+    <ClInclude Include="tgtFlamethrower.h" />
+    <ClInclude Include="tgtIncludes.h" />
+    <ClInclude Include="tgtLeafblower.h" />
     <ClInclude Include="tgtMinigun.h" />
+    <ClInclude Include="tgtRemove.h" />
     <ClInclude Include="tgtRope.h" />
+    <ClInclude Include="tgtSlice.h" />
     <ClInclude Include="tgtSpawner.h" />
     <ClInclude Include="tgtWeld.h" />
     <ClInclude Include="thirdperson.h" />
@@ -258,10 +268,19 @@
     <ClCompile Include="physCamera.cpp" />
     <ClCompile Include="physMonitor.cpp" />
     <ClCompile Include="Raycaster.cpp" />
+    <ClCompile Include="snapPoints.cpp" />
+    <ClCompile Include="tgtAttribute.cpp" />
     <ClCompile Include="tgtCamera.cpp" />
+    <ClCompile Include="tgtDamage.cpp" />
+    <ClCompile Include="tgtDebug.cpp" />
+    <ClCompile Include="tgtDev.cpp" />
     <ClCompile Include="tgtExplode.cpp" />
+    <ClCompile Include="tgtFlamethrower.cpp" />
+    <ClCompile Include="tgtLeafblower.cpp" />
     <ClCompile Include="tgtMinigun.cpp" />
+    <ClCompile Include="tgtRemove.cpp" />
     <ClCompile Include="tgtRope.cpp" />
+    <ClCompile Include="tgtSlice.cpp" />
     <ClCompile Include="tgtSpawner.cpp" />
     <ClCompile Include="TDFuncs.cpp" />
     <ClCompile Include="Global.cpp" />

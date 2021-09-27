@@ -2,6 +2,7 @@
 #include "tgtSpawner.h"
 #include <iostream>
 #include "Raycaster.h"
+#include "snapPoints.h"
 
 tgt_spawner::tgt_spawner() {
 	tool = TOOL_SPAWNER;
@@ -18,7 +19,15 @@ tgt_spawner::tgt_spawner() {
 
 DWORD tgt_spawner::exec() {
     raycaster::rayData rd = raycaster::castRayPlayer();
+
     td::Vec3 target = rd.worldPos;
+    TDShape* tShape = rd.hitShape;
+
+    if (rd.successful) {
+        //snapPoints::drawSnapPoints(tShape);
+    }
+
+
 
     if (!spawner::thrownMode) {
         spawner::drawSpawngunObjectOutline(currentSpawngunObject.voxObject, rd);

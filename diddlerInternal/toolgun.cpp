@@ -12,35 +12,45 @@
 #include "dotProjector.h"
 #include <glm/gtx/quaternion.hpp>
 
-#include "tgtBase.h"
-#include "tgtSpawner.h"
-#include "tgtMinigun.h"
-#include "tgtWeld.h"
-#include "tgtRope.h"
-#include "tgtExplode.h"
-#include "tgtCamera.h"
+#include "tgtIncludes.h"
 
 namespace nToolgun {
     const char* tgName = "toolgun";
 
     //tool instances
-    tgt_spawner* instance_spawner = 0;
-    tgt_minigun* instance_minigun = 0;
-    tgt_weld* instance_weld = 0;
-    tgt_rope* instance_rope = 0;
-    tgt_explode* instance_explode = 0;
     tgt_camera* instance_camera = 0;
+    tgt_damage* instance_damage = 0;
+    tgt_debug* instance_debug = 0;
+    tgt_dev* instance_dev = 0;
+    tgt_explode* instance_explode = 0;
+    tgt_leafblower* instance_leafblower = 0;
+    tgt_minigun* instance_minigun = 0;
+    tgt_remove* instance_remove = 0;
+    tgt_rope* instance_rope = 0;
+    tgt_slice* instance_slice = 0;
+    tgt_spawner* instance_spawner = 0;
+    tgt_weld* instance_weld = 0;
+    tgt_flamethrower* instance_flamethrower = 0;
+    tgt_attribute* instance_attribute = 0;
 
     toolnames currentTool = TOOL_SPAWNER;
     bool isInit = false;
 
     void init() {
-        instance_spawner = new tgt_spawner;
-        instance_minigun = new tgt_minigun;
-        instance_weld = new tgt_weld;
-        instance_rope = new tgt_rope;
-        instance_explode = new tgt_explode;
         instance_camera = new tgt_camera;
+        instance_damage = new tgt_damage;
+        instance_debug = new tgt_debug;
+        instance_dev = new tgt_dev;
+        instance_explode = new tgt_explode;
+        instance_leafblower = new tgt_leafblower;
+        instance_minigun = new tgt_minigun;
+        instance_remove = new tgt_remove;
+        instance_rope = new tgt_rope;
+        instance_slice = new tgt_slice;
+        instance_spawner = new tgt_spawner;
+        instance_weld = new tgt_weld;
+        instance_flamethrower = new tgt_flamethrower;
+        instance_attribute = new tgt_attribute;
 
         isInit = true;
     }
@@ -53,29 +63,61 @@ namespace nToolgun {
 
         if (memcmp(glb::player->heldItemName, tgName, 8) == 0) {
             switch (currentTool) {
-                case TOOL_SPAWNER:
-                    instance_spawner->exec();
-                    break;
+            case TOOL_SPAWNER: //done
+                instance_spawner->exec();
+                break;
 
-                case TOOL_MINIGUN:
-                    instance_minigun->exec();
-                    break;
+            case TOOL_MINIGUN: //done
+                instance_minigun->exec();
+                break;
 
-                case TOOL_WELD:
-                    instance_weld->exec();
-                    break;
+            case TOOL_CLICKEXPLODE: //done
+                instance_explode->exec();
+                break;
 
-                case TOOL_ROPE:
-                    instance_rope->exec();
-                    break;
+            case TOOL_FLAMETHROWER:
+                instance_flamethrower->exec();
+                break;
 
-                case TOOL_CLICKEXPLODE:
-                    instance_explode->exec();
-                    break;
+            case TOOL_DAMAGE:
+                instance_damage->exec();
+                break;
 
-                case TOOL_CAMERA:
-                    instance_camera->exec();
-                    break;
+            case TOOL_REMOVE:
+                instance_remove->exec();
+                break;
+
+            case TOOL_ATTRIBUTE:
+                instance_attribute->exec();
+                break;
+
+            case TOOL_LEAFBLOWER:
+                instance_leafblower->exec();
+                break;
+
+            case TOOL_SLICE:
+                instance_slice->exec();
+                break;
+
+            case TOOL_CAMERA: //done
+                instance_camera->exec();
+                break;
+
+            case TOOL_ROPE: //done
+                instance_rope->exec();
+                break;
+
+            case TOOL_WELD: //done
+                instance_weld->exec();
+                break;
+
+            case TOOL_DEBUG:
+                instance_debug->exec();
+                break;
+
+            case TOOL_DEV:
+                instance_dev->exec();
+                break;
 
             }
         }

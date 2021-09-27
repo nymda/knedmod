@@ -22,10 +22,10 @@ namespace threadCamera {
 	};
 
 	class KMCamera {
-		int resolutionX = 160;
-		int resolutionY = 120;
-		int nextResolutionX = 160;
-		int nextResolutionY = 120;
+		int resolutionX = 100;
+		int resolutionY = 75;
+		int nextResolutionX = 100;
+		int nextResolutionY = 75;
 		bool bufferUpdateNeeded = false;
 		void* camTexture;
 		float lastFrameExecTime = 0.f;

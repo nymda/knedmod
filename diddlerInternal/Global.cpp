@@ -5,6 +5,10 @@
 namespace glb {
 
 	void setObjectAttribute(TDShape* shape, const char* a1, const char* a2) {
+		if (!shape || !a1 || !a2) {
+			return;
+		}
+
 		td::small_string p1 = td::small_string(a1);
 		td::small_string p2 = td::small_string(a2);
 		glb::oSOA(shape, &p1, &p2);

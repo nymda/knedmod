@@ -54,6 +54,7 @@ namespace constClock {
 			//	removePosition.push_back(kmc);
 			//}
 			if (kmc->cameraActive) {
+				std::cout << "updateImage called" << std::endl;
 				kmc->updateImage();
 			}
 		}

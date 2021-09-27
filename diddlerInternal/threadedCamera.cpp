@@ -33,11 +33,13 @@ namespace threadCamera {
 		ImVec2 adjustedPosMin = ImVec2(windowPos.x + posMin.x, windowPos.y + posMin.y);
 		ImVec2 adjustedPosMax = ImVec2(windowPos.x + posMax.x, windowPos.y + posMax.y);
 		drawList->AddImage((void*)camera->createImage(), adjustedPosMin, adjustedPosMax);
-		ImGui::Text("FPS: %.2f", camera->getFps());
+		ImGui::Text("TIME: %.2f MS", camera->getLastFrameTime());
 		ImGui::End();
 	}
 
 	KMCamera::KMCamera(glm::quat rot, glm::vec3 pos, glm::vec3 forwv, glm::vec3 upv, int resX, int resY) {
+		this->cameraActive = false;
+
 		glGenTextures(1, (GLuint*)camTexture);
 		resolutionX = resX;
 		resolutionY = resY;
@@ -141,9 +143,14 @@ namespace threadCamera {
 			FRAMESTART = execTimer.now();
 			DCF++;
 			for (int y = 0; y < resolutionY; y++) {
+				//byte rLineShade = (byte)(rand() % 255);
+
+				byte lineShadeR = (byte)(rand() % 128);
+				byte lineShadeG = (byte)(rand() % 128);
+				byte lineShadeB = (byte)(rand() % 128);
+
 				for (int x = resolutionX; x > 0; x--) {
-					byte rLineShade = (byte)(rand() % 255);
-					bufferWrite[pxPointer] = { rLineShade, rLineShade, rLineShade, 0xFF };
+					bufferWrite[pxPointer] = { lineShadeR, lineShadeG, lineShadeB, 0xFF };
 					pxPointer++;
 				}
 			}
@@ -180,13 +187,25 @@ namespace threadCamera {
 				glm::vec4 rayWorld = invViewMat * eyeCoords;
 				glm::vec3 rayDirection = glm::normalize(glm::vec3(rayWorld));
 				rd = raycaster::castRayManual(math::v3_glm2td(thisFramePosition), math::v3_glm2td(rayDirection), &rcf);
-				int iThisDist = (rd.distance) / 2;
-				int iColourR = ((rd.palette.m_Color.m_R * 255) - iThisDist);
-				if (iColourR < 0) { iColourR = 0; }
-				int iColourG = ((rd.palette.m_Color.m_G * 255) - iThisDist);
-				if (iColourG < 0) { iColourG = 0; }
-				int iColourB = ((rd.palette.m_Color.m_B * 255) - iThisDist);
-				if (iColourB < 0) { iColourB = 0; }
+
+				int iColourR = 0;
+				int iColourG = 0;
+				int iColourB = 0;
+
+				if (rd.distance > 0.f) {
+					int iThisDist = (rd.distance) / 2;
+					iColourR = ((rd.palette.m_Color.m_R * 255) - iThisDist);
+					if (iColourR < 0) { iColourR = 0; }
+					iColourG = ((rd.palette.m_Color.m_G * 255) - iThisDist);
+					if (iColourG < 0) { iColourG = 0; }
+					iColourB = ((rd.palette.m_Color.m_B * 255) - iThisDist);
+					if (iColourB < 0) { iColourB = 0; }
+				}
+				else {
+					iColourR = 0;
+					iColourG = 77;
+					iColourB = 77;
+				}
 
 				bufferWrite[pxPointer] = { (byte)iColourR,(byte)iColourG, (byte)iColourB, 0xFF };
 
