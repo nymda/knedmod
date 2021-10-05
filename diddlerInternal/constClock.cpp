@@ -7,6 +7,7 @@
 #include "Global.h"
 #include "threadedCamera.h"
 #include "toolgun.h"
+#include "physCamera.h"
 
 namespace constClock {
 	std::thread clockThread;
@@ -49,23 +50,11 @@ namespace constClock {
 	std::vector<threadCamera::KMCamera*> removePosition = {};
 	//this function runs at a constant speed, depending on the input mstime
 	void cUpdateFunction() {
-		for (threadCamera::KMCamera* kmc : threadCamera::gameCameras) {
-			//if (kmc->isDestroyed()) {
-			//	removePosition.push_back(kmc);
-			//}
-			if (kmc->cameraActive) {
-				std::cout << "updateImage called" << std::endl;
-				kmc->updateImage();
-			}
+
+
+		if (threadCamera::runInSeperateThread) {
+			threadCamera::updateGameCameras();
 		}
 
-		//for (threadCamera::KMCamera* p : removePosition) {
-		//	threadCamera::gameCameras.erase(std::find(threadCamera::gameCameras.begin(), threadCamera::gameCameras.end(), p));
-		//}
-
-		//removePosition.clear();
-		//tp1 = tp2;
-		//tp2 = execTimer.now();
-		//std::cout << "Pulse time: " << std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(tp2 - tp1).count() / 1000.f) << std::endl;
 	}
 }

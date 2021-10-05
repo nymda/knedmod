@@ -49,7 +49,7 @@ namespace mods {
 		}
 
 		physCamera::updateCamera();
-		HaropDrone::updateHaropCamera();
+		//HaropDrone::updateHaropCamera();
 		objectTesting::updateDebugObject();
 		//camera::quatCameraOutline();
 

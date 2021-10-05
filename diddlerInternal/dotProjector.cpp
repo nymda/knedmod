@@ -58,12 +58,12 @@ namespace dotProjector {
                 float comY = 0.f;
 
                 if (stochastic) {
-                    comX = (fov / 2.f) - (x * pxSize) + randFloat(-(pxSize / 3.f), (pxSize / 3.f));
-                    comY = (fov / 2.f) - (y * pxSize) + randFloat(-(pxSize / 3.f), (pxSize / 3.f));
+                    comX = (fov / 2.f) - ((x * pxSize) - (pxSize / 2.f)) + randFloat(-(pxSize / 3.f), (pxSize / 3.f));
+                    comY = (fov / 2.f) - ((y * pxSize) + (pxSize / 2.f)) + randFloat(-(pxSize / 3.f), (pxSize / 3.f));
                 }
                 else {
-                    comX = (fov / 2.f) - (x * pxSize);
-                    comY = (fov / 2.f) - (y * pxSize);
+                    comX = (fov / 2.f) - ((x * pxSize) - (pxSize / 2.f));
+                    comY = (fov / 2.f) - ((y * pxSize) + (pxSize / 2.f));
                 }
 
                 glm::vec2 ray_nds = glm::vec2(comX, comY);

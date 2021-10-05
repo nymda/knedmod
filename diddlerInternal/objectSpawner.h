@@ -43,6 +43,9 @@ namespace spawner {
 		bool nocull = false;
 		bool animate = false;
 		bool useUserRotation = false;
+
+		bool useSnaps = false;
+		glm::vec3 snapPosition = { 0, 0, 0 };
 	};
 
 	struct freeObjectSpawnParams {
@@ -50,6 +53,9 @@ namespace spawner {
 		bool nocull = false;
 		bool animate = false;
 		bool useUserRotation = false;
+
+		bool useSnaps = false;
+		glm::vec3 snapPosition = { 0, 0, 0 };
 	};
 
 	struct thrownObjectSpawnParams {

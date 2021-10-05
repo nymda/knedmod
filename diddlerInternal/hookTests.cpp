@@ -395,7 +395,7 @@ __int64 hkcreateTextureThing(void* texture, void* pixelBuffer, bool a3) {
 
     if (((int*)texture)[1] == 0x280) {
         //find the openGL texture for the TV
-        camera::alt_texture = texture;
+        //camera::alt_texture = texture;
     }
 
     return glb::oCreateTextureThing(texture, pixelBuffer, a3);
@@ -465,13 +465,31 @@ void hkUpdateScreen(TDScreen* screen, void* a2) {
     return glb::tdUpdateScreen(screen);
 }
 
+char hkRayCrashA(void* a1, float* a2, float* a3, float* a4, float* a5) {
+    if (a1 < (void*)0xFF) {
+        printf_s("E: A1: %p A2: %p A3: %p A4: %p A5: %p\n", a1, a2, a3, a4, a5);
+        return 0;
+    }
+    return glb::tdRaycastCrashA(a1, a2, a3, a4, a5);
+}
+
+char hkRayCrashB(void* a1, void* a2) {
+    if (a2 < (void*)0xFF) {
+        printf_s("E: A1: %p A2: %p\n", a1, a2);
+        return 0;
+    }
+    return glb::tdRaycastCrashB(a1, a2);
+}
+
 void initTestHook() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
     //DetourAttach(&(PVOID&)glb::oCreateTextureThing, hkcreateTextureThing);
     //DetourAttach(&(PVOID&)glb::tdConstructScreen, hkInitScreen);
-    DetourAttach(&(PVOID&)glb::tdInitScreenSecondary, hkInitScreenSecondary);
-    DetourAttach(&(PVOID&)glb::tdUpdateScreen, hkUpdateScreen);
+    //DetourAttach(&(PVOID&)glb::tdInitScreenSecondary, hkInitScreenSecondary);
+    //DetourAttach(&(PVOID&)glb::tdUpdateScreen, hkUpdateScreen);
+    //DetourAttach(&(PVOID&)glb::tdRaycastCrashA, hkRayCrashA);
+    //DetourAttach(&(PVOID&)glb::tdRaycastCrashB, hkRayCrashB);
     DetourTransactionCommit();
 }
 
@@ -480,7 +498,9 @@ void terminateTestHook() {
     DetourUpdateThread(GetCurrentThread());
     //DetourDetach(&(PVOID&)glb::oCreateTextureThing, hkcreateTextureThing);
     //DetourDetach(&(PVOID&)glb::tdConstructScreen, hkInitScreen);
-    DetourDetach(&(PVOID&)glb::tdInitScreenSecondary, hkInitScreenSecondary);
-    DetourDetach(&(PVOID&)glb::tdUpdateScreen, hkUpdateScreen);
+    //DetourDetach(&(PVOID&)glb::tdInitScreenSecondary, hkInitScreenSecondary);
+    //DetourDetach(&(PVOID&)glb::tdUpdateScreen, hkUpdateScreen);
+    //DetourDetach(&(PVOID&)glb::tdRaycastCrashA, hkRayCrashA);
+    //;etourAttach(&(PVOID&)glb::tdRaycastCrashB, hkRayCrashB);
     DetourTransactionCommit();
 }

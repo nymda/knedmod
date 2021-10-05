@@ -23,9 +23,21 @@ namespace raycaster {
         float outDist = 0.f;
 
         //std::cout << std::hex << &pCopy << " : " << &rCopy << " : " << &outDist << " : " << &output << " : " << &oShape << " : " << (uintptr_t*)&rdp.palette << std::endl;
-        //printf_s("%p : %p : %p : %p : %p : %p \n", &pCopy, &rCopy, &outDist, &output, &oShape, (uintptr_t*)&rdp.palette);
-     
-        glb::oRC(glb::scene, &pCopy, &rCopy, 250.f, filterCus, &outDist, &output, &oShape, (uintptr_t*)&rdp.palette);
+        //printf_s("SCENE: %p\n", glb::scene);
+
+        if ((uintptr_t*)glb::scene < (uintptr_t*)0x000000FF) {
+            printf_s("SCENE: %p\n", glb::scene);
+        }
+
+        try {
+            glb::oRC(glb::scene, &pCopy, &rCopy, 250.f, filterCus, &outDist, &output, &oShape, (uintptr_t*)&rdp.palette);
+        }
+        catch (...) {
+            //raycast caused an internal issue, just abandon this call
+            printf_s("Raycast caused an exception\n");
+            rdp.successful = false;
+            return rdp;
+        }
         
         if (outDist == 0) {
             oShape = 0;

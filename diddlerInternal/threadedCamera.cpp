@@ -12,10 +12,22 @@
 #include "dotProjector.h"
 #include "camera.h"
 #include "threadedCamera.h"
+#include "TDObjects.h"
 
 namespace threadCamera {
 
 	std::vector<KMCamera*> gameCameras = {};
+	bool runInSeperateThread = false;
+	bool stochastic = true;
+	cameraType method = CT_Colour;
+
+	void updateGameCameras() {
+		for (threadCamera::KMCamera* kmc : threadCamera::gameCameras) {
+			if (kmc->cameraActive) {
+				kmc->updateImage();
+			}
+		}
+	}
 
 	float randFloat(float min, float max) {
 		return min + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (max - min)));
@@ -37,6 +49,18 @@ namespace threadCamera {
 		ImGui::End();
 	}
 
+	int mapToIntRange(float minVal, float maxVal, float thisVal, int minInt, int maxInt) {
+
+		int vec = ((maxVal) - (minVal));
+		if (vec <= 0) { vec = 1; }
+		int pxVal = 255 - ((thisVal - minVal) * 255 / vec);
+
+		if (pxVal < 0) { pxVal = 0; }
+		if (pxVal > 255) { pxVal = 255; }
+
+		return pxVal;
+	}
+
 	KMCamera::KMCamera(glm::quat rot, glm::vec3 pos, glm::vec3 forwv, glm::vec3 upv, int resX, int resY) {
 		this->cameraActive = false;
 
@@ -48,6 +72,7 @@ namespace threadCamera {
 		bufferB = new pixel[resolutionX * resolutionY];
 		bufferShow = bufferA;
 		bufferWrite = bufferB;
+		bufferDistances = new float[resolutionX * resolutionY];
 
 		FillMemory(bufferA, (resolutionX * resolutionY) * 4, 0x00);
 		FillMemory(bufferB, (resolutionX * resolutionY) * 4, 0x00);
@@ -66,10 +91,15 @@ namespace threadCamera {
 		//std::cout << "PX : " << std::to_string(pos.x) << " PY : " << std::to_string(pos.y) << " PZ : " << std::to_string(pos.z) << std::endl;
 		//std::cout << "===" << std::endl;
 
+		td::Color blue{ 0.f, 0.f, 1.f, 1.f };
+
 		rotation = rot;
 		position = pos;
 		forward = forwv;
 		up = upv;
+
+		//printf_s("Time delta: %.02f\n", glb::game->m_fElapsedTime);
+		//drawCube(math::v3_glm2td(pos), 0.02f, blue);
 	}
 
 	void* KMCamera::createImage() {
@@ -116,8 +146,10 @@ namespace threadCamera {
 	}
 
 	float KMCamera::updateImage() {
-		glm::quat thisFrameQuat = rotation;
-		glm::vec3 thisFramePosition = position;
+		rcf.m_RejectTransparent = true;
+
+		td::Color blue{ 1.f, 0.f, 0.f, 1.f };
+		//drawCube(math::v3_glm2td(position), 0.02f, blue);
 
 		float pxSizeX = (fov / resolutionX);
 		float pxSizeY = (fov / resolutionY);
@@ -134,6 +166,7 @@ namespace threadCamera {
 			bufferB = new pixel[resolutionX * resolutionY];
 			bufferShow = bufferA;
 			bufferWrite = bufferB;
+			bufferDistances = new float[resolutionX * resolutionY];
 
 			FillMemory(bufferA, (resolutionX * resolutionY) * 4, 0x00);
 			FillMemory(bufferB, (resolutionX * resolutionY) * 4, 0x00);
@@ -144,13 +177,9 @@ namespace threadCamera {
 			DCF++;
 			for (int y = 0; y < resolutionY; y++) {
 				//byte rLineShade = (byte)(rand() % 255);
-
-				byte lineShadeR = (byte)(rand() % 128);
-				byte lineShadeG = (byte)(rand() % 128);
-				byte lineShadeB = (byte)(rand() % 128);
-
 				for (int x = resolutionX; x > 0; x--) {
-					bufferWrite[pxPointer] = { lineShadeR, lineShadeG, lineShadeB, 0xFF };
+					byte shade = (byte)(rand() % 128);
+					bufferWrite[pxPointer] = { shade, shade, shade, 0xFF };
 					pxPointer++;
 				}
 			}
@@ -165,19 +194,29 @@ namespace threadCamera {
 		}
 
 		FRAMESTART = execTimer.now();
-		glm::vec3 raycast_dir_bl = thisFrameQuat * forward;
-		raycaster::rayData rd = raycaster::castRayManual(math::v3_glm2td(thisFramePosition), math::v3_glm2td(raycast_dir_bl), &rcf);
-		glm::vec3 glTarget = glm::vec3(rd.worldPos.x, rd.worldPos.y, rd.worldPos.z);
-		glm::mat4x4 vmatrix = glm::lookAt(thisFramePosition, glTarget, up);
-		glm::mat4x4 pmatrix = glm::perspective(50.f, 1.f, 1.f, 1000.f);
-		glm::mat4 invProjMat = glm::inverse(pmatrix);
-		glm::mat4 invViewMat = glm::inverse(vmatrix);
+		raycast_dir_bl = rotation * forward;
+		raycaster::rayData rd = raycaster::castRayManual(math::v3_glm2td(position), math::v3_glm2td(raycast_dir_bl), &rcf);
+		glTarget = glm::vec3(rd.worldPos.x, rd.worldPos.y, rd.worldPos.z);
+		vmatrix = glm::lookAt(position, glTarget, up);
+		pmatrix = glm::perspective(50.f, 1.f, 1.f, 1000.f);
+		invProjMat = glm::inverse(pmatrix);
+		invViewMat = glm::inverse(vmatrix);
+
+		float frameMaxDist = 0;
+		float frameMinDist = INT32_MAX;
 
 		for (int y = 0; y < resolutionY; y++) {
 			for (int x = resolutionX; x > 0; x--) {
+				float xNoise = 0;
+				float yNoise = 0;
 
-				float comX = (fov / 2.f) - (x * pxSizeX) + randFloat(-(pxSizeX / 3.f), (pxSizeX / 3.f));
-				float comY = (fov / 2.f) - (y * pxSizeY) + randFloat(-(pxSizeY / 3.f), (pxSizeY / 3.f));
+				if (stochastic) {
+					xNoise = randFloat(-(pxSizeX / 3.f), (pxSizeX / 3.f));
+					yNoise = randFloat(-(pxSizeY / 3.f), (pxSizeY / 3.f));
+				}
+
+				float comX = (fov / 2.f) - ((x * pxSizeX) - (pxSizeX / 2.f)) + xNoise;
+				float comY = (fov / 2.f) - ((y * pxSizeY) + (pxSizeY / 2.f)) + yNoise;
 
 				glm::vec2 ray_nds = glm::vec2(comX, comY);
 				glm::vec4 ray_clip = glm::vec4(ray_nds.x, ray_nds.y, -1.0f, 1.0f);
@@ -186,32 +225,81 @@ namespace threadCamera {
 
 				glm::vec4 rayWorld = invViewMat * eyeCoords;
 				glm::vec3 rayDirection = glm::normalize(glm::vec3(rayWorld));
-				rd = raycaster::castRayManual(math::v3_glm2td(thisFramePosition), math::v3_glm2td(rayDirection), &rcf);
+
+				raycaster::rayData rd = raycaster::castRayManual(math::v3_glm2td(position), math::v3_glm2td(rayDirection), &rcf);
+
+				if (rd.distance > 0.f && rd.distance < 1000.f && rd.distance < frameMinDist) {
+					frameMinDist = rd.distance;
+				}
+				if (rd.distance > 0.f && rd.distance < 1000.f && rd.distance > frameMaxDist) {
+					frameMaxDist = rd.distance;
+				}
 
 				int iColourR = 0;
 				int iColourG = 0;
 				int iColourB = 0;
 
-				if (rd.distance > 0.f) {
-					int iThisDist = (rd.distance) / 2;
-					iColourR = ((rd.palette.m_Color.m_R * 255) - iThisDist);
-					if (iColourR < 0) { iColourR = 0; }
-					iColourG = ((rd.palette.m_Color.m_G * 255) - iThisDist);
-					if (iColourG < 0) { iColourG = 0; }
-					iColourB = ((rd.palette.m_Color.m_B * 255) - iThisDist);
-					if (iColourB < 0) { iColourB = 0; }
+				if (threadCamera::method == CT_Colour) {
+					if (rd.distance > 0.f) {
+						int iThisDist = (rd.distance) / 2;
+						int iPxNoise = rand() % 16;
+						iColourR = (iPxNoise + (rd.palette.m_Color.m_R * 255) - iThisDist);
+						if (iColourR < 0) { iColourR = 0; }
+						if (iColourR > 255) { iColourR = 255; }
+						iColourG = (iPxNoise + (rd.palette.m_Color.m_G * 255) - iThisDist);
+						if (iColourG < 0) { iColourG = 0; }
+						if (iColourG > 255) { iColourG = 255; }
+						iColourB = (iPxNoise + (rd.palette.m_Color.m_B * 255) - iThisDist);
+						if (iColourB < 0) { iColourB = 0; }
+						if (iColourB > 255) { iColourB = 255; }
+					}
+					else {
+						iColourR = 0;
+						iColourG = 77;
+						iColourB = 77;
+					}
+
+					bufferWrite[pxPointer] = { (byte)iColourR,(byte)iColourG, (byte)iColourB, 0xFF };
 				}
-				else {
-					iColourR = 0;
-					iColourG = 77;
-					iColourB = 77;
+				else if (threadCamera::method == CT_Monochrome) {
+					int iThisDist = (rd.distance) / 2;
+					int iPxNoise = rand() % 16;
+					iColourR = (iPxNoise + (rd.palette.m_Color.m_R * 255) - iThisDist);
+					if (iColourR < 0) { iColourR = 0; }
+					if (iColourR > 255) { iColourR = 255; }
+					iColourG = (iPxNoise + (rd.palette.m_Color.m_G * 255) - iThisDist);
+					if (iColourG < 0) { iColourG = 0; }
+					if (iColourG > 255) { iColourG = 255; }
+					iColourB = (iPxNoise + (rd.palette.m_Color.m_B * 255) - iThisDist);
+					if (iColourB < 0) { iColourB = 0; }
+					if (iColourB > 255) { iColourB = 255; }
+
+					int avg = (iColourR + iColourG + iColourB) / 3;
+					iColourR = iColourG = iColourB = avg;
+
+					bufferWrite[pxPointer] = { (byte)iColourR,(byte)iColourG, (byte)iColourB, 0xFF };
 				}
 
-				bufferWrite[pxPointer] = { (byte)iColourR,(byte)iColourG, (byte)iColourB, 0xFF };
+				bufferDistances[pxPointer] = rd.distance;
 
 				pxPointer++;
 			}
 		}
+
+		//printf_s("Min: %0.2f, Max: %0.2f\n", frameMinDist, frameMaxDist);
+
+		pxPointer = 0;
+		if (threadCamera::method == CT_Dist) {
+			for (int y = 0; y < resolutionY; y++) {
+				for (int x = resolutionX; x > 0; x--) {
+					float thisDist = bufferDistances[pxPointer];
+					int thisVal = mapToIntRange(frameMinDist, frameMaxDist, thisDist, 0, 255);
+					bufferWrite[pxPointer] = { (byte)thisVal,(byte)thisVal, (byte)thisVal, 0xFF };
+					pxPointer++;
+				}
+			}
+		}
+
 		swapBuffers();
 		FRAMEEND = execTimer.now();
 		lastFrameExecTime = (std::chrono::duration_cast<std::chrono::microseconds>(FRAMEEND - FRAMESTART).count() / 1000.f);

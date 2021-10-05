@@ -90,7 +90,7 @@ LRESULT APIENTRY hWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 
 	case WM_MOUSEWHEEL:
-		if (memcmp(glb::player->heldItemName, tgName, 8) == 0 && selectedToolgunTool == (int)toolgun::tgSettings::spawner) {
+		if (memcmp(glb::player->heldItemName, tgName, 8) == 0 && nToolgun::currentTool == toolnames::TOOL_SPAWNER) {
 			if ((short)(HIWORD(wParam)) > 0 && (LOWORD(wParam) & MK_SHIFT)) {
 				spawner::voxScale += 0.05f;
 				lockoutScroll = true;
@@ -359,13 +359,11 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			static int blower_current = 0;
 			static int spawnr_current = 0;
 
-			toolgun::currentsetting = (toolgun::tgSettings)selectedToolgunTool;
-
 			bool* bpTrue = &bTRUE;
 			bool* bpFalse = &bFALSE;
 
-			if (ImGui::Button("Spawner", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::spawner; nToolgun::currentTool = toolnames::TOOL_SPAWNER; };
-			if (selectedToolgunTool == (int)toolgun::tgSettings::spawner) {
+			if (ImGui::Button("Spawner", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_SPAWNER; };
+			if (nToolgun::currentTool == toolnames::TOOL_SPAWNER) {
 				ImGui::Separator();
 				//ImGui::Combo("Mode", &spawnr_current, spawnModesCh, IM_ARRAYSIZE(spawnModesCh));
 				//toolgun::method = (toolgun::spawngunMethod)spawnr_current;
@@ -390,8 +388,8 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::Separator();
 			}
 
-			if (ImGui::Button("Rope", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::rope; nToolgun::currentTool = toolnames::TOOL_ROPE; };
-			if (selectedToolgunTool == (int)toolgun::tgSettings::rope) {
+			if (ImGui::Button("Rope", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_ROPE; };
+			if (nToolgun::currentTool == toolnames::TOOL_ROPE) {
 				ImGui::Separator();
 				ImGui::Text("Rope tab");
 				ImGui::SliderFloat("Slack", &nToolgun::instance_rope->ropeSlack, -10.f, 10.f, "%.1f");
@@ -401,16 +399,16 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::Separator();
 			}
 
-			if (ImGui::Button("Weld", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::weld; nToolgun::currentTool = toolnames::TOOL_WELD; };
-			if (selectedToolgunTool == (int)toolgun::tgSettings::weld) {
+			if (ImGui::Button("Weld", ImVec2(ImGui::GetWindowWidth() - 16, 20))) {nToolgun::currentTool = toolnames::TOOL_WELD; };
+			if (nToolgun::currentTool == toolnames::TOOL_WELD) {
 				ImGui::Separator();
 				ImGui::Text("Weld tab");
 				ImGui::Separator();
 			}
 
 			ImGui::SetNextItemWidth(ImGui::GetWindowWidth());
-			if (ImGui::Button("Minigun", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::minigun; nToolgun::currentTool = toolnames::TOOL_MINIGUN; };
-			if (selectedToolgunTool == (int)toolgun::tgSettings::minigun) {
+			if (ImGui::Button("Minigun", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_MINIGUN; };
+			if (nToolgun::currentTool == toolnames::TOOL_MINIGUN) {
 				ImGui::Separator();
 				ImGui::Combo("Bullet type", &bullet_current, bulletTypes, IM_ARRAYSIZE(bulletTypes));
 				nToolgun::instance_minigun->bulletType = bullet_current;
@@ -420,8 +418,8 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			}
 
 			ImGui::SetNextItemWidth(ImGui::GetWindowWidth());
-			if (ImGui::Button("Explosions", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::explosion;  nToolgun::currentTool = toolnames::TOOL_CLICKEXPLODE; };
-			if (selectedToolgunTool == (int)toolgun::tgSettings::explosion) {
+			if (ImGui::Button("Explosions", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_CLICKEXPLODE; };
+			if (nToolgun::currentTool == toolnames::TOOL_CLICKEXPLODE) {
 				ImGui::Separator();
 				ImGui::SliderFloat("Explosion spread", &nToolgun::instance_explode->explosionFov, 0, 0.5, "%.2f");
 				ImGui::SliderInt("Explosion count", &nToolgun::instance_explode->bulletCount, 1, 25);
@@ -429,86 +427,83 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::Separator();
 			}
 
-			if (ImGui::Button("Flamethrower", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::flamethrower; };
-			if (selectedToolgunTool == (int)toolgun::tgSettings::flamethrower) {
+			if (ImGui::Button("Flamethrower", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_FLAMETHROWER; };
+			if (nToolgun::currentTool == toolnames::TOOL_FLAMETHROWER) {
 				ImGui::Separator();
-				ImGui::SliderFloat("Radius", &toolgun::flRadius, 1.f, 10.f, "%.2f");
-				ImGui::SliderInt("Chance %", &toolgun::chance, 1, 100);
+				ImGui::SliderFloat("Radius", &nToolgun::instance_flamethrower->flRadius, 1.f, 10.f, "%.2f");
+				ImGui::SliderInt("Chance %", &nToolgun::instance_flamethrower->chance, 1, 100);
 				ImGui::Separator();
 			}
 
-			if (ImGui::Button("Remover", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::remover; };
-			if (selectedToolgunTool == (int)toolgun::tgSettings::remover) {
+			if (ImGui::Button("Remover", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_REMOVE; };
+			if (nToolgun::currentTool == toolnames::TOOL_REMOVE) {
 				ImGui::Separator();
 				ImGui::Text("Remover tab");
 				ImGui::Separator();
 			}
 
-			if (ImGui::Button("Set attribute", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::setAtttibute; };
-			if (selectedToolgunTool == (int)toolgun::tgSettings::setAtttibute) {
-				if (toolgun::currentsetting == toolgun::tgSettings::setAtttibute) {
-					ImGui::Separator();
-					ImGui::InputText("Attribute 1", toolgun::setAttributeFirst, 128);
-					ImGui::InputText("Attribute 2", toolgun::setAttributeSecond, 128);
-					ImGui::Separator();
+			if (ImGui::Button("Set attribute", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_ATTRIBUTE; };
+			if (nToolgun::currentTool == toolnames::TOOL_ATTRIBUTE) {
+				ImGui::Separator();
+				ImGui::InputText("Attribute 1", nToolgun::instance_attribute->setAttributeFirst, 128);
+				ImGui::InputText("Attribute 2", nToolgun::instance_attribute->setAttributeSecond, 128);
+				ImGui::Separator();
+			}
+
+			if (ImGui::Button("Destroyer", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_DAMAGE; };
+			if (nToolgun::currentTool == toolnames::TOOL_DAMAGE) {
+				ImGui::Separator();
+				ImGui::SliderFloat("Max Dist", &nToolgun::instance_damage->maxRange, 0.1f, 100.f, "%.2f");
+				ImGui::SliderFloat("Hole size", &nToolgun::instance_damage->holeSize, 0.1f, 100.f, "%.2f");
+				ImGui::SliderFloat("Radius", &nToolgun::instance_damage->flRadius, 0.1f, 100.f, "%.2f");
+				ImGui::SliderInt("Resolution", &nToolgun::instance_damage->res, 1, 1024);
+				ImGui::Checkbox("Fire constantly", &nToolgun::instance_damage->fireConst);
+				ImGui::Separator();
+			}
+
+			if (ImGui::Button("Leafblower", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_LEAFBLOWER; };
+			if (nToolgun::currentTool == toolnames::TOOL_LEAFBLOWER) {
+				//ImGui::Separator();
+				//ImGui::Combo("Mode", &blower_current, leafBlowerModes, IM_ARRAYSIZE(leafBlowerModes));
+				//toolgun::LBMode = (toolgun::leafblowerModes)blower_current;
+				//ImGui::Checkbox("Show rays", &toolgun::showRayHitPos);
+				//ImGui::SliderInt("Rays", &toolgun::leafBlowerRayCount, 0, 500);
+				//ImGui::SliderFloat("FOV", &toolgun::leafBlowerFOV, 0.01f, 0.5f, "%.2f");
+				//ImGui::Separator();
+			}
+
+			if (ImGui::Button("Slicer", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_SLICE; };
+			if (nToolgun::currentTool == toolnames::TOOL_SLICE) {
+				ImGui::Separator();
+				ImGui::SliderInt("Resolution", &nToolgun::instance_slice->slicer_resolution, 64, 1024);
+				ImGui::SliderFloat("maxDist", &nToolgun::instance_slice->slicer_maxDist, 1.f, 1000.f, "%.2f");
+				if (ImGui::RadioButton("Horizontal", nToolgun::instance_slice->slicerHorizontal)) {
+					nToolgun::instance_slice->slicerHorizontal = true;
 				}
-			}
-
-			if (ImGui::Button("Destroyer", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::destroyer; };
-			if (selectedToolgunTool == (int)toolgun::tgSettings::destroyer) {
-				ImGui::Separator();
-				ImGui::SliderFloat("Max Dist", &toolgun::maxRange, 0.1f, 100.f, "%.2f");
-				ImGui::SliderFloat("Hole size", &toolgun::holeSize, 0.1f, 100.f, "%.2f");
-				ImGui::Checkbox("Fire constantly", &toolgun::fireConst);
-				ImGui::Separator();
-			}
-
-			if (ImGui::Button("Leafblower", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::leafblower; };
-			if (selectedToolgunTool == (int)toolgun::tgSettings::leafblower) {
-				ImGui::Separator();
-				ImGui::Combo("Mode", &blower_current, leafBlowerModes, IM_ARRAYSIZE(leafBlowerModes));
-				toolgun::LBMode = (toolgun::leafblowerModes)blower_current;
-				ImGui::Checkbox("Show rays", &toolgun::showRayHitPos);
-				ImGui::SliderInt("Rays", &toolgun::leafBlowerRayCount, 0, 500);
-				ImGui::SliderFloat("FOV", &toolgun::leafBlowerFOV, 0.01f, 0.5f, "%.2f");
-				ImGui::Separator();
-			}
-
-			if (ImGui::Button("Slicer", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::slicer; };
-			if (selectedToolgunTool == (int)toolgun::tgSettings::slicer) {
-				ImGui::Separator();
-				ImGui::SliderInt("Resolution", &toolgun::slicer_resolution, 64, 1024);
-				ImGui::SliderFloat("maxDist", &toolgun::slicer_maxDist, 1.f, 1000.f, "%.2f");
-				if (ImGui::RadioButton("Horizontal", toolgun::slicerHorizontal)) {
-					toolgun::slicerHorizontal = !toolgun::slicerHorizontal;
-				}
-				if (ImGui::RadioButton("Vertical", !toolgun::slicerHorizontal)) {
-					toolgun::slicerHorizontal = !toolgun::slicerHorizontal;
+				if (ImGui::RadioButton("Vertical", !nToolgun::instance_slice->slicerHorizontal)) {
+					nToolgun::instance_slice->slicerHorizontal = false;
 				}
 				ImGui::Separator();
 			}
 		
-			if (ImGui::Button("Camera", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::camera; nToolgun::currentTool = toolnames::TOOL_CAMERA; };
-			if (selectedToolgunTool == (int)toolgun::tgSettings::camera) {
+			if (ImGui::Button("Camera", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_CAMERA; };
+			if (nToolgun::currentTool == toolnames::TOOL_CAMERA) {
 				ImGui::Separator();
 				ImGui::SliderInt("Resolution X", &nToolgun::instance_camera->resolutionX, 32, 512);
 				ImGui::SliderInt("Resolution Y", &nToolgun::instance_camera->resolutionY, 32, 512);
 				ImGui::SliderFloat("FOV", &nToolgun::instance_camera->fov, 1.f, 20.f, "%.1f");
-
+				if (ImGui::Button("Spawn physCamera", { 150, 0 })) {
+					physCamera::spawnCameraObject();
+				}
+				if (ImGui::Button("Destroy physCamera", { 150, 0 })) {
+					physCamera::destroyCamera();
+				}
 				if (ImGui::Button("Update")) {
 					for (threadCamera::KMCamera* kmc : threadCamera::gameCameras) {
 						kmc->setResolution(nToolgun::instance_camera->resolutionX, nToolgun::instance_camera->resolutionY);
 						kmc->fov = nToolgun::instance_camera->fov;
 					}
 				}
-
-				if (ImGui::Button("Spawn physCamera")) {
-					physCamera::spawnCameraObject();
-				}
-				if (ImGui::Button("Destroy physCamera")) {
-					physCamera::destroyCamera();
-				}
-
 
 				//ImGui::Checkbox("Monochrome", &camera::mono);
 				//ImGui::Checkbox("Enable transparency", &camera::transparency);
@@ -527,15 +522,15 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::Separator();
 			}
 
-			if (ImGui::Button("DebugObject", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::debugObject; };
-			if (selectedToolgunTool == (int)toolgun::tgSettings::debugObject) {
+			if (ImGui::Button("DebugObject", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_DEBUG; };
+			if (nToolgun::currentTool == toolnames::TOOL_DEBUG) {
 				ImGui::Separator();
 				ImGui::Text("DebugObject tab");
 				ImGui::Separator();
 			}
 
-			if (ImGui::Button("testing (dev stuff dont use)", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { selectedToolgunTool = (int)toolgun::tgSettings::testing; };
-			if (selectedToolgunTool == (int)toolgun::tgSettings::testing) {
+			if (ImGui::Button("testing (dev stuff dont use)", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_DEV; };
+			if (nToolgun::currentTool == toolnames::TOOL_DEV) {
 				ImGui::Separator();
 				ImGui::Text("Testing tab");
 				ImGui::Separator();
@@ -603,34 +598,36 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::SliderInt("C4 size", &c4::selectedBombSizeInt, 1, 3);
 			}
 
-			//if (ImGui::CollapsingHeader("physCamera")) {
-			//	if (ImGui::Button("Spawn physCamera")) {
-			//		physCamera::spawnCameraObject();
-			//	}
-			//	//if (ImGui::Button("Spawn physMonitor")) {
-			//	//	physMonitor::spawnMonitor();
-			//	//}
-			//	if (ImGui::Button("Destroy physCamera")) {
-			//		physCamera::destroyCamera();
-			//	}
-			//	ImGui::Separator();
-			//	ImGui::SliderInt("Resolution", &toolgun::cameraResolution, 32, 512);
-			//	ImGui::SliderFloat("FOV", &toolgun::cameraFov, 1.f, 10.f, "%.1f");
-			//	ImGui::Checkbox("Monochrome", &camera::mono);
-			//	ImGui::Checkbox("Enable transparency", &camera::transparency);
-			//	ImGui::Checkbox("Save image", &toolgun::takeSnapshot);
-			//	ImGui::Checkbox("(Staged) show progress", &camera::showImageProgress);
-			//	ImGui::SliderInt("(Staged) max pixels / frame", &camera::staged_maxPixelsPerFrame, 100, 10000);
-			//	if (ImGui::RadioButton("Interlaced", camera::mode == camera::cameraMode::interlaced)) {
-			//		camera::mode = camera::cameraMode::interlaced;
-			//	}
-			//	if (ImGui::RadioButton("Staged", camera::mode == camera::cameraMode::staged)) {
-			//		camera::mode = camera::cameraMode::staged;
-			//	}
-			//	if (ImGui::RadioButton("Fullframe", camera::mode == camera::cameraMode::fullframe)) {
-			//		camera::mode = camera::cameraMode::fullframe;
-			//	}
-			//}
+			if (ImGui::CollapsingHeader("Camera")) {
+				ImGui::Checkbox("Seperate thread", &threadCamera::runInSeperateThread);
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::BeginTooltip();
+					ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+					ImGui::TextUnformatted("Run the camera routine in a seperate thread.\nFast, but sometimes unstable.");
+					ImGui::PopTextWrapPos();
+					ImGui::EndTooltip();
+				}
+				ImGui::Checkbox("Stochastic sampling", &threadCamera::stochastic);
+				if (ImGui::RadioButton("Colour", (threadCamera::method == threadCamera::cameraType::CT_Colour))) {
+					threadCamera::method = threadCamera::cameraType::CT_Colour;
+				}
+				if (ImGui::RadioButton("Monochrome", (threadCamera::method == threadCamera::cameraType::CT_Monochrome))) {
+					threadCamera::method = threadCamera::cameraType::CT_Monochrome;
+				}
+				if (ImGui::RadioButton("Distance", (threadCamera::method == threadCamera::cameraType::CT_Dist))) {
+					threadCamera::method = threadCamera::cameraType::CT_Dist;
+				}
+
+				if (ImGui::Button("Spawn physCamera", { 150, 0 })) {
+					physCamera::spawnCameraObject();
+				}
+				if (ImGui::Button("Destroy physCamera", { 150, 0 })) {
+					physCamera::destroyCamera();
+				}
+
+
+			}
 
 			if (ImGui::CollapsingHeader("environment (buggy)")) {
 				if (ImGui::Button("Set night")) {
@@ -831,11 +828,11 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			break;
 		}
 
-		if (toolgun::currentsetting == toolgun::tgSettings::debugObject && toolgun::playerIsHoldingToolgun) {
-			ImGui::Separator();
-			ImGui::Text("Shape : %p", toolgun::dbgObject.tShape);
-			ImGui::Text("Body   : %p", toolgun::dbgObject.tBody);
-		}
+		//if (nToolgun::currentTool == toolnames::TOOL_DEBUG && nToolgun::holdingToolgun) {
+		//	ImGui::Separator();
+		//	ImGui::Text("Shape : %p", nToolgun::instance_debug->tShape);
+		//	ImGui::Text("Body   : %p", toolgun::dbgObject.tBody);
+		//}
 
 		ImGui::End();
 	}

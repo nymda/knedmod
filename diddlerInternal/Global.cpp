@@ -48,6 +48,8 @@ namespace glb {
 	unknGraphicsInitFunction oUnknGraphicsInitFunction;
 	validatePath oValidatePath;
 	initScreenSecondary tdInitScreenSecondary;
+	raycastCrashA tdRaycastCrashA;
+	raycastCrashB tdRaycastCrashB;
 
 	joinConstructor tdConstructJoint;
 	initBall tdInitBall;

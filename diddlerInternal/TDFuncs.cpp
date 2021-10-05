@@ -63,6 +63,8 @@ void sigscanItems() {
     glb::oValidatePath = (validatePath)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x56\x41\x57\x48\x8D\x68\xA1\x48\x81\xEC\x90\x00\x00\x00\x48\xC7\x45\xDF\xFE\xFF\xFF\xFF\x48\x89\x58\x08\x48", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::oLoadResource = (loadResource)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x54\x41\x55\x41\x56\x41\x57\x48\x8D\x68\xA1\x48\x81\xEC\x90\x00\x00\x00\x48\xC7\x45\xD7\xFE\xFF\xFF\xFF\x48", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::tdInitScreenSecondary = (initScreenSecondary)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x57\x48\x83\xEC\x20\x48\x8B\xDA\x48\x8B\xF9\xE8\x3B\xA7\xFD\xFF\x48\x8D\x57\x28\x48\x8B\xCB\xE8\x4F\x94\x01", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    glb::tdRaycastCrashA = (raycastCrashA)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x48\x89\x7C\x24\x10\x55\x48\x8B\xEC\x48\x83\xEC\x70\xF3\x0F\x10\x02\x48\x8B\xF9\xF3\x41\x0F\x58\x00\xF3\x0F", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
+    glb::tdRaycastCrashB = (raycastCrashB)mem::FindPattern((PBYTE)"\x48\x83\xEC\x08\x4C\x8B\xD2\x4C\x8B\xC9\x8B\x52\x70\x85\x11\x75\x07\x32\xC0\x48\x83\xC4\x08\xC3\x8B\x41\x04\x23\xC2\x3B\x41\x04", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL));
 
     glb::osub_140105F30 = (sub_140105F30)mem::FindPattern((PBYTE)"\x48\x8B\x41\x10\x48\x85\xC0\x74\x18\x0F\x1F\x80\x00\x00\x00\x00", "xxxxxxxxxxxxxxx", GetModuleHandle(NULL));
     glb::osub_140146470 = (sub_140146470)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x4C\x8D\x41\x28\x48\x8B\xDA\x48\x8B\x49", "xxxxxxxxxxxxxxx", GetModuleHandle(NULL));
@@ -82,6 +84,8 @@ void sigscanItems() {
 
     std::cout << "" << std::endl;
     std::cout << "[Function Addresses:       ]" << std::endl;
+    std::cout << "tdRaycastCrashA      : " << std::hex << glb::tdRaycastCrashA << std::endl;
+    std::cout << "tdRaycastCrashB      : " << std::hex << glb::tdRaycastCrashB << std::endl;
     std::cout << "tdInitScreenSec      : " << std::hex << glb::tdInitScreenSecondary << std::endl;
     std::cout << "loadResource         : " << std::hex << glb::oLoadResource << std::endl;
     std::cout << "sub_140105F30        : " << std::hex << glb::osub_140105F30 << std::endl;

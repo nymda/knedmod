@@ -23,13 +23,17 @@ DWORD tgt_spawner::exec() {
     td::Vec3 target = rd.worldPos;
     TDShape* tShape = rd.hitShape;
 
-    if (rd.successful) {
-        //snapPoints::drawSnapPoints(tShape);
-    }
-
-
+    //if (rd.successful) {
+    //    snapPoints::drawSnapPoints(tShape);
+    //}
 
     if (!spawner::thrownMode) {
+
+        //glm::vec3 out = { 0, 0, 0 };
+        //if (snapPoints::getClosestSnapPoint(math::v3_td2glm(target), snapPoints::getSnapPoints(tShape), 1.f, &out)) {
+        //    rd.worldPos = math::v3_glm2td(out);
+        //}
+
         spawner::drawSpawngunObjectOutline(currentSpawngunObject.voxObject, rd);
     }
 
@@ -41,6 +45,13 @@ DWORD tgt_spawner::exec() {
                 params.attributes = currentSpawngunObject.attributes;
                 params.useUserRotation = true;
                 params.nocull = true;
+
+                //glm::vec3 out = { 0, 0, 0 };
+                //if (snapPoints::getClosestSnapPoint(math::v3_td2glm(target), snapPoints::getSnapPoints(tShape), 1.f, &out)) {
+                //    params.useSnaps = true;
+                //    params.snapPosition = out;
+                //}
+
                 spawner::placeFreeObject(currentSpawngunObject.voxPath, params);
             }
             else if (spawner::childMode) {
@@ -48,6 +59,13 @@ DWORD tgt_spawner::exec() {
                 params.attributes = currentSpawngunObject.attributes;
                 params.useUserRotation = true;
                 params.nocull = true;
+
+                glm::vec3 out = { 0, 0, 0 };
+                //if (snapPoints::getClosestSnapPoint(math::v3_td2glm(target), snapPoints::getSnapPoints(tShape), 1.f, &out)) {
+                //    params.useSnaps = true;
+                //    params.snapPosition = out;
+                //}
+
                 spawner::placeChildObject(currentSpawngunObject.voxPath, params);
             }
             else if (spawner::thrownMode) {

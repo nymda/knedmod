@@ -82,7 +82,7 @@ namespace spawner {
     float voxScale = 1.f;
     std::vector<spawner::spawnerCatagory> spawnerObjectsDatabase;
 
-    std::vector<toolgun::fadeShapeOutline> spawnedObjects = {};
+    //std::vector<toolgun::fadeShapeOutline> spawnedObjects = {};
     std::vector<KMSpawnedObject> spawnList = {};
     KMSpawnedObject lastSpawnedObject{};
     td::Color white{ 1.f, 1.f, 1.f, 1.f };
@@ -417,10 +417,10 @@ namespace spawner {
         }
         
         if (params.animate) {
-            toolgun::fadeShapeOutline tmp;
-            tmp.shape = lsp.shape;
-            tmp.alpha = 255;
-            spawnedObjects.push_back(tmp);
+            //toolgun::fadeShapeOutline tmp;
+            //tmp.shape = lsp.shape;
+            //tmp.alpha = 255;
+            //spawnedObjects.push_back(tmp);
         }
 
         return lsp;
@@ -434,20 +434,20 @@ namespace spawner {
     void processMostRecentObject() {
 
         bool clearSpawnedObjects = true;
-        if (spawnedObjects.size() > 0) {
-            for (toolgun::fadeShapeOutline& fso : spawnedObjects) {
-                glb::oHighlightShape(glb::renderer, fso.shape, (float)(fso.alpha / 255.f));
-                if (fso.alpha > 0) {
-                    fso.alpha -= 4;
-                    clearSpawnedObjects = false;
-                }
-            }
+        //if (spawnedObjects.size() > 0) {
+        //    for (toolgun::fadeShapeOutline& fso : spawnedObjects) {
+        //        glb::oHighlightShape(glb::renderer, fso.shape, (float)(fso.alpha / 255.f));
+        //        if (fso.alpha > 0) {
+        //            fso.alpha -= 4;
+        //            clearSpawnedObjects = false;
+        //        }
+        //    }
 
-            if (clearSpawnedObjects) {
-                spawnedObjects.clear();
-                clearSpawnedObjects = false;
-            }
-        }
+        //    if (clearSpawnedObjects) {
+        //        spawnedObjects.clear();
+        //        clearSpawnedObjects = false;
+        //    }
+        //}
 
         if (glb::game) {
             if (glb::game->State == gameState::menu) {
@@ -849,8 +849,17 @@ namespace spawner {
         glm::vec3 clippingTranslation = (vz_f * clippingOffset.z) + (vy_f * clippingOffset.y) + (vx_f * clippingOffset.x);
         translation = translation - clippingTranslation;
 
-        object.body->Position = { rd.worldPos.x - translation.x, (rd.worldPos.y - translation.y), rd.worldPos.z - translation.z };
-        *(glm::quat*)&object.body->Rotation = q;
+        if (params.useSnaps) {
+            object.body->Position = { params.snapPosition.x - translation.x, params.snapPosition.y - translation.y, params.snapPosition.z - translation.z };
+            //*(glm::quat*)&object.body->Rotation = math::expandRotation(math::q_td2glm(rd.hitShape->getParentBody()->Rotation), math::q_td2glm(rd.hitShape->rOffset));
+            *(glm::quat*)&object.body->Rotation = q;
+        }
+        else {
+            object.body->Position = { rd.worldPos.x - translation.x, (rd.worldPos.y - translation.y), rd.worldPos.z - translation.z };
+            *(glm::quat*)&object.body->Rotation = q;
+        }
+
+
         object.body->Velocity = { 0, 0, 0 };
 
         for (TDShape* cShape : object.shapes) {

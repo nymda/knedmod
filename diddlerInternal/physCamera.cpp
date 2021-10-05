@@ -30,13 +30,14 @@ namespace physCamera {
 
 	void spawnCameraObject() {
         if (!objCamera) {
-            objCamera = new threadCamera::KMCamera(math::q_td2glm(glb::player->cameraQuat), math::v3_td2glm(glb::player->cameraPosition), { 0, 0, -1 }, { 0, -1, 0 }, toolgun::cameraResolutionX, toolgun::cameraResolutionY);
+            objCamera = new threadCamera::KMCamera(math::q_td2glm(glb::player->cameraQuat), math::v3_td2glm(glb::player->cameraPosition), { 0, 0, -1 }, { 0, -1, 0 }, nToolgun::instance_camera->resolutionX, nToolgun::instance_camera->resolutionY);
         }   
         objCamera->cameraDestroyed = false;
 		spawner::objectSpawnerParams osp = {};
 		osp.nocull = true;
         camera = spawner::placeFreeObject("KM_Vox/Default/camera/object.vox");
         glb::setObjectAttribute(camera.shapes[0], "nocull", "");
+        objCamera->parent = camera.shapes[0];
 
         objCamera->rcf.m_IgnoredShapes.push_back(camera.shapes[0]);
 	}
@@ -69,7 +70,14 @@ namespace physCamera {
         if (!objCamera) { return; }
 
         if (objCamera->DCF < 60) {
+            if (!threadCamera::runInSeperateThread && objCamera->cameraDestroyed) {
+                objCamera->updateImage();
+            }
             threadCamera::drawCameraWndw(objCamera);
+            objCamera->cameraActive = true;
+        }
+        else {
+            objCamera->cameraActive = false;
         }
 
         TDBody* cameraBody = camera.body;
@@ -116,12 +124,8 @@ namespace physCamera {
 
         objCamera->cameraActive = true;
         objCamera->updateCameraSpecs(bodyQuat, centerpoint, { -1, 0, 0 }, -cameraUp);
-
-        if (camera::transparency) {
-            objCamera->rcf.m_RejectTransparent = true;
-        }
-        else {
-            objCamera->rcf.m_RejectTransparent = false;
+        if (!threadCamera::runInSeperateThread) {
+            objCamera->updateImage();
         }
 	}
 }

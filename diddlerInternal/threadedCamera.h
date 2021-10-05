@@ -14,12 +14,24 @@
 
 namespace threadCamera {
 
+	extern bool runInSeperateThread;
+	extern bool stochastic;
+	void updateGameCameras();
+
 	struct pixel {
 		byte R = 0;
 		byte G = 0;
 		byte B = 0;
 		byte A = 0;
 	};
+
+	enum cameraType {
+		CT_Colour,
+		CT_Monochrome,
+		CT_Dist
+	};
+
+	extern cameraType method;
 
 	class KMCamera {
 		int resolutionX = 100;
@@ -31,10 +43,18 @@ namespace threadCamera {
 		float lastFrameExecTime = 0.f;
 		bool switchDestroyBuffers = false;
 
+		glm::vec3 raycast_dir_bl;
+		glm::vec3 glTarget;
+		glm::mat4x4 vmatrix;
+		glm::mat4x4 pmatrix;
+		glm::mat4 invProjMat;
+		glm::mat4 invViewMat;
+
 	public:
 		bool cameraActive = true;
 		bool cameraDestroyed = false;
 		int DCF = 0;
+		TDShape* parent;
 
 		RaycastFilter rcf = { };
 
@@ -48,6 +68,7 @@ namespace threadCamera {
 		pixel* bufferB = 0;
 		pixel* bufferShow = bufferA;
 		pixel* bufferWrite = bufferB;
+		float* bufferDistances = 0;
 
 		KMCamera(glm::quat rot, glm::vec3 pos, glm::vec3 forwv, glm::vec3 upv, int resX, int resY);
 		void updateCameraSpecs(glm::quat rot, glm::vec3 pos, glm::vec3 forwv, glm::vec3 upv);

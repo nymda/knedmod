@@ -40,6 +40,8 @@ typedef void(__fastcall* wrappedDoDamage)(TDScene* scene, td::Vec3* position, fl
 typedef void(__fastcall* setBodySomething)(uintptr_t body, __int8 a1, __int8 a2);
 typedef void(__fastcall* handleBombObjs)(uintptr_t a1);
 typedef void(__fastcall* setShapeParentBody)(TDShape* shape, byte unkn, TDBody* body);
+typedef char(__fastcall* raycastCrashA)(void* a1, float* a2, float* a3, float* a4, float* a5);
+typedef char(__fastcall* raycastCrashB)(void* a1, void* a2);
 
 //creation
 typedef uintptr_t(__fastcall* tSpawnVox) (td::small_string* path, td::small_string* subpath, float scale);
@@ -106,7 +108,6 @@ typedef void*(__fastcall* sub_140105F30)(TDScreen* screen, int a2);
 typedef void*(__fastcall* sub_140146470)(__int64 a1, __int64 a2);
 typedef void*(__fastcall* sub_140032EA0)(float* a1, __int64 a2, float* a3);
 
-
 //td maths
 typedef __int64(__fastcall* apiQuatEuler)(float* a1, float* a2);
 typedef __int64(__fastcall* interestingUpdateFunc)(TDBody* body, __int8 a2, __int8 a3);
@@ -135,6 +136,8 @@ namespace glb {
     extern unknGraphicsInitFunction oUnknGraphicsInitFunction;
     extern validatePath oValidatePath;
     extern loadResource oLoadResource;
+    extern raycastCrashA tdRaycastCrashA;
+    extern raycastCrashB tdRaycastCrashB;
 
     extern sub_140105F30 osub_140105F30;
     extern sub_140146470 osub_140146470;
