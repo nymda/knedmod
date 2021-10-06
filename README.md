@@ -6,4 +6,7 @@ This is considered far from a complete project and has a lot of known bugs that 
 
 Building requires MS Detours and GLEW. KnedMod is released under the GNU GPL v3 license.
 
+COMPILED BINARIES AND INSTALL INSTRUCTIONS ARE AVAILABLE ON THIS SERVER: https://discord.gg/d4uW3hG
+LOOK UNDER #mod_submissions AND FOLLOW THE README
+
 Tons of thanks to [SK83RJOSH](https://github.com/SK83RJOSH), [Nahu](https://github.com/nxhu64) and [Xorberax](https://github.com/ss-gnalvesteffer)
