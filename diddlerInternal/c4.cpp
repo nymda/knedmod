@@ -138,12 +138,16 @@ namespace c4 {
                     osp.nocull = true;
                     osp.pushSpawnList = false;
                     
-                    const char* currentPath = "vox\\Default\\Cracker\\object.vox";
-                    impNade = spawner::spawnObjectProxy(currentPath, osp);
+                    const char* currentPath = "KM_Vox\\Default\\Cracker\\object.vox";
+                    
+                    spawner::thrownObjectSpawnParams params = {};
+                    params.power = 20.f;
+                    params.nocull = true;
+                    spawner::spawnedObject object = spawner::throwFreeObject(currentPath, params);
 
-                    glb::setObjectAttribute(impNade.shape, "unbreakable", "");
-                    glb::setObjectAttribute(impNade.shape, "bombstrength", std::to_string(firecrackerExplosionSize).c_str());
-                    glb::setObjectAttribute(impNade.shape, "bomb", "1.5");
+                    glb::setObjectAttribute(object.shapes[0], "unbreakable", "");
+                    glb::setObjectAttribute(object.shapes[0], "bombstrength", std::to_string(firecrackerExplosionSize).c_str());
+                    glb::setObjectAttribute(object.shapes[0], "bomb", "1.5");
                     //glb::setObjectAttribute(impNade.shape, "smoke", "");
                 }
             }
@@ -171,7 +175,7 @@ namespace c4 {
                     osp.nocull = true;
                     osp.pushSpawnList = false;
 
-                    const char* currentPath = "vox\\Default\\handBomb\\object.vox";
+                    const char* currentPath = "KM_Vox\\Default\\handBomb\\object.vox";
                     impNade = spawner::spawnObjectProxy(currentPath, osp);
 
                     glb::setObjectAttribute(impNade.shape, "unbreakable", "");
@@ -201,7 +205,7 @@ namespace c4 {
                     osp.nocull = true;
                     osp.pushSpawnList = false;
 
-                    const char* currentPath = "vox\\Default\\brick\\object.vox";
+                    const char* currentPath = "KM_Vox\\Default\\brick\\object.vox";
                     spawner::KMSpawnedObject brick = spawner::spawnObjectProxy(currentPath, osp);
 
                     glb::setObjectAttribute(brick.shape, "explosive", "1");

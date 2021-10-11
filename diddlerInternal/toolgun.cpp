@@ -34,6 +34,7 @@ namespace nToolgun {
     tgt_weld* instance_weld = 0;
     tgt_flamethrower* instance_flamethrower = 0;
     tgt_attribute* instance_attribute = 0;
+    tgt_balloon* instance_balloon = 0;
 
     toolnames currentTool = TOOL_SPAWNER;
     bool isInit = false;
@@ -53,6 +54,7 @@ namespace nToolgun {
         instance_weld = new tgt_weld;
         instance_flamethrower = new tgt_flamethrower;
         instance_attribute = new tgt_attribute;
+        instance_balloon = new tgt_balloon;
 
         isInit = true;
     }
@@ -121,6 +123,10 @@ namespace nToolgun {
 
             case TOOL_DEV:
                 instance_dev->exec();
+                break;
+
+            case TOOL_BALLOON:
+                instance_balloon->exec();
                 break;
 
             }

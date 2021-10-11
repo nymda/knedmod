@@ -49,6 +49,12 @@
     <Filter Include="Source Files\Mods\deprecated">
       <UniqueIdentifier>{1b07feb1-02d8-4ad3-8158-9eb2632f0e95}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\wire">
+      <UniqueIdentifier>{1095a3af-337c-4275-b093-99bb1de16130}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\wire">
+      <UniqueIdentifier>{fb829142-99a0-4db0-b770-075d7ddb7a6a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mem.h">
@@ -264,6 +270,27 @@
     <ClInclude Include="snapPoints.h">
       <Filter>Header Files\Misc</Filter>
     </ClInclude>
+    <ClInclude Include="balloons.h">
+      <Filter>Header Files\Mods</Filter>
+    </ClInclude>
+    <ClInclude Include="tgtBalloon.h">
+      <Filter>Header Files\toolgunTools</Filter>
+    </ClInclude>
+    <ClInclude Include="wireObjectBase.h">
+      <Filter>Header Files\wire</Filter>
+    </ClInclude>
+    <ClInclude Include="wireObjectSpawn.h">
+      <Filter>Header Files\wire</Filter>
+    </ClInclude>
+    <ClInclude Include="wireObjectKernel.h">
+      <Filter>Header Files\wire</Filter>
+    </ClInclude>
+    <ClInclude Include="wirePlacementIntBus.h">
+      <Filter>Header Files\wire</Filter>
+    </ClInclude>
+    <ClInclude Include="wirePlacements.h">
+      <Filter>Header Files\wire</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -451,6 +478,24 @@
     </ClCompile>
     <ClCompile Include="snapPoints.cpp">
       <Filter>Source Files\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="balloons.cpp">
+      <Filter>Source Files\Mods</Filter>
+    </ClCompile>
+    <ClCompile Include="tgtBalloon.cpp">
+      <Filter>Source Files\toolgunTools</Filter>
+    </ClCompile>
+    <ClCompile Include="wireObjectBase.cpp">
+      <Filter>Source Files\wire</Filter>
+    </ClCompile>
+    <ClCompile Include="wireObjectSpawn.cpp">
+      <Filter>Source Files\wire</Filter>
+    </ClCompile>
+    <ClCompile Include="wireObjectKernel.cpp">
+      <Filter>Source Files\wire</Filter>
+    </ClCompile>
+    <ClCompile Include="wirePlacementIntBus.cpp">
+      <Filter>Source Files\wire</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -5,9 +5,19 @@
 #include <glm/gtc/quaternion.hpp>
 #include <vector>
 
+struct snapPoint {
+	glm::vec3 position;
+	glm::vec3 direction;
+};
+
+struct snapPointPackage {
+	std::vector<snapPoint> snapPoints;
+	glm::quat parentRotation;
+};
+
 namespace snapPoints {
 	bool pointNearPoint(glm::vec3 pointA, glm::vec3 pointB, float maxDist);
-	bool getClosestSnapPoint(glm::vec3 sourcePoint, std::vector<glm::vec3> snapPoints, float maxDist, glm::vec3* out);
+	bool getClosestSnapPoint(glm::vec3 sourcePoint, snapPointPackage snapPackage, float maxDist, snapPoint* out);
 	void drawSnapPoints(TDShape* shape);
-	std::vector<glm::vec3> getSnapPoints(TDShape* shape);
+	snapPointPackage getSnapPoints(TDShape* shape);
 }

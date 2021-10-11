@@ -21,6 +21,7 @@ namespace nToolgun {
     extern tgt_weld* instance_weld;
     extern tgt_flamethrower* instance_flamethrower;
     extern tgt_attribute* instance_attribute;
+    extern tgt_balloon* instance_balloon;
 
     extern toolnames currentTool;
 }

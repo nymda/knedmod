@@ -5,6 +5,7 @@
 #include "Raycaster.h"
 #include <glm/gtc/quaternion.hpp>
 #include <vector>
+#include "snapPoints.h"
 
 inline bool exists(const std::string& name);
 
@@ -125,7 +126,7 @@ namespace spawner {
 	};
 
 	void switchRotationStep(WPARAM wParam);
-	void drawSpawngunObjectOutline(TDVox* currentVox, raycaster::rayData rd);
+	void drawSpawngunObjectOutline(TDVox* currentVox, raycaster::rayData rd, bool usingSnapPoints, glm::quat parentRotation, snapPoint point);
 	spawnedObject throwFreeObject(std::string filepath, thrownObjectSpawnParams params);
 	spawnedObject placeChildObject(std::string filepath, childObjectSpawnParams params = {});
 	bool spawnChildEntity(std::string filepath, childObjectSpawnParams params, spawnedObject* object);

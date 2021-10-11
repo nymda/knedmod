@@ -12,6 +12,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include "toolgun.h"
 #include <glm/gtx/quaternion.hpp>
+#include "snapPoints.h"
 
 namespace fs = std::filesystem;
 
@@ -183,7 +184,6 @@ namespace spawner {
         }
 
 
-
         glm::vec3 vx = q * glm::vec3(-1, 0, 0);
         glm::vec3 vy = q * glm::vec3(0, -1, 0);
         glm::vec3 vz = q * glm::vec3(0, 0, -1); //(UP)
@@ -253,7 +253,7 @@ namespace spawner {
         return { 0.f, 0.f, ZOffset };
     }
 
-    void drawSpawngunObjectOutline(TDVox* currentVox, raycaster::rayData rd) {
+    void drawSpawngunObjectOutline(TDVox* currentVox, raycaster::rayData rd, bool usingSnapPoints, glm::quat parentRotation, snapPoint point) {
 
         glm::vec3 clippingOffset = math::v3_td2glm(getClippingTranslation(currentVox, rd, true));
 
@@ -271,7 +271,7 @@ namespace spawner {
         float voxSizeZ = (currentVox->sizeZ / 10.f) * spawner::voxScale;
 
         td::Vec3 oSize = { voxSizeX, voxSizeY, voxSizeZ };
-        glm::vec3 hitPos = { rd.worldPos.x, rd.worldPos.y, rd.worldPos.z };
+        glm::vec3 targetGLM = math::v3_td2glm(target);
 
         glm::quat facePlayer = glm::quat(glm::vec3(4.71238898025f, glb::player->camYaw /* + (deg2rad(objectPlacementRotationSteps[currentRotationStep]))*/, 0));
         glm::vec3 vxTmp = facePlayer * glm::vec3(-1, 0, 0);
@@ -280,12 +280,17 @@ namespace spawner {
 
         hitDir = glm::normalize(hitDir);
 
-        glm::quat q = glm::conjugate(glm::quat(glm::lookAt(hitPos, hitPos + hitDir, vxTmp))); //this is kinda inverted, with "up" facing the player and "forward" facing away from the surface. "fixing" this makes it work less good so eh.
+        glm::quat q = glm::conjugate(glm::quat(glm::lookAt(targetGLM, targetGLM + hitDir, vxTmp))); //this is kinda inverted, with "up" facing the player and "forward" facing away from the surface. "fixing" this makes it work less good so eh.
         glm::quat q_flat = q;
 
         glm::quat rotOffset = glm::quat(glm::vec3(-(deg2rad(objectPlacementRotationSteps_V[currentRotationStep_V2])), -(deg2rad(objectPlacementRotationSteps_V[currentRotationStep_V1])), -(deg2rad(objectPlacementRotationSteps_H[currentRotationStep_H]))));
-        //glm::quat rotOffset = getCurrentRotationOffset(true);
         q = q * rotOffset;
+
+        if (usingSnapPoints) {
+            q = parentRotation;
+            q_flat = q;
+            target = math::v3_glm2td(point.position + (point.direction * (voxSizeX * 0.5f)));
+        }
 
         glm::vec3 vx = q * glm::vec3(-1, 0, 0);
         glm::vec3 vy = q * glm::vec3(0, -1, 0);
@@ -851,7 +856,7 @@ namespace spawner {
 
         if (params.useSnaps) {
             object.body->Position = { params.snapPosition.x - translation.x, params.snapPosition.y - translation.y, params.snapPosition.z - translation.z };
-            //*(glm::quat*)&object.body->Rotation = math::expandRotation(math::q_td2glm(rd.hitShape->getParentBody()->Rotation), math::q_td2glm(rd.hitShape->rOffset));
+            *(glm::quat*)&object.body->Rotation = math::expandRotation(math::q_td2glm(rd.hitShape->getParentBody()->Rotation), math::q_td2glm(rd.hitShape->rOffset));
             *(glm::quat*)&object.body->Rotation = q;
         }
         else {

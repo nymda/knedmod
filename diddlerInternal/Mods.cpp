@@ -12,6 +12,8 @@
 #include "physCamera.h"
 #include "Harop.h"
 #include "objectTranslationTest.h"
+#include "balloons.h"
+#include "wireObjectKernel.h"
 
 namespace mods {
 	char jetpackKey = VK_SPACE;
@@ -27,11 +29,14 @@ namespace mods {
 
 	void execMods() {
 		spawner::processMostRecentObject();
-		//toolgun::handleToolgun();
 		nToolgun::runToolgun();
+		wireObjects::updateExistingWireObjects();
+		wireObjects::highlightTarget();
+
 		c4::runC4();
 		noclip::update();
-
+		balloons::updateAllBalloons();
+		
 		if (jetpack) {
 			jetpack::executeJetpack();
 		}

@@ -26,7 +26,6 @@ DWORD tgt_camera::exec() {
         playerCamera->cameraActive = false;
     }
 
-    playerCamera->fov = fov;
     threadCamera::drawCameraWndw(playerCamera);
 
     return 0x01;

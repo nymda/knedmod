@@ -22,6 +22,8 @@
 #include "constClock.h"
 #include "console.h"
 #include "tgtMinigun.h"
+#include "wireObjectKernel.h"
+#include "wireObjectSpawn.h"
 
 #pragma comment(lib, "glew32s.lib")
 
@@ -211,7 +213,7 @@ void showWelcomeMessage() {
 	ImGui::Text("Welcome to knedmod");
 	ImGui::Text("To access the main menu, press [F1]. To enter noclip, press [V]");
 	ImGui::Separator();
-	ImGui::Text("This build of knedmod is designed for teardown 0.1.4");
+	ImGui::Text("This build of knedmod is designed for teardown 0.8.0");
 	ImGui::Text("Knedmod is in beta, you are likely to encounter bugs / crashes");
 	ImGui::Text("Press [ESC] to close this message");
 
@@ -362,6 +364,10 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			bool* bpTrue = &bTRUE;
 			bool* bpFalse = &bFALSE;
 
+			if (ImGui::Button("Create test wire object", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { 
+				wireObjects::spawnWireObject(0);
+			};
+
 			if (ImGui::Button("Spawner", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_SPAWNER; };
 			if (nToolgun::currentTool == toolnames::TOOL_SPAWNER) {
 				ImGui::Separator();
@@ -403,6 +409,15 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			if (nToolgun::currentTool == toolnames::TOOL_WELD) {
 				ImGui::Separator();
 				ImGui::Text("Weld tab");
+				ImGui::Separator();
+			}
+
+
+			if (ImGui::Button("Balloon", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_BALLOON; };
+			if (nToolgun::currentTool == toolnames::TOOL_BALLOON) {
+				ImGui::Separator();
+				ImGui::Text("Balloon tab");
+				ImGui::SliderFloat("Power", &nToolgun::instance_balloon->balloonPower, 1.f, 100.f, "%.1f");
 				ImGui::Separator();
 			}
 
@@ -461,16 +476,16 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::Separator();
 			}
 
-			if (ImGui::Button("Leafblower", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_LEAFBLOWER; };
-			if (nToolgun::currentTool == toolnames::TOOL_LEAFBLOWER) {
-				//ImGui::Separator();
-				//ImGui::Combo("Mode", &blower_current, leafBlowerModes, IM_ARRAYSIZE(leafBlowerModes));
-				//toolgun::LBMode = (toolgun::leafblowerModes)blower_current;
-				//ImGui::Checkbox("Show rays", &toolgun::showRayHitPos);
-				//ImGui::SliderInt("Rays", &toolgun::leafBlowerRayCount, 0, 500);
-				//ImGui::SliderFloat("FOV", &toolgun::leafBlowerFOV, 0.01f, 0.5f, "%.2f");
-				//ImGui::Separator();
-			}
+			//if (ImGui::Button("Leafblower", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_LEAFBLOWER; };
+			//if (nToolgun::currentTool == toolnames::TOOL_LEAFBLOWER) {
+			//	//ImGui::Separator();
+			//	//ImGui::Combo("Mode", &blower_current, leafBlowerModes, IM_ARRAYSIZE(leafBlowerModes));
+			//	//toolgun::LBMode = (toolgun::leafblowerModes)blower_current;
+			//	//ImGui::Checkbox("Show rays", &toolgun::showRayHitPos);
+			//	//ImGui::SliderInt("Rays", &toolgun::leafBlowerRayCount, 0, 500);
+			//	//ImGui::SliderFloat("FOV", &toolgun::leafBlowerFOV, 0.01f, 0.5f, "%.2f");
+			//	//ImGui::Separator();
+			//}
 
 			if (ImGui::Button("Slicer", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_SLICE; };
 			if (nToolgun::currentTool == toolnames::TOOL_SLICE) {
@@ -491,7 +506,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::Separator();
 				ImGui::SliderInt("Resolution X", &nToolgun::instance_camera->resolutionX, 32, 512);
 				ImGui::SliderInt("Resolution Y", &nToolgun::instance_camera->resolutionY, 32, 512);
-				ImGui::SliderFloat("FOV", &nToolgun::instance_camera->fov, 1.f, 20.f, "%.1f");
+				ImGui::SliderFloat("FOV", &threadCamera::universialFov, 1.f, 20.f, "%.1f");
 				if (ImGui::Button("Spawn physCamera", { 150, 0 })) {
 					physCamera::spawnCameraObject();
 				}
@@ -501,7 +516,6 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				if (ImGui::Button("Update")) {
 					for (threadCamera::KMCamera* kmc : threadCamera::gameCameras) {
 						kmc->setResolution(nToolgun::instance_camera->resolutionX, nToolgun::instance_camera->resolutionY);
-						kmc->fov = nToolgun::instance_camera->fov;
 					}
 				}
 
@@ -522,12 +536,12 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::Separator();
 			}
 
-			if (ImGui::Button("DebugObject", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_DEBUG; };
-			if (nToolgun::currentTool == toolnames::TOOL_DEBUG) {
-				ImGui::Separator();
-				ImGui::Text("DebugObject tab");
-				ImGui::Separator();
-			}
+			//if (ImGui::Button("DebugObject", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_DEBUG; };
+			//if (nToolgun::currentTool == toolnames::TOOL_DEBUG) {
+			//	ImGui::Separator();
+			//	ImGui::Text("DebugObject tab");
+			//	ImGui::Separator();
+			//}
 
 			if (ImGui::Button("testing (dev stuff dont use)", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_DEV; };
 			if (nToolgun::currentTool == toolnames::TOOL_DEV) {
@@ -565,26 +579,22 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				//if (ImGui::Checkbox("Remove plank length limit", &miscPatches::plankPatch)) {
 				//	miscPatches::updatePlankPatch();
 				//}
-				if (ImGui::CollapsingHeader("objects")) {
-					if (ImGui::Button("Spawn lantern")) {
-						lantern::spawnLantern();
-					}
+				//if (ImGui::CollapsingHeader("objects")) {
+				//	if (ImGui::Button("Spawn lantern")) {
+				//		lantern::spawnLantern();
+				//	}
 
 
-					ImGui::SliderFloat("pointSize", &lantern::a1, 0.1f, 255.f, "%.2f");
-					ImGui::SliderFloat("shadows", &lantern::a2, 0.1f, 255.f, "%.2f");
-					ImGui::SliderFloat("brightness", &lantern::a3, 0.1f, 255.f, "%.2f");
-					ImGui::SliderFloat("fog", &lantern::a4, 0.1f, 255.f, "%.2f");
-					ImGui::Spacing();
-					ImGui::SliderFloat("R", &lantern::lightR, 0.1f, 255.f, "%.2f");
-					ImGui::SliderFloat("G", &lantern::lightG, 0.1f, 255.f, "%.2f");
-					ImGui::SliderFloat("B", &lantern::lightB, 0.1f, 255.f, "%.2f");
-				}
+				//	ImGui::SliderFloat("pointSize", &lantern::a1, 0.1f, 255.f, "%.2f");
+				//	ImGui::SliderFloat("shadows", &lantern::a2, 0.1f, 255.f, "%.2f");
+				//	ImGui::SliderFloat("brightness", &lantern::a3, 0.1f, 255.f, "%.2f");
+				//	ImGui::SliderFloat("fog", &lantern::a4, 0.1f, 255.f, "%.2f");
+				//	ImGui::Spacing();
+				//	ImGui::SliderFloat("R", &lantern::lightR, 0.1f, 255.f, "%.2f");
+				//	ImGui::SliderFloat("G", &lantern::lightG, 0.1f, 255.f, "%.2f");
+				//	ImGui::SliderFloat("B", &lantern::lightB, 0.1f, 255.f, "%.2f");
+				//}
 				ImGui::SliderFloat("Cracker power", &c4::firecrackerExplosionSize, 0.f, 5.f, "%.1f");
-
-				if (ImGui::Checkbox("Everything can burn", &fireSpreadMod::isFireModEnabled)) {
-					fireSpreadMod::toggleFireMod();
-				}
 			}
 
 			if (ImGui::CollapsingHeader("minimap")) {
@@ -629,70 +639,70 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 
 			}
 
-			if (ImGui::CollapsingHeader("environment (buggy)")) {
-				if (ImGui::Button("Set night")) {
-					envOptions::setNight();
-				}
+			//if (ImGui::CollapsingHeader("environment (buggy)")) {
+			//	if (ImGui::Button("Set night")) {
+			//		envOptions::setNight();
+			//	}
 
-				if (ImGui::Button("All lights off")) {
-					for (TDLight* tdl : *(glb::scene->m_Lights)) {
-						((TDLight*)tdl)->m_Enabled = false;
-					}
-				}
+			//	if (ImGui::Button("All lights off")) {
+			//		for (TDLight* tdl : *(glb::scene->m_Lights)) {
+			//			((TDLight*)tdl)->m_Enabled = false;
+			//		}
+			//	}
 
-				if (ImGui::Button("All lights on")) {
-					for (TDLight* tdl : *(glb::scene->m_Lights)) {
-						((TDLight*)tdl)->m_Enabled = true;
-					}
-				}
+			//	if (ImGui::Button("All lights on")) {
+			//		for (TDLight* tdl : *(glb::scene->m_Lights)) {
+			//			((TDLight*)tdl)->m_Enabled = true;
+			//		}
+			//	}
 
-				ImGui::SliderInt("New res", &newRes, 1, 1024);
+			//	ImGui::SliderInt("New res", &newRes, 1, 1024);
 
-				if (ImGui::Button("List screens")) {
-					for (TDScreen* tds : *(glb::scene->m_Screens)) {
+			//	if (ImGui::Button("List screens")) {
+			//		for (TDScreen* tds : *(glb::scene->m_Screens)) {
 
-						//((TDScreen*)tds)->m_Resolution = { newRes, newRes };
-						//glb::tdUpdateScreen(((TDScreen*)tds));
-						std::cout << "Screen @ " << ((TDScreen*)tds) << " RES: " << &((TDScreen*)tds)->m_Resolution << " SIZE: " << std::to_string(((TDScreen*)tds)->m_Resolution.x) << " : " << std::to_string(((TDScreen*)tds)->m_Resolution.y) << " SCRIPT: " << (TDScreen*)tds->m_Script.c_str() << std::endl;
-					}
-				}
+			//			//((TDScreen*)tds)->m_Resolution = { newRes, newRes };
+			//			//glb::tdUpdateScreen(((TDScreen*)tds));
+			//			std::cout << "Screen @ " << ((TDScreen*)tds) << " RES: " << &((TDScreen*)tds)->m_Resolution << " SIZE: " << std::to_string(((TDScreen*)tds)->m_Resolution.x) << " : " << std::to_string(((TDScreen*)tds)->m_Resolution.y) << " SCRIPT: " << (TDScreen*)tds->m_Script.c_str() << std::endl;
+			//		}
+			//	}
 
-				//ImGui::InputText("Skybox", tempSkyboxPath, 128);
-				ImGui::SliderFloat("Sun brightness", &glb::scene->pEnvironment->m_SunBrightness, 0.f, 255.f, "%.2f");
-				ImGui::SliderFloat("Sun spread", &glb::scene->pEnvironment->m_SunSpread, 0.f, 255.f, "%.2f");
-				ImGui::SliderFloat("Sun length", &glb::scene->pEnvironment->m_SunLength, 0.f, 255.f, "%.2f");
-				ImGui::SliderFloat("Sun fog", &glb::scene->pEnvironment->m_FogScale, 0.f, 255.f, "%.2f");
-				ImGui::SliderFloat("Sun glare", &glb::scene->pEnvironment->m_SunGlare, 0.f, 255.f, "%.2f");
-				ImGui::Spacing();
-				ImGui::SliderFloat("sun R", &glb::scene->pEnvironment->m_SunColorTint.x, 0.f, 255.f, "%.2f");
-				ImGui::SliderFloat("sun G", &glb::scene->pEnvironment->m_SunColorTint.y, 0.f, 255.f, "%.2f");
-				ImGui::SliderFloat("sun B", &glb::scene->pEnvironment->m_SunColorTint.z, 0.f, 255.f, "%.2f");
-				ImGui::Spacing();
-				ImGui::SliderFloat("Exposure max", &glb::scene->pEnvironment->m_Exposure.x, 0.f, 255.f, "%.2f");
-				ImGui::SliderFloat("Exposure min", &glb::scene->pEnvironment->m_Exposure.y, 0.f, 255.f, "%.2f");
-				ImGui::Spacing();
-				ImGui::SliderFloat("Ambience", &glb::scene->pEnvironment->m_Ambient, 0.f, 255.f, "%.2f");
-				ImGui::SliderFloat("Brightness", &glb::scene->pEnvironment->m_Brightness, 0.f, 255.f, "%.2f");
-				ImGui::SliderFloat("rain", &glb::scene->pEnvironment->m_Rain, 0.f, 1.f, "%.2f");
-				ImGui::SliderFloat("wetness", &glb::scene->pEnvironment->m_Wetness, 0.f, 1.f, "%.2f");
-				ImGui::SliderFloat("puddle ammount", &glb::scene->pEnvironment->m_PuddleAmount, 0.f, 1.f, "%.2f");
-				ImGui::SliderFloat("puddle size", &glb::scene->pEnvironment->m_Puddlesize, 0.f, 1.f, "%.2f");
-				ImGui::SliderFloat("slippery", &glb::scene->pEnvironment->m_Slippery, 0.f, 1.f, "%.2f");
-				ImGui::SliderFloat("sky rotation", &glb::scene->pEnvironment->m_SkyboxRot, 0.f, 255.f, "%.2f");
-				ImGui::Checkbox("Nightlight", &glb::scene->pEnvironment->m_Nightlight);
-				if (ImGui::Button("Update pEnvironment") && glb::game->State == gameState::ingame) {
-					glb::oEnvUpdate((uintptr_t)glb::scene->pEnvironment);
-				}
-				if (ImGui::Button("Sleep all bodies")) {
-					for (TDBody* tdb : *(glb::scene->m_Bodies)) {
-						tdb->countDown = 0x00;
-						tdb->isAwake = false;
-					}
-				}
+			//	//ImGui::InputText("Skybox", tempSkyboxPath, 128);
+			//	ImGui::SliderFloat("Sun brightness", &glb::scene->pEnvironment->m_SunBrightness, 0.f, 255.f, "%.2f");
+			//	ImGui::SliderFloat("Sun spread", &glb::scene->pEnvironment->m_SunSpread, 0.f, 255.f, "%.2f");
+			//	ImGui::SliderFloat("Sun length", &glb::scene->pEnvironment->m_SunLength, 0.f, 255.f, "%.2f");
+			//	ImGui::SliderFloat("Sun fog", &glb::scene->pEnvironment->m_FogScale, 0.f, 255.f, "%.2f");
+			//	ImGui::SliderFloat("Sun glare", &glb::scene->pEnvironment->m_SunGlare, 0.f, 255.f, "%.2f");
+			//	ImGui::Spacing();
+			//	ImGui::SliderFloat("sun R", &glb::scene->pEnvironment->m_SunColorTint.x, 0.f, 255.f, "%.2f");
+			//	ImGui::SliderFloat("sun G", &glb::scene->pEnvironment->m_SunColorTint.y, 0.f, 255.f, "%.2f");
+			//	ImGui::SliderFloat("sun B", &glb::scene->pEnvironment->m_SunColorTint.z, 0.f, 255.f, "%.2f");
+			//	ImGui::Spacing();
+			//	ImGui::SliderFloat("Exposure max", &glb::scene->pEnvironment->m_Exposure.x, 0.f, 255.f, "%.2f");
+			//	ImGui::SliderFloat("Exposure min", &glb::scene->pEnvironment->m_Exposure.y, 0.f, 255.f, "%.2f");
+			//	ImGui::Spacing();
+			//	ImGui::SliderFloat("Ambience", &glb::scene->pEnvironment->m_Ambient, 0.f, 255.f, "%.2f");
+			//	ImGui::SliderFloat("Brightness", &glb::scene->pEnvironment->m_Brightness, 0.f, 255.f, "%.2f");
+			//	ImGui::SliderFloat("rain", &glb::scene->pEnvironment->m_Rain, 0.f, 1.f, "%.2f");
+			//	ImGui::SliderFloat("wetness", &glb::scene->pEnvironment->m_Wetness, 0.f, 1.f, "%.2f");
+			//	ImGui::SliderFloat("puddle ammount", &glb::scene->pEnvironment->m_PuddleAmount, 0.f, 1.f, "%.2f");
+			//	ImGui::SliderFloat("puddle size", &glb::scene->pEnvironment->m_Puddlesize, 0.f, 1.f, "%.2f");
+			//	ImGui::SliderFloat("slippery", &glb::scene->pEnvironment->m_Slippery, 0.f, 1.f, "%.2f");
+			//	ImGui::SliderFloat("sky rotation", &glb::scene->pEnvironment->m_SkyboxRot, 0.f, 255.f, "%.2f");
+			//	ImGui::Checkbox("Nightlight", &glb::scene->pEnvironment->m_Nightlight);
+			//	if (ImGui::Button("Update pEnvironment") && glb::game->State == gameState::ingame) {
+			//		glb::oEnvUpdate((uintptr_t)glb::scene->pEnvironment);
+			//	}
+			//	if (ImGui::Button("Sleep all bodies")) {
+			//		for (TDBody* tdb : *(glb::scene->m_Bodies)) {
+			//			tdb->countDown = 0x00;
+			//			tdb->isAwake = false;
+			//		}
+			//	}
 
-			}
+			//}
 
-			if (ImGui::CollapsingHeader("Smoker (buggy)")) {
+			/*if (ImGui::CollapsingHeader("Smoker (buggy)")) {
 				if (ImGui::Button("Spawn smoker")) {
 					smoker::spawnSmoker();
 				}
@@ -766,7 +776,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::SliderFloat("U62", &smoker::pInfo.U62, 0.f, 5.f, "%.2f");
 				ImGui::SliderFloat("U63", &smoker::pInfo.U63, 0.f, 5.f, "%.2f");
 				ImGui::SliderFloat("U64", &smoker::pInfo.U64, 0.f, 5.f, "%.2f");
-			}
+			}*/
 		}
 
 		ImGui::EndTabBar();

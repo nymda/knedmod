@@ -16,6 +16,7 @@ namespace threadCamera {
 
 	extern bool runInSeperateThread;
 	extern bool stochastic;
+	extern float universialFov;
 	void updateGameCameras();
 
 	struct pixel {
@@ -62,7 +63,6 @@ namespace threadCamera {
 		glm::vec3 position = { 0, 0, 0 };
 		glm::vec3 forward = { 0, 0, 0 };
 		glm::vec3 up = { 0, 0, 0 };
-		float fov = 8.f;
 
 		pixel* bufferA = 0;
 		pixel* bufferB = 0;

@@ -14,11 +14,14 @@
 #include "threadedCamera.h"
 #include "TDObjects.h"
 
+#define rndLvl 16
+
 namespace threadCamera {
 
 	std::vector<KMCamera*> gameCameras = {};
-	bool runInSeperateThread = false;
-	bool stochastic = true;
+	bool runInSeperateThread = true;
+	bool stochastic = false;
+	float universialFov = 8.f;
 	cameraType method = CT_Colour;
 
 	void updateGameCameras() {
@@ -151,8 +154,8 @@ namespace threadCamera {
 		td::Color blue{ 1.f, 0.f, 0.f, 1.f };
 		//drawCube(math::v3_glm2td(position), 0.02f, blue);
 
-		float pxSizeX = (fov / resolutionX);
-		float pxSizeY = (fov / resolutionY);
+		float pxSizeX = (universialFov / resolutionX);
+		float pxSizeY = (universialFov / resolutionY);
 		int pxPointer = 0;
 
 		if (bufferUpdateNeeded) {
@@ -215,8 +218,8 @@ namespace threadCamera {
 					yNoise = randFloat(-(pxSizeY / 3.f), (pxSizeY / 3.f));
 				}
 
-				float comX = (fov / 2.f) - ((x * pxSizeX) - (pxSizeX / 2.f)) + xNoise;
-				float comY = (fov / 2.f) - ((y * pxSizeY) + (pxSizeY / 2.f)) + yNoise;
+				float comX = (universialFov / 2.f) - ((x * pxSizeX) - (pxSizeX / 2.f)) + xNoise;
+				float comY = (universialFov / 2.f) - ((y * pxSizeY) + (pxSizeY / 2.f)) + yNoise;
 
 				glm::vec2 ray_nds = glm::vec2(comX, comY);
 				glm::vec4 ray_clip = glm::vec4(ray_nds.x, ray_nds.y, -1.0f, 1.0f);
@@ -239,10 +242,32 @@ namespace threadCamera {
 				int iColourG = 0;
 				int iColourB = 0;
 
-				if (threadCamera::method == CT_Colour) {
-					if (rd.distance > 0.f) {
+				if (rd.successful && rd.distance < 1000.f) {
+					if (threadCamera::method == CT_Colour) {
+						if (rd.distance > 0.f) {
+							int iThisDist = (rd.distance) / 2;
+							int iPxNoise = rand() % rndLvl;
+							iColourR = (iPxNoise + (rd.palette.m_Color.m_R * 255) - iThisDist);
+							if (iColourR < 0) { iColourR = 0; }
+							if (iColourR > 255) { iColourR = 255; }
+							iColourG = (iPxNoise + (rd.palette.m_Color.m_G * 255) - iThisDist);
+							if (iColourG < 0) { iColourG = 0; }
+							if (iColourG > 255) { iColourG = 255; }
+							iColourB = (iPxNoise + (rd.palette.m_Color.m_B * 255) - iThisDist);
+							if (iColourB < 0) { iColourB = 0; }
+							if (iColourB > 255) { iColourB = 255; }
+						}
+						else {
+							iColourR = 0;
+							iColourG = 77;
+							iColourB = 77;
+						}
+
+						bufferWrite[pxPointer] = { (byte)iColourR,(byte)iColourG, (byte)iColourB, 0xFF };
+					}
+					else if (threadCamera::method == CT_Monochrome) {
 						int iThisDist = (rd.distance) / 2;
-						int iPxNoise = rand() % 16;
+						int iPxNoise = rand() % rndLvl;
 						iColourR = (iPxNoise + (rd.palette.m_Color.m_R * 255) - iThisDist);
 						if (iColourR < 0) { iColourR = 0; }
 						if (iColourR > 255) { iColourR = 255; }
@@ -252,33 +277,18 @@ namespace threadCamera {
 						iColourB = (iPxNoise + (rd.palette.m_Color.m_B * 255) - iThisDist);
 						if (iColourB < 0) { iColourB = 0; }
 						if (iColourB > 255) { iColourB = 255; }
+
+						int avg = (iColourR + iColourG + iColourB) / 3;
+						iColourR = iColourG = iColourB = avg;
+
+						bufferWrite[pxPointer] = { (byte)iColourR,(byte)iColourG, (byte)iColourB, 0xFF };
 					}
-					else {
-						iColourR = 0;
-						iColourG = 77;
-						iColourB = 77;
-					}
-
-					bufferWrite[pxPointer] = { (byte)iColourR,(byte)iColourG, (byte)iColourB, 0xFF };
 				}
-				else if (threadCamera::method == CT_Monochrome) {
-					int iThisDist = (rd.distance) / 2;
-					int iPxNoise = rand() % 16;
-					iColourR = (iPxNoise + (rd.palette.m_Color.m_R * 255) - iThisDist);
-					if (iColourR < 0) { iColourR = 0; }
-					if (iColourR > 255) { iColourR = 255; }
-					iColourG = (iPxNoise + (rd.palette.m_Color.m_G * 255) - iThisDist);
-					if (iColourG < 0) { iColourG = 0; }
-					if (iColourG > 255) { iColourG = 255; }
-					iColourB = (iPxNoise + (rd.palette.m_Color.m_B * 255) - iThisDist);
-					if (iColourB < 0) { iColourB = 0; }
-					if (iColourB > 255) { iColourB = 255; }
-
-					int avg = (iColourR + iColourG + iColourB) / 3;
-					iColourR = iColourG = iColourB = avg;
-
-					bufferWrite[pxPointer] = { (byte)iColourR,(byte)iColourG, (byte)iColourB, 0xFF };
+				else {
+					int iPxNoise = rand() % rndLvl;
+					bufferWrite[pxPointer] = {(byte)iPxNoise, (byte)(iPxNoise + 77), (byte)(iPxNoise + 77), 0xFF };
 				}
+				
 
 				bufferDistances[pxPointer] = rd.distance;
 

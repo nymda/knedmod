@@ -14,3 +14,4 @@
 #include "tgtWeld.h"
 #include "tgtFlamethrower.h"
 #include "tgtAttribute.h"
+#include "tgtBalloon.h"

@@ -501,6 +501,6 @@ void terminateTestHook() {
     //DetourDetach(&(PVOID&)glb::tdInitScreenSecondary, hkInitScreenSecondary);
     //DetourDetach(&(PVOID&)glb::tdUpdateScreen, hkUpdateScreen);
     //DetourDetach(&(PVOID&)glb::tdRaycastCrashA, hkRayCrashA);
-    //;etourAttach(&(PVOID&)glb::tdRaycastCrashB, hkRayCrashB);
+    //DetourAttach(&(PVOID&)glb::tdRaycastCrashB, hkRayCrashB);
     DetourTransactionCommit();
 }

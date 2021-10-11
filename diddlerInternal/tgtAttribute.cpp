@@ -42,7 +42,12 @@ DWORD tgt_attribute::exec() {
             clickedObjects.push_back({ rd.hitShape, 255 });
             td::small_string attrib = setAttributeFirst;
             td::small_string attrib2 = setAttributeSecond;
-            glb::oSOA(rd.hitShape, &attrib, &attrib2);
+
+            if (rd.hitShape) {
+                glb::oSOA(rd.hitShape, &attrib, &attrib2);
+            }
+
+
         }
     }
     else {

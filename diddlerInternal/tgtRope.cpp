@@ -10,6 +10,7 @@ tgt_rope::tgt_rope() {
 DWORD tgt_rope::exec() {
     td::Color white{ 1.f, 1.f, 1.f, 1.f };
 
+
     raycaster::rayData rd = raycaster::castRayPlayer();
     drawCube(rd.worldPos, 0.02f, white);
     if (ropeToolFirstPos) {

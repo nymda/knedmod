@@ -2,7 +2,15 @@
 #include "Global.h"
 #include "Raycaster.h"
 
+int filterException(int code, PEXCEPTION_POINTERS ex) {
+
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+
+
 namespace raycaster {
+
+
 
     rayData castRayManual(td::Vec3 position, td::Vec3 rotation, RaycastFilter* filterCus) {
 
@@ -22,18 +30,11 @@ namespace raycaster {
         uintptr_t oPal;
         float outDist = 0.f;
 
-        //std::cout << std::hex << &pCopy << " : " << &rCopy << " : " << &outDist << " : " << &output << " : " << &oShape << " : " << (uintptr_t*)&rdp.palette << std::endl;
-        //printf_s("SCENE: %p\n", glb::scene);
-
-        if ((uintptr_t*)glb::scene < (uintptr_t*)0x000000FF) {
-            printf_s("SCENE: %p\n", glb::scene);
-        }
-
-        try {
+        //this is very very naughty and you shouldnt do it ever
+        __try {
             glb::oRC(glb::scene, &pCopy, &rCopy, 250.f, filterCus, &outDist, &output, &oShape, (uintptr_t*)&rdp.palette);
         }
-        catch (...) {
-            //raycast caused an internal issue, just abandon this call
+        __except (filterException(GetExceptionCode(), GetExceptionInformation())) {
             printf_s("Raycast caused an exception\n");
             rdp.successful = false;
             return rdp;
@@ -51,6 +52,7 @@ namespace raycaster {
         rdp.worldPos = worldPosV3;
         rdp.angle = output;
         rdp.hitShape = (TDShape*)oShape;
+        rdp.successful = true;
         return rdp;
     }
 

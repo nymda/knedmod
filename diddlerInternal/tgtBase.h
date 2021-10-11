@@ -16,6 +16,7 @@ enum toolnames {
 	TOOL_ROPE, //done
 	TOOL_WELD, //done
 	TOOL_DEBUG,
+	TOOL_BALLOON,
 	TOOL_DEV
 };
 

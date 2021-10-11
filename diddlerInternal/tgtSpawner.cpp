@@ -29,12 +29,21 @@ DWORD tgt_spawner::exec() {
 
     if (!spawner::thrownMode) {
 
-        //glm::vec3 out = { 0, 0, 0 };
-        //if (snapPoints::getClosestSnapPoint(math::v3_td2glm(target), snapPoints::getSnapPoints(tShape), 1.f, &out)) {
-        //    rd.worldPos = math::v3_glm2td(out);
-        //}
 
-        spawner::drawSpawngunObjectOutline(currentSpawngunObject.voxObject, rd);
+        snapPoint currentSnapPoint = {};
+        //if (snapPoints::getClosestSnapPoint(math::v3_td2glm(target), snapPoints::getSnapPoints(tShape), 1.f, &currentSnapPoint)) {
+        //    //rd.worldPos = math::v3_glm2td(out);
+
+        //    glm::quat simRotation = math::expandRotation(math::q_td2glm(rd.hitShape->getParentBody()->Rotation), math::q_td2glm(rd.hitShape->rOffset));
+
+        //    spawner::drawSpawngunObjectOutline(currentSpawngunObject.voxObject, rd, true, simRotation, currentSnapPoint);
+        //}
+        //else {
+        //    spawner::drawSpawngunObjectOutline(currentSpawngunObject.voxObject, rd, false, {0, 0, 0, 0}, currentSnapPoint);
+        //} 
+
+        spawner::drawSpawngunObjectOutline(currentSpawngunObject.voxObject, rd, false, { 0, 0, 0, 0 }, currentSnapPoint);
+
     }
 
     if (glb::player->isAttacking) {

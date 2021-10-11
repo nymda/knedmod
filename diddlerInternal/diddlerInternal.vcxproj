@@ -163,8 +163,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="balloons.h" />
     <ClInclude Include="snapPoints.h" />
     <ClInclude Include="tgtAttribute.h" />
+    <ClInclude Include="tgtBalloon.h" />
     <ClInclude Include="tgtBase.h" />
     <ClInclude Include="c4.h" />
     <ClInclude Include="camera.h" />
@@ -234,8 +236,14 @@
     <ClInclude Include="threadedCamera.h" />
     <ClInclude Include="toolgun.h" />
     <ClInclude Include="types.h" />
+    <ClInclude Include="wireObjectBase.h" />
+    <ClInclude Include="wireObjectKernel.h" />
+    <ClInclude Include="wireObjectSpawn.h" />
+    <ClInclude Include="wirePlacementIntBus.h" />
+    <ClInclude Include="wirePlacements.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="balloons.cpp" />
     <ClCompile Include="c4.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="cameraManager.cpp" />
@@ -270,6 +278,7 @@
     <ClCompile Include="Raycaster.cpp" />
     <ClCompile Include="snapPoints.cpp" />
     <ClCompile Include="tgtAttribute.cpp" />
+    <ClCompile Include="tgtBalloon.cpp" />
     <ClCompile Include="tgtCamera.cpp" />
     <ClCompile Include="tgtDamage.cpp" />
     <ClCompile Include="tgtDebug.cpp" />
@@ -298,6 +307,10 @@
     <ClCompile Include="threadedCamera.cpp" />
     <ClCompile Include="toolgun.cpp" />
     <ClCompile Include="types.cpp" />
+    <ClCompile Include="wireObjectBase.cpp" />
+    <ClCompile Include="wireObjectKernel.cpp" />
+    <ClCompile Include="wireObjectSpawn.cpp" />
+    <ClCompile Include="wirePlacementIntBus.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="diddlerInternal.rc" />
