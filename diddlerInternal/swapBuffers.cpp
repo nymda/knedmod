@@ -82,9 +82,15 @@ LRESULT APIENTRY hWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					spawner::switchRotationStep(wParam);
 				}
 			}
-		}
 
-	
+			if (wParam == 0x45) {
+				wireObjects::wireObj* hitObj = 0;
+				raycaster::rayData rd = raycaster::castRayPlayer();
+				if (wireObjects::getWireObjectByShape(rd.hitShape, &hitObj) && rd.distance <= 3.f) {
+					hitObj->usrExec();
+				}
+			}
+		}	
 
 		if (wParam == VK_OEM_3 || wParam == 0xDF) {
 			console::consoleOpen = !console::consoleOpen;
@@ -237,6 +243,8 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 	if (needToLoadObjects) {
 		needToLoadObjects = false;
 		spawner::spawnerObjectsDatabase = spawner::enumerateSpawnableObjects();
+		wireObjects::loadWireObjectVoxs();
+		//wireObjects::wireObjectsDatabase = spawner::enumerateWireObjects();
 	}
 
 	ImGui_ImplOpenGL3_NewFrame();
@@ -290,9 +298,6 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 						ImGui::Separator();
 					}
 
-					//ImGui::Text(lso.objectName.c_str());
-					//ImGui::SetNextItemWidth(25);
-
 					if (ImGui::ImageButton((void*)lso.imageTexture, ImVec2(ImGui::GetColumnWidth() - 23, ImGui::GetColumnWidth() - 23))) {
 						spawner::freeObjectSpawnParams params = {};
 						params.attributes = lso.attributes;
@@ -318,9 +323,6 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 						}
 						ImGui::EndPopup();
 					}
-
-
-
 
 					ImGui::NextColumn();
 					counter++;
@@ -364,9 +366,26 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			bool* bpTrue = &bTRUE;
 			bool* bpFalse = &bFALSE;
 
-			if (ImGui::Button("Create test wire object", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { 
-				wireObjects::spawnWireObject(0);
+			if (ImGui::Button("Create button", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { 
+				wireObjects::spawnWireObject(8);
 			};
+
+			if (ImGui::Button("Create bomb", ImVec2(ImGui::GetWindowWidth() - 16, 20))) {
+				wireObjects::spawnWireObject(3);
+			};
+
+			if (ImGui::Button("Create bloon", ImVec2(ImGui::GetWindowWidth() - 16, 20))) {
+				wireObjects::spawnWireObject(9);
+			};
+
+			ImGui::Separator();
+
+			if (ImGui::Button("Wire", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_WIRE; };
+			if (nToolgun::currentTool == toolnames::TOOL_WIRE) {
+				ImGui::Separator();
+				ImGui::Text("Wire tab");
+				ImGui::Separator();
+			}
 
 			if (ImGui::Button("Spawner", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_SPAWNER; };
 			if (nToolgun::currentTool == toolnames::TOOL_SPAWNER) {

@@ -57,6 +57,17 @@ namespace wireObjects {
 		{255, 255, 255, 255}
 	};
 
+	static const char* nodeColourNames[] = {
+		"Red",
+		"Green",
+		"Blue",
+		"Yellow",
+		"Magenta",
+		"Cyan",
+		"Black",
+		"White"
+	};
+
 	class wireNode {
 		nodeType type;
 		int value = 0;
@@ -71,11 +82,22 @@ namespace wireObjects {
 		nodeType getType() { return type; }
 		nodeColour getColour() { return colour; }
 		glm::vec3 getPosition() { return relPosition; }
-		int getValue() { return value; }
+		glm::vec3 getWorldPosition();
+		int getValue() { 
+			if (activeConnection) {
+				return connection->value;
+			}
+			else {
+				return 0;
+			}
+
+		}
+		int getOwnValue() { return value; }
 		int setValue(int val) { value = val; return val; }
+		bool isConnected() { return activeConnection; }
 
 		void dispose() {
-			this->disconnect();
+			disconnect();
 			delete(this);
 		}
 
@@ -100,7 +122,7 @@ namespace wireObjects {
 			}
 		}
 
-		nodeResponse connect(wireNode* client) {
+		nodeResponse authenticate(wireNode* client) {
 			if (activeConnection) {
 				return wireObjects::nodeResponse::NR_Busy;
 			}
@@ -111,16 +133,21 @@ namespace wireObjects {
 				return wireObjects::nodeResponse::NR_TypeMissmatch;
 			}
 			else {
-				connection = client;
 				return wireObjects::nodeResponse::NR_Ok;
 			}
+		}
+
+		nodeResponse confirmConnection(wireNode* client) {
+			connection = client;
+			activeConnection = true;
+			return wireObjects::nodeResponse::NR_Ok;
 		}
 
 		void disconnect() {
 			if (connection && activeConnection) {
 				activeConnection = false;
-				connection = 0;
 				connection->disconnect();
+				connection = 0;
 			}
 		}
 	};
@@ -138,10 +165,20 @@ namespace wireObjects {
 		DWORD drawNodes(wireNode* selected = 0);
 		virtual DWORD init(TDShape* housing, int memoryVal) = 0;	//run when the object is created
 		virtual DWORD exec() = 0;									//run every frame
+		virtual DWORD usrExec() = 0;								//run with the E key (handled externally)
+
+		void softDispose() {
+			if (destroyed) { return; }
+			this->disconnectAll();
+			destroyed = true;
+		}
 
 		void disconnectAll() {
 			for (wireNode* cNode : nodes) {
-				cNode->disconnect();
+				printf_s("\nNODE: %p", cNode);
+				if (cNode && cNode->isConnected()) {
+					cNode->disconnect();
+				}
 			}
 		}
 

@@ -674,6 +674,71 @@ namespace spawner {
         return returnObj;
     }
 
+    std::vector<spawnerCatagory> enumerateWireObjects() {
+        std::vector<spawnerCatagory> returnObj = {};
+        for (const auto& file : fs::directory_iterator("KM_Misc\\KM_Wire"))
+        {
+            int voxCount = 0;
+
+            // /\ iterate over each folder within [KM_Vox]
+            std::string path = file.path().string();
+            std::string catig = path.substr(7, path.size() - 7);
+            spawnerCatagory current;
+            current.name = catig;
+
+            bool foundVox = false;
+            bool foundImage = false;
+            for (const auto& catagoryFolder : fs::directory_iterator(file.path()))
+            {
+
+                // /\ iterate over each subfolder within [VOX / CATIG]
+                char* currentVoxPath;
+                char* currentImagePath;
+
+                if (strcmp(catagoryFolder.path().filename().string().c_str(), "object.vox") == 0)
+                {
+                    foundVox = true;
+                }
+                if (strcmp(catagoryFolder.path().filename().string().c_str(), "object.png") == 0)
+                {
+                    foundImage = true;
+                }
+
+                //std::cout << foundVox << " : " << foundImage << std::endl;
+                if (foundVox && foundImage) {
+                    LoadedSpawnableObject lso{};
+                    lso.catagory = catig;
+                    lso.basePath = catagoryFolder.path().string();
+                    lso.imagePath = lso.basePath + "\\object.png";
+                    lso.voxPath = lso.basePath + "\\object.vox";
+
+                    //std::cout << lso.basePath.c_str() << std::endl;
+
+                    td::small_string ssVoxPath = td::small_string(lso.voxPath.c_str());
+                    td::small_string ssSubPath = td::small_string("");
+
+
+
+
+                    lso.voxObject = (TDVox*)glb::oSpawnVox(&ssVoxPath, &ssSubPath, 1.f);
+
+                    lso.objectName = getObjectName(lso.basePath);
+
+
+                    int imgSize = 255;
+                    LoadTextureFromFile(lso.imagePath.c_str(), &lso.imageTexture, &imgSize, &imgSize);
+                    voxCount++;
+                    current.objects.push_back(lso);
+                }
+            }
+
+            std::cout << "[I] Loaded " << std::to_string(voxCount) << " wire objects from: " << catig << std::endl;
+
+            returnObj.push_back(current);
+        }
+        return returnObj;
+    }
+
     void deleteLastObject() {
         if (glb::game->State == gameState::ingame) {
             if (spawnList.size() > 0) {
@@ -856,7 +921,7 @@ namespace spawner {
 
         if (params.useSnaps) {
             object.body->Position = { params.snapPosition.x - translation.x, params.snapPosition.y - translation.y, params.snapPosition.z - translation.z };
-            *(glm::quat*)&object.body->Rotation = math::expandRotation(math::q_td2glm(rd.hitShape->getParentBody()->Rotation), math::q_td2glm(rd.hitShape->rOffset));
+            //*(glm::quat*)&object.body->Rotation = math::expandRotation(math::q_td2glm(rd.hitShape->getParentBody()->Rotation), math::q_td2glm(rd.hitShape->rOffset));
             *(glm::quat*)&object.body->Rotation = q;
         }
         else {

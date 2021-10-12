@@ -232,6 +232,7 @@
     <ClInclude Include="tgtSlice.h" />
     <ClInclude Include="tgtSpawner.h" />
     <ClInclude Include="tgtWeld.h" />
+    <ClInclude Include="tgtWire.h" />
     <ClInclude Include="thirdperson.h" />
     <ClInclude Include="threadedCamera.h" />
     <ClInclude Include="toolgun.h" />
@@ -239,8 +240,12 @@
     <ClInclude Include="wireObjectBase.h" />
     <ClInclude Include="wireObjectKernel.h" />
     <ClInclude Include="wireObjectSpawn.h" />
+    <ClInclude Include="wirePlacementBalloonDeployer.h" />
+    <ClInclude Include="wirePlacementBomb.h" />
+    <ClInclude Include="wirePlacementButton.h" />
     <ClInclude Include="wirePlacementIntBus.h" />
     <ClInclude Include="wirePlacements.h" />
+    <ClInclude Include="wireTool.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="balloons.cpp" />
@@ -303,6 +308,7 @@
     <ClCompile Include="swapBuffers.cpp" />
     <ClCompile Include="TDObjects.cpp" />
     <ClCompile Include="tgtWeld.cpp" />
+    <ClCompile Include="tgtWire.cpp" />
     <ClCompile Include="thirdperson.cpp" />
     <ClCompile Include="threadedCamera.cpp" />
     <ClCompile Include="toolgun.cpp" />
@@ -310,7 +316,11 @@
     <ClCompile Include="wireObjectBase.cpp" />
     <ClCompile Include="wireObjectKernel.cpp" />
     <ClCompile Include="wireObjectSpawn.cpp" />
+    <ClCompile Include="wirePlacementBalloonDeployer.cpp" />
+    <ClCompile Include="wirePlacementBomb.cpp" />
+    <ClCompile Include="wirePlacementButton.cpp" />
     <ClCompile Include="wirePlacementIntBus.cpp" />
+    <ClCompile Include="wireTool.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="diddlerInternal.rc" />

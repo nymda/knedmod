@@ -7,16 +7,6 @@
 
 namespace balloons {
 
-	struct balloon {
-		TDShape* shape;
-		TDBody* body;
-		float upVelocity;
-		
-		bool destroyed = false;
-		bool hasString = false;
-		int wait = 1;
-		td::Vec3 origin = { 0, 0, 0 };
-	};
 
 	float r2dp(float var)
 	{
@@ -61,8 +51,8 @@ namespace balloons {
 
 					//td::Vec3 bPos = { b.body->Position.x, b.body->Position.y + 0.5f, b.body->Position.z };
 
-					drawCube(floorPos, 0.05f, ropeColor);
-					drawCube(bPos, 0.05f, ropeColor);
+					//drawCube(floorPos, 0.05f, ropeColor);
+					//drawCube(bPos, 0.05f, ropeColor);
 
 					glb::tdInitWire(newJoint, &floorPos, &bPos, newJoint->m_Size, ropeColor, 2.5f, 100.f, 1.f);
 
@@ -97,11 +87,6 @@ namespace balloons {
 		obj.body->Position.y += 1.f;
 
 		raycaster::rayData rd = raycaster::castRayPlayer();
-
-
-		//drawCube(floorPos, 0.05f, ropeColor);
-		//drawCube(bPos, 0.05f, ropeColor);
-
 
 		balloon b = { obj.shapes[0], obj.body, power, false, false, 2, rd.worldPos };
 		balloons.push_back(b);

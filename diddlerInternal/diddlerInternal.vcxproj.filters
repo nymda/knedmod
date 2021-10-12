@@ -55,6 +55,12 @@
     <Filter Include="Source Files\wire">
       <UniqueIdentifier>{fb829142-99a0-4db0-b770-075d7ddb7a6a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\wire\wireObjects">
+      <UniqueIdentifier>{9c94a442-a0da-4798-9462-e5c8d3a1888a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\wire\wireObjects">
+      <UniqueIdentifier>{8960a992-9d8c-407c-af5c-165cfa4d304b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mem.h">
@@ -286,10 +292,25 @@
       <Filter>Header Files\wire</Filter>
     </ClInclude>
     <ClInclude Include="wirePlacementIntBus.h">
-      <Filter>Header Files\wire</Filter>
+      <Filter>Header Files\wire\wireObjects</Filter>
     </ClInclude>
     <ClInclude Include="wirePlacements.h">
+      <Filter>Header Files\wire\wireObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="wireTool.h">
       <Filter>Header Files\wire</Filter>
+    </ClInclude>
+    <ClInclude Include="tgtWire.h">
+      <Filter>Header Files\toolgunTools</Filter>
+    </ClInclude>
+    <ClInclude Include="wirePlacementButton.h">
+      <Filter>Header Files\wire\wireObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="wirePlacementBomb.h">
+      <Filter>Header Files\wire\wireObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="wirePlacementBalloonDeployer.h">
+      <Filter>Header Files\wire\wireObjects</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -495,7 +516,22 @@
       <Filter>Source Files\wire</Filter>
     </ClCompile>
     <ClCompile Include="wirePlacementIntBus.cpp">
+      <Filter>Source Files\wire\wireObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="wireTool.cpp">
       <Filter>Source Files\wire</Filter>
+    </ClCompile>
+    <ClCompile Include="tgtWire.cpp">
+      <Filter>Source Files\toolgunTools</Filter>
+    </ClCompile>
+    <ClCompile Include="wirePlacementButton.cpp">
+      <Filter>Source Files\wire\wireObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="wirePlacementBomb.cpp">
+      <Filter>Source Files\wire\wireObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="wirePlacementBalloonDeployer.cpp">
+      <Filter>Source Files\wire\wireObjects</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

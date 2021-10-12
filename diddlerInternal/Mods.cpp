@@ -31,7 +31,7 @@ namespace mods {
 		spawner::processMostRecentObject();
 		nToolgun::runToolgun();
 		wireObjects::updateExistingWireObjects();
-		wireObjects::highlightTarget();
+		//wireObjects::highlightTarget();
 
 		c4::runC4();
 		noclip::update();

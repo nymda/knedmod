@@ -15,3 +15,4 @@
 #include "tgtFlamethrower.h"
 #include "tgtAttribute.h"
 #include "tgtBalloon.h"
+#include "tgtWire.h"

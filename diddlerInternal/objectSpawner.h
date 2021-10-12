@@ -136,6 +136,7 @@ namespace spawner {
 	KMSpawnedObject spawnObjectProxy(std::string path, objectSpawnerParams params);
 	void processMostRecentObject();
 	std::vector<spawnerCatagory> enumerateSpawnableObjects();
+	std::vector<spawnerCatagory> enumerateWireObjects();
 	void handleSpawnerWeapon();
 	KMSpawnedObject spawnEntity(std::string filepath, objectSpawnerParams osp);
 	bool updateShapeBody(TDShape* shape, TDBody* body);

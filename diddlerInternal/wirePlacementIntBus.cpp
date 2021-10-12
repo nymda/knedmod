@@ -31,14 +31,17 @@ namespace wireObjects {
 	}
 
 	DWORD wirePlacementIntBus::exec() {
-		if (!housing || housing->isBroken) { this->disconnectAll(); this->destroyed = true; }
-		if (this->destroyed) { return 0x00; }
 
 		int inputValue = nodes[0]->getClientValue(); //get the value on YELLOW
 		nodes[1]->setValue(inputValue); //set YELLOW value on RED
 		nodes[2]->setValue(inputValue); //set YELLOW value on GREEN
 		nodes[3]->setValue(inputValue); //set YELLOW value on BLUE
 
+		return 0x01;
+	}
+
+	DWORD wirePlacementIntBus::usrExec()
+	{
 		return 0x01;
 	}
 }

@@ -1,6 +1,8 @@
 #include "wireObjectBase.h"
 #include "Raycaster.h"
 #include <vector>
+#include "objectSpawner.h"
+#include "wireObjectSpawn.h"
 
 namespace wireObjects {
 	std::vector<wireObj*> wireObjectStack = {};
@@ -21,7 +23,6 @@ namespace wireObjects {
 			wireNode* tNode = 0;
 			wireObj* tObj = 0;
 			if (getWireObjectByShape(rd.hitShape, &tObj)) {
-				printf_s("Hit tObj: %p\n", tObj);
 				if(tObj->getClosestNode(math::v3_td2glm(rd.worldPos), &tNode)) {
 					tObj->drawNodes(tNode);
 				}
@@ -30,6 +31,24 @@ namespace wireObjects {
 				}
 			}
 		}
+	}
+
+	int loadWireObjectVoxs() {
+		int r = 0;
+		for (wireObjectInfo& woi : validWireObjects) {
+			td::small_string ssVoxPath = td::small_string(woi.path);
+			td::small_string ssSubPath = td::small_string("");
+			woi.voxTemplate = (TDVox*)glb::oSpawnVox(&ssVoxPath, &ssSubPath, 1.f);
+
+			if (woi.voxTemplate) {
+				printf_s("Loaded vox template for %s\n", woi.path);
+				r++;
+			}
+			else {
+				printf_s("Vox tempalte loading failed for %s\n", woi.path);
+			}
+		}
+		return r;
 	}
 
 	int updateExistingWireObjects() {
@@ -44,8 +63,11 @@ namespace wireObjects {
 
 		int c = 0;
 		for (wireObj* wObj : wireObjectStack) {
-			wObj->exec();
-			c++; //haha
+			if (!wObj->housing || wObj->housing->isBroken) { wObj->softDispose(); continue; }
+			if (!wObj->destroyed) {
+				wObj->exec();
+				c++; //haha
+			}
 		}
 
 		return c;

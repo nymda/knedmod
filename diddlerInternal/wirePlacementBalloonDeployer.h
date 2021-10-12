@@ -2,9 +2,9 @@
 #include "wireObjectBase.h"
 
 namespace wireObjects {
-	class wirePlacementIntBus : public wireObj {
+	class wirePlacementBalloonDeployer : public wireObj {
 	public:
-		wirePlacementIntBus();
+		wirePlacementBalloonDeployer();
 		DWORD init(TDShape* housing, int memoryVal) override;
 		DWORD exec() override;
 		DWORD usrExec() override;

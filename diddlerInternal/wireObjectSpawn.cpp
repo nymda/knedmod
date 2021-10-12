@@ -11,9 +11,21 @@ namespace wireObjects {
 			wireObj* newObject = 0;
 
 			switch (object.id) {
-			case 0:
-				newObject = new wirePlacementIntBus();
-				break;
+				case 0:
+					newObject = new wirePlacementIntBus();
+					break;
+
+				case 3:
+					newObject = new wirePlacementBomb();
+					break;
+
+				case 8:
+					newObject = new wirePlacementButton();
+					break;
+
+				case 9:
+					newObject = new wirePlacementBalloonDeployer();
+					break;
 			}
 
 			if (!newObject) { return 0; };
