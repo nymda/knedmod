@@ -370,6 +370,10 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				wireObjects::spawnWireObject(8);
 			};
 
+			if (ImGui::Button("Create bus", ImVec2(ImGui::GetWindowWidth() - 16, 20))) {
+				wireObjects::spawnWireObject(1);
+			};
+
 			if (ImGui::Button("Create bomb", ImVec2(ImGui::GetWindowWidth() - 16, 20))) {
 				wireObjects::spawnWireObject(3);
 			};

@@ -1,36 +1,36 @@
 #include "wireObjectBase.h"
-#include "wirePlacementIntBus.h"
+#include "wirePlacementBoolBus.h"
 #include "drawCube.h"
 
 namespace wireObjects {
-	wirePlacementIntBus::wirePlacementIntBus() {
+	wirePlacementBoolBus::wirePlacementBoolBus() {
 
 	}
 
-	DWORD wirePlacementIntBus::init(TDShape* housing, int memoryVal) {
+	DWORD wirePlacementBoolBus::init(TDShape* housing, int memoryVal) {
 		this->housing = housing;
 		this->memory = memoryVal;
 
 		wireNode* _yellow = new wireNode();
-		_yellow->init(this, wireObjects::nodeType::NT_Numeric, wireObjects::nodeColour::Yellow, { 0.25f, 0.35f, 0.05f });
+		_yellow->init(this, wireObjects::nodeType::NT_Bool, wireObjects::nodeColour::Yellow, { 0.25f, 0.35f, 0.05f });
 		this->nodes.push_back(_yellow);
 
 		wireNode* _red = new wireNode();
-		_red->init(this, wireObjects::nodeType::NT_Numeric, wireObjects::nodeColour::Red, { 0.05f, 0.15f, 0.05f });
+		_red->init(this, wireObjects::nodeType::NT_Bool, wireObjects::nodeColour::Red, { 0.05f, 0.15f, 0.05f });
 		this->nodes.push_back(_red);
 
 		wireNode* _green = new wireNode();
-		_green->init(this, wireObjects::nodeType::NT_Numeric, wireObjects::nodeColour::Green, { 0.05f, 0.35f, 0.05f });
+		_green->init(this, wireObjects::nodeType::NT_Bool, wireObjects::nodeColour::Green, { 0.05f, 0.35f, 0.05f });
 		this->nodes.push_back(_green);
 
 		wireNode* _blue = new wireNode();
-		_blue->init(this, wireObjects::nodeType::NT_Numeric, wireObjects::nodeColour::Blue, { 0.05f, 0.55f, 0.05f });
+		_blue->init(this, wireObjects::nodeType::NT_Bool, wireObjects::nodeColour::Blue, { 0.05f, 0.55f, 0.05f });
 		this->nodes.push_back(_blue);
 
 		return 0x01;
 	}
 
-	DWORD wirePlacementIntBus::exec() {
+	DWORD wirePlacementBoolBus::exec() {
 
 		int inputValue = nodes[0]->getValue(); //get the value on YELLOW
 		nodes[1]->setValue(inputValue); //set YELLOW value on RED
@@ -40,7 +40,7 @@ namespace wireObjects {
 		return 0x01;
 	}
 
-	DWORD wirePlacementIntBus::usrExec()
+	DWORD wirePlacementBoolBus::usrExec()
 	{
 		return 0x01;
 	}

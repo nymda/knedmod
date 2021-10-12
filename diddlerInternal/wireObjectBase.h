@@ -113,15 +113,6 @@ namespace wireObjects {
 			return false;
 		}
 
-		int getClientValue() {
-			if (connection && activeConnection) {
-				return connection->getValue();
-			}
-			else {
-				return 0;
-			}
-		}
-
 		nodeResponse authenticate(wireNode* client) {
 			if (activeConnection) {
 				return wireObjects::nodeResponse::NR_Busy;

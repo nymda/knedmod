@@ -15,6 +15,10 @@ namespace wireObjects {
 					newObject = new wirePlacementIntBus();
 					break;
 
+				case 1:
+					newObject = new wirePlacementBoolBus();
+					break;
+
 				case 3:
 					newObject = new wirePlacementBomb();
 					break;
