@@ -3,8 +3,6 @@
 
 namespace wireObjects {
 
-	int onTimeCountdown = 0;
-
 	wirePlacementButton::wirePlacementButton() {
 
 	}
@@ -22,22 +20,24 @@ namespace wireObjects {
 
 	DWORD wirePlacementButton::exec() {
 
-		if (onTimeCountdown > 0) {
-			onTimeCountdown--;
+		if (this->onTimeCountdown > 0) {
+			this->onTimeCountdown--;
 			this->nodes[0]->setValue(1);
 		}
 		else {
 			this->nodes[0]->setValue(0);
 		}
 
-		this->memory = onTimeCountdown;
+		this->memory = this->onTimeCountdown;
 
 		return 0x01;
 	}
 
 	DWORD wirePlacementButton::usrExec() {
-		if (onTimeCountdown == 0) {
-			onTimeCountdown = 15;
+		printf_s("exec called: %p\n", this);
+
+		if (this->onTimeCountdown == 0) {
+			this->onTimeCountdown = 30;
 		}
 		return 0x01;
 	}

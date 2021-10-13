@@ -244,7 +244,9 @@
     <ClInclude Include="wirePlacementBomb.h" />
     <ClInclude Include="wirePlacementBoolBus.h" />
     <ClInclude Include="wirePlacementButton.h" />
+    <ClInclude Include="wirePlacementGates.h" />
     <ClInclude Include="wirePlacementIntBus.h" />
+    <ClInclude Include="wirePlacementLamp.h" />
     <ClInclude Include="wirePlacements.h" />
     <ClInclude Include="wireTool.h" />
   </ItemGroup>
@@ -321,7 +323,9 @@
     <ClCompile Include="wirePlacementBomb.cpp" />
     <ClCompile Include="wirePlacementBoolBus.cpp" />
     <ClCompile Include="wirePlacementButton.cpp" />
+    <ClCompile Include="wirePlacementGates.cpp" />
     <ClCompile Include="wirePlacementIntBus.cpp" />
+    <ClCompile Include="wirePlacementLamp.cpp" />
     <ClCompile Include="wireTool.cpp" />
   </ItemGroup>
   <ItemGroup>

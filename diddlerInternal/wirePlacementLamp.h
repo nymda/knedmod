@@ -2,11 +2,9 @@
 #include "wireObjectBase.h"
 
 namespace wireObjects {
-	class wirePlacementButton : public wireObj {
+	class wirePlacementLamp : public wireObj {
 	public:
-		int onTimeCountdown = 0;
-
-		wirePlacementButton();
+		wirePlacementLamp();
 		DWORD init(TDShape* housing, int memoryVal) override;
 		DWORD exec() override;
 		DWORD usrExec() override;

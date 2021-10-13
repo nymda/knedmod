@@ -24,6 +24,7 @@
 #include "tgtMinigun.h"
 #include "wireObjectKernel.h"
 #include "wireObjectSpawn.h"
+#include "wireTool.h"
 
 #pragma comment(lib, "glew32s.lib")
 
@@ -87,6 +88,7 @@ LRESULT APIENTRY hWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				wireObjects::wireObj* hitObj = 0;
 				raycaster::rayData rd = raycaster::castRayPlayer();
 				if (wireObjects::getWireObjectByShape(rd.hitShape, &hitObj) && rd.distance <= 3.f) {
+					//printf_s("exec for: %p\n", hitObj);
 					hitObj->usrExec();
 				}
 			}
@@ -353,6 +355,9 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 		if (ImGui::TabItemButton("Settings")) {
 			selectedTab = 1;
 		}
+		if (ImGui::TabItemButton("Wire")) {
+			selectedTab = 2;
+		}
 
 		if (selectedTab == 0) {
 			//const char* items[] = { "Spawner", "Minigun", "Explosions", "Flamethrower", "Remover", "Set attribute", "Destroyer", "DebugObject", "Leafblower", "Slicer", "Camera", "Rope" };
@@ -366,28 +371,14 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			bool* bpTrue = &bTRUE;
 			bool* bpFalse = &bFALSE;
 
-			if (ImGui::Button("Create button", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { 
-				wireObjects::spawnWireObject(8);
-			};
 
-			if (ImGui::Button("Create bus", ImVec2(ImGui::GetWindowWidth() - 16, 20))) {
-				wireObjects::spawnWireObject(1);
-			};
-
-			if (ImGui::Button("Create bomb", ImVec2(ImGui::GetWindowWidth() - 16, 20))) {
-				wireObjects::spawnWireObject(3);
-			};
-
-			if (ImGui::Button("Create bloon", ImVec2(ImGui::GetWindowWidth() - 16, 20))) {
-				wireObjects::spawnWireObject(9);
-			};
 
 			ImGui::Separator();
 
-			if (ImGui::Button("Wire", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_WIRE; };
+			if (ImGui::Button("Wire##tselect", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_WIRE; };
 			if (nToolgun::currentTool == toolnames::TOOL_WIRE) {
 				ImGui::Separator();
-				ImGui::Text("Wire tab");
+				ImGui::Text("Wire tool selected. see Wire tab.");
 				ImGui::Separator();
 			}
 
@@ -420,7 +411,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			if (ImGui::Button("Rope", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_ROPE; };
 			if (nToolgun::currentTool == toolnames::TOOL_ROPE) {
 				ImGui::Separator();
-				ImGui::Text("Rope tab");
+				ImGui::Text("Rope settings:");
 				ImGui::SliderFloat("Slack", &nToolgun::instance_rope->ropeSlack, -10.f, 10.f, "%.1f");
 				ImGui::SliderFloat("Stretchyness", &nToolgun::instance_rope->ropeStrength, 0.f, 10.f, "%.1f");
 				ImGui::SliderFloat("Max stretch", &nToolgun::instance_rope->ropeMaxStretch, 0.f, 10.f, "%.1f");
@@ -431,7 +422,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			if (ImGui::Button("Weld", ImVec2(ImGui::GetWindowWidth() - 16, 20))) {nToolgun::currentTool = toolnames::TOOL_WELD; };
 			if (nToolgun::currentTool == toolnames::TOOL_WELD) {
 				ImGui::Separator();
-				ImGui::Text("Weld tab");
+				ImGui::Text("Weld settings:");
 				ImGui::Separator();
 			}
 
@@ -439,7 +430,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			if (ImGui::Button("Balloon", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_BALLOON; };
 			if (nToolgun::currentTool == toolnames::TOOL_BALLOON) {
 				ImGui::Separator();
-				ImGui::Text("Balloon tab");
+				ImGui::Text("Balloon settings:");
 				ImGui::SliderFloat("Power", &nToolgun::instance_balloon->balloonPower, 1.f, 100.f, "%.1f");
 				ImGui::Separator();
 			}
@@ -448,6 +439,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			if (ImGui::Button("Minigun", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_MINIGUN; };
 			if (nToolgun::currentTool == toolnames::TOOL_MINIGUN) {
 				ImGui::Separator();
+				ImGui::Text("Minigun settings:");
 				ImGui::Combo("Bullet type", &bullet_current, bulletTypes, IM_ARRAYSIZE(bulletTypes));
 				nToolgun::instance_minigun->bulletType = bullet_current;
 				ImGui::SliderFloat("Minigun spread", &nToolgun::instance_minigun->minigunFov, 0.f, 5.f, "%.2f");
@@ -459,6 +451,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			if (ImGui::Button("Explosions", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_CLICKEXPLODE; };
 			if (nToolgun::currentTool == toolnames::TOOL_CLICKEXPLODE) {
 				ImGui::Separator();
+				ImGui::Text("Explosion settings:");
 				ImGui::SliderFloat("Explosion spread", &nToolgun::instance_explode->explosionFov, 0, 0.5, "%.2f");
 				ImGui::SliderInt("Explosion count", &nToolgun::instance_explode->bulletCount, 1, 25);
 				ImGui::SliderFloat("Power", &nToolgun::instance_explode->explosionPower, 0.25f, 25.f, "%.2f");
@@ -468,6 +461,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			if (ImGui::Button("Flamethrower", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_FLAMETHROWER; };
 			if (nToolgun::currentTool == toolnames::TOOL_FLAMETHROWER) {
 				ImGui::Separator();
+				ImGui::Text("Flamethrower settings:");
 				ImGui::SliderFloat("Radius", &nToolgun::instance_flamethrower->flRadius, 1.f, 10.f, "%.2f");
 				ImGui::SliderInt("Chance %", &nToolgun::instance_flamethrower->chance, 1, 100);
 				ImGui::Separator();
@@ -476,13 +470,14 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			if (ImGui::Button("Remover", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_REMOVE; };
 			if (nToolgun::currentTool == toolnames::TOOL_REMOVE) {
 				ImGui::Separator();
-				ImGui::Text("Remover tab");
+				ImGui::Text("Remover settings:");
 				ImGui::Separator();
 			}
 
 			if (ImGui::Button("Set attribute", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_ATTRIBUTE; };
 			if (nToolgun::currentTool == toolnames::TOOL_ATTRIBUTE) {
 				ImGui::Separator();
+				ImGui::Text("Attribute settings:");
 				ImGui::InputText("Attribute 1", nToolgun::instance_attribute->setAttributeFirst, 128);
 				ImGui::InputText("Attribute 2", nToolgun::instance_attribute->setAttributeSecond, 128);
 				ImGui::Separator();
@@ -491,6 +486,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			if (ImGui::Button("Destroyer", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_DAMAGE; };
 			if (nToolgun::currentTool == toolnames::TOOL_DAMAGE) {
 				ImGui::Separator();
+				ImGui::Text("Destroyer settings:");
 				ImGui::SliderFloat("Max Dist", &nToolgun::instance_damage->maxRange, 0.1f, 100.f, "%.2f");
 				ImGui::SliderFloat("Hole size", &nToolgun::instance_damage->holeSize, 0.1f, 100.f, "%.2f");
 				ImGui::SliderFloat("Radius", &nToolgun::instance_damage->flRadius, 0.1f, 100.f, "%.2f");
@@ -513,6 +509,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			if (ImGui::Button("Slicer", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_SLICE; };
 			if (nToolgun::currentTool == toolnames::TOOL_SLICE) {
 				ImGui::Separator();
+				ImGui::Text("Slicer settings:");
 				ImGui::SliderInt("Resolution", &nToolgun::instance_slice->slicer_resolution, 64, 1024);
 				ImGui::SliderFloat("maxDist", &nToolgun::instance_slice->slicer_maxDist, 1.f, 1000.f, "%.2f");
 				if (ImGui::RadioButton("Horizontal", nToolgun::instance_slice->slicerHorizontal)) {
@@ -527,6 +524,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			if (ImGui::Button("Camera", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_CAMERA; };
 			if (nToolgun::currentTool == toolnames::TOOL_CAMERA) {
 				ImGui::Separator();
+				ImGui::Text("Camera settings:");
 				ImGui::SliderInt("Resolution X", &nToolgun::instance_camera->resolutionX, 32, 512);
 				ImGui::SliderInt("Resolution Y", &nToolgun::instance_camera->resolutionY, 32, 512);
 				ImGui::SliderFloat("FOV", &threadCamera::universialFov, 1.f, 20.f, "%.1f");
@@ -574,7 +572,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			}
 
 		}
-		else {
+		else if(selectedTab == 1) {
 			if (ImGui::CollapsingHeader("debug")) {
 				if (ImGui::Button("Spawn DebugCube")) {
 					objectTesting::spawnDebugObject();
@@ -801,7 +799,71 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::SliderFloat("U64", &smoker::pInfo.U64, 0.f, 5.f, "%.2f");
 			}*/
 		}
+		else if (selectedTab == 2) {
+			ImGui::Text("Wire tab");
 
+			if (ImGui::RadioButton("Wire mode", (wireObjects::toolgunSetting == wireObjects::wireToolSetting::WTS_Interact))) {
+				(wireObjects::toolgunSetting = wireObjects::wireToolSetting::WTS_Interact);
+			}
+
+			if (ImGui::RadioButton("Place mode", (wireObjects::toolgunSetting == wireObjects::wireToolSetting::WTS_Place))) {
+				(wireObjects::toolgunSetting = wireObjects::wireToolSetting::WTS_Place);
+			}
+
+			ImGui::Separator();
+
+			if (ImGui::RadioButton("OBJ_IntBus", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_IntBus))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_IntBus);
+			};
+
+			if (ImGui::RadioButton("OBJ_BoolBus", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_BoolBus))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_BoolBus);
+			};
+
+			if (ImGui::RadioButton("OBJ_ConstantValue", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_ConstantValue))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_ConstantValue);
+			};
+
+			if (ImGui::RadioButton("OBJ_Explosive", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Explosive))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Explosive);
+			};
+
+			if (ImGui::RadioButton("OBJ_GreaterThan", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_GreaterThan))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_GreaterThan);
+			};
+
+			if (ImGui::RadioButton("OBJ_Lamp", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Lamp))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Lamp);
+			};
+
+			if (ImGui::RadioButton("OBJ_LessThan", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_LessThan))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_LessThan);
+			};
+
+			if (ImGui::RadioButton("OBJ_Raycast", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Raycast))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Raycast);
+			};
+
+			if (ImGui::RadioButton("OBJ_Button", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Button))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Button);
+			};
+
+			if (ImGui::RadioButton("OBJ_BalloonDeployer", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_BalloonDeployer))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_BalloonDeployer);
+			};
+
+			if (ImGui::RadioButton("OBJ_ANDgate", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_ANDgate))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_ANDgate);
+			};
+
+			if (ImGui::RadioButton("OBJ_ORgate", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_ORgate))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_ORgate);
+			};
+
+			if (ImGui::RadioButton("OBJ_NOTgate", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_NOTgate))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_NOTgate);
+			};
+		}
 		ImGui::EndTabBar();
 
 		ImGui::Separator();

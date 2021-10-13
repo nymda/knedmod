@@ -5,46 +5,84 @@
 #include "objectSpawner.h"
 
 namespace wireObjects {
-	wireObj* spawnWireObject(int objectID) {
-		if (objectID <= wireObjectCount) {
-			wireObjectInfo object = validWireObjects[objectID];
-			wireObj* newObject = 0;
+	wireObj* spawnWireObject(wireObjectName object) {
 
-			switch (object.id) {
-				case 0:
-					newObject = new wirePlacementIntBus();
-					break;
+		wireObjectInfo wobject = findByName(object);
+		wireObj* newObject = 0;
 
-				case 1:
-					newObject = new wirePlacementBoolBus();
-					break;
+		switch (wobject.name) {
+			case wireObjectName::OBJ_IntBus:
+				newObject = new wirePlacementIntBus();
+				break;
 
-				case 3:
-					newObject = new wirePlacementBomb();
-					break;
+			case wireObjectName::OBJ_BoolBus:
+				newObject = new wirePlacementBoolBus();
+				break;
 
-				case 8:
-					newObject = new wirePlacementButton();
-					break;
+			case wireObjectName::OBJ_ConstantValue:
+				newObject = 0;
+				break;
 
-				case 9:
-					newObject = new wirePlacementBalloonDeployer();
-					break;
-			}
+			case wireObjectName::OBJ_Explosive:
+				newObject = new wirePlacementBomb();
+				break;
 
-			if (!newObject) { return 0; };
+			case wireObjectName::OBJ_GreaterThan:
+				newObject = 0;
+				break;
 
-			spawner::childObjectSpawnParams params = {};
-			params.useUserRotation = true;
-			params.nocull = true;
-			spawner::spawnedObject sp = spawner::placeChildObject(object.path, params);
+			case wireObjectName::OBJ_Lamp:
+				newObject = new wirePlacementLamp();
+				break;
 
-			newObject->init(sp.shapes[0], 0);
+			case wireObjectName::OBJ_LessThan:
+				newObject = 0;
+				break;
 
-			wireObjectStack.push_back(newObject);
+			case wireObjectName::OBJ_Raycast:
+				newObject = 0;
+				break;
 
-			return newObject;
+			case wireObjectName::OBJ_Button:
+				newObject = new wirePlacementButton();
+				break;
+
+			case wireObjectName::OBJ_BalloonDeployer:
+				newObject = new wirePlacementBalloonDeployer();
+				break;
+
+			case wireObjectName::OBJ_ANDgate:
+				newObject = new wirePlacementAND();
+				break;
+
+			case wireObjectName::OBJ_NOTgate:
+				newObject = new wirePlacementNOT();
+				break;
+
+			case wireObjectName::OBJ_ORgate:
+				newObject = new wirePlacementOR();
+				break;
 		}
-		return 0;
+
+		if (!newObject) { return 0; };
+
+		spawner::childObjectSpawnParams params = {};
+		params.useUserRotation = true;
+		params.nocull = true;
+		spawner::spawnedObject sp = spawner::placeChildObject(wobject.path, params);
+
+		newObject->init(sp.shapes[0], 0);
+
+		wireObjectStack.push_back(newObject);
+
+		return newObject;
+		
+	}
+
+	wireObjectInfo findByName(wireObjectName name) {
+		for (wireObjectInfo& woi : validWireObjects) {
+			if (woi.name == name) { return woi; };
+		}
+		return validWireObjects[0];
 	}
 }

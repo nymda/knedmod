@@ -315,6 +315,12 @@
     <ClInclude Include="wirePlacementBoolBus.h">
       <Filter>Header Files\wire\wireObjects</Filter>
     </ClInclude>
+    <ClInclude Include="wirePlacementGates.h">
+      <Filter>Header Files\wire\wireObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="wirePlacementLamp.h">
+      <Filter>Header Files\wire\wireObjects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -537,6 +543,12 @@
       <Filter>Source Files\wire\wireObjects</Filter>
     </ClCompile>
     <ClCompile Include="wirePlacementBoolBus.cpp">
+      <Filter>Source Files\wire\wireObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="wirePlacementGates.cpp">
+      <Filter>Source Files\wire\wireObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="wirePlacementLamp.cpp">
       <Filter>Source Files\wire\wireObjects</Filter>
     </ClCompile>
   </ItemGroup>

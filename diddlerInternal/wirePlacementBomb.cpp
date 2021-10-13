@@ -25,7 +25,7 @@ namespace wireObjects {
 			td::Vec3 objectMin = this->housing->posMin;
 			td::Vec3 objectMax = this->housing->posMax;
 			td::Vec3 centerpoint = { objectMax.x - ((objectMax.x - objectMin.x) / 2), objectMax.y - ((objectMax.y - objectMin.y) / 2), objectMax.z - ((objectMax.z - objectMin.z) / 2) };
-			glb::TDcreateExplosion((uintptr_t)glb::scene, &centerpoint, 2.f);
+			glb::TDcreateExplosion((uintptr_t)glb::scene, &centerpoint, 3.f);
 			this->softDispose();
 		}
 

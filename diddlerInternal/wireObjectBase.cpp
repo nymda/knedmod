@@ -94,4 +94,8 @@ namespace wireObjects {
 
 		return worldPosition;
 	}
+
+	int convFloatToInt(float input) {
+		return floor(input * 100);
+	}
 }

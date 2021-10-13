@@ -8,8 +8,10 @@ namespace wireObjects {
 	std::vector<wireObj*> wireObjectStack = {};
 
 	bool getWireObjectByShape(TDShape* shape, wireObj** out) {
+		//printf_s("Searching for: %p\n", shape);
 		for (wireObj* wObj : wireObjectStack) {
 			if (wObj->housing == shape) {
+				//printf_s("out set to: %p\n", wObj);
 				*out = wObj;
 				return true;
 			}
@@ -41,11 +43,11 @@ namespace wireObjects {
 			woi.voxTemplate = (TDVox*)glb::oSpawnVox(&ssVoxPath, &ssSubPath, 1.f);
 
 			if (woi.voxTemplate) {
-				printf_s("Loaded vox template for %s\n", woi.path);
+				printf_s("[I] Loaded vox template for %s\n", woi.path);
 				r++;
 			}
 			else {
-				printf_s("Vox tempalte loading failed for %s\n", woi.path);
+				printf_s("[I] Vox tempalte loading failed for %s\n", woi.path);
 			}
 		}
 		return r;
