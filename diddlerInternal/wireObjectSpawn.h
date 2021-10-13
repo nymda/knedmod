@@ -4,6 +4,7 @@
 #include <vector>
 
 namespace wireObjects {
+
 	static enum class wireObjectName : int {
 		OBJ_IntBus = 0,
 		OBJ_BoolBus = 1,
@@ -17,7 +18,8 @@ namespace wireObjects {
 		OBJ_BalloonDeployer = 9,
 		OBJ_ANDgate = 10,
 		OBJ_ORgate = 11,
-		OBJ_NOTgate = 12
+		OBJ_NOTgate = 12,
+		OBJ_PositionTracker
 	};
 
 	struct wireObjectInfo {
@@ -40,6 +42,7 @@ namespace wireObjects {
 		{wireObjectName::OBJ_ANDgate, "KM_Misc\\KM_Wire\\w_ANDgate\\object.vox", 0},
 		{wireObjectName::OBJ_ORgate, "KM_Misc\\KM_Wire\\w_ORgate\\object.vox", 0},
 		{wireObjectName::OBJ_NOTgate, "KM_Misc\\KM_Wire\\w_NOTgate\\object.vox", 0},
+		{wireObjectName::OBJ_PositionTracker, "KM_Misc\\KM_Wire\\w_gps\\object.vox", 0},
 	};
 
 	wireObjectInfo findByName(wireObjectName name);

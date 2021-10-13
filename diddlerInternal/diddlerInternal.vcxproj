@@ -244,9 +244,13 @@
     <ClInclude Include="wirePlacementBomb.h" />
     <ClInclude Include="wirePlacementBoolBus.h" />
     <ClInclude Include="wirePlacementButton.h" />
+    <ClInclude Include="wirePlacementComparisons.h" />
+    <ClInclude Include="wirePlacementConstInt.h" />
     <ClInclude Include="wirePlacementGates.h" />
+    <ClInclude Include="wirePlacementGPS.h" />
     <ClInclude Include="wirePlacementIntBus.h" />
     <ClInclude Include="wirePlacementLamp.h" />
+    <ClInclude Include="wirePlacementRaycaster.h" />
     <ClInclude Include="wirePlacements.h" />
     <ClInclude Include="wireTool.h" />
   </ItemGroup>
@@ -323,9 +327,13 @@
     <ClCompile Include="wirePlacementBomb.cpp" />
     <ClCompile Include="wirePlacementBoolBus.cpp" />
     <ClCompile Include="wirePlacementButton.cpp" />
+    <ClCompile Include="wirePlacementComparisons.cpp" />
+    <ClCompile Include="wirePlacementConstInt.cpp" />
     <ClCompile Include="wirePlacementGates.cpp" />
+    <ClCompile Include="wirePlacementGPS.cpp" />
     <ClCompile Include="wirePlacementIntBus.cpp" />
     <ClCompile Include="wirePlacementLamp.cpp" />
+    <ClCompile Include="wirePlacementRaycaster.cpp" />
     <ClCompile Include="wireTool.cpp" />
   </ItemGroup>
   <ItemGroup>

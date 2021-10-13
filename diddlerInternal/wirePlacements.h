@@ -6,3 +6,7 @@
 #include "wirePlacementBoolBus.h"
 #include "wirePlacementGates.h"
 #include "wirePlacementLamp.h"
+#include "wirePlacementComparisons.h"
+#include "wirePlacementGPS.h"
+#include "wirePlacementConstInt.h"
+#include "wirePlacementRaycaster.h"

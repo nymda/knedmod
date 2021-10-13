@@ -96,6 +96,6 @@ namespace wireObjects {
 	}
 
 	int convFloatToInt(float input) {
-		return floor(input * 100);
+		return floor(input * 10);
 	}
 }

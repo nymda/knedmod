@@ -321,6 +321,18 @@
     <ClInclude Include="wirePlacementLamp.h">
       <Filter>Header Files\wire\wireObjects</Filter>
     </ClInclude>
+    <ClInclude Include="wirePlacementComparisons.h">
+      <Filter>Header Files\wire\wireObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="wirePlacementGPS.h">
+      <Filter>Header Files\wire\wireObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="wirePlacementConstInt.h">
+      <Filter>Header Files\wire\wireObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="wirePlacementRaycaster.h">
+      <Filter>Header Files\wire\wireObjects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -549,6 +561,18 @@
       <Filter>Source Files\wire\wireObjects</Filter>
     </ClCompile>
     <ClCompile Include="wirePlacementLamp.cpp">
+      <Filter>Source Files\wire\wireObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="wirePlacementComparisons.cpp">
+      <Filter>Source Files\wire\wireObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="wirePlacementGPS.cpp">
+      <Filter>Source Files\wire\wireObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="wirePlacementConstInt.cpp">
+      <Filter>Source Files\wire\wireObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="wirePlacementRaycaster.cpp">
       <Filter>Source Files\wire\wireObjects</Filter>
     </ClCompile>
   </ItemGroup>

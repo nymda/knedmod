@@ -10,6 +10,7 @@ namespace wireObjects {
 	wireObjectName toolgunSelectedObject = wireObjectName::OBJ_Button;
 
 	bool shootOnce = true;
+	int targetUserMemory = 0;
 
 	wireObj* tObj = 0;
 	wireNode* nodeA = 0;
@@ -94,6 +95,25 @@ namespace wireObjects {
 				if (shootOnce) {
 					shootOnce = false;
 					wireObjects::spawnWireObject(toolgunSelectedObject);
+				}
+			}
+			else {
+				shootOnce = true;
+			}
+		}
+		else if (toolgunSetting == wireToolSetting::WTS_SetUserMemory) {
+			if (nodeA != 0) { nodeA = 0; }
+			if (nodeB != 0) { nodeB = 0; }
+
+			if (glb::player->isAttacking) {
+				if (shootOnce) {
+					shootOnce = false;
+
+					wireObjects::wireObj* hitObj = 0;
+					raycaster::rayData rd = raycaster::castRayPlayer();
+					if (wireObjects::getWireObjectByShape(rd.hitShape, &hitObj) && rd.distance <= 3.f) {
+						hitObj->memory = targetUserMemory;
+					}
 				}
 			}
 			else {

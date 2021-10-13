@@ -80,7 +80,9 @@ LRESULT APIENTRY hWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			if (wParam == VK_LEFT || wParam == VK_RIGHT || wParam == VK_UP || wParam == VK_DOWN) {
 				if (memcmp(glb::player->heldItemName, tgName, 8) == 0) {
-					spawner::switchRotationStep(wParam);
+					if (nToolgun::currentTool == toolnames::TOOL_SPAWNER) {
+						spawner::switchRotationStep(wParam);
+					}
 				}
 			}
 
@@ -100,15 +102,31 @@ LRESULT APIENTRY hWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 
 	case WM_MOUSEWHEEL:
-		if (memcmp(glb::player->heldItemName, tgName, 8) == 0 && nToolgun::currentTool == toolnames::TOOL_SPAWNER) {
-			if ((short)(HIWORD(wParam)) > 0 && (LOWORD(wParam) & MK_SHIFT)) {
-				spawner::voxScale += 0.05f;
-				lockoutScroll = true;
+		if (memcmp(glb::player->heldItemName, tgName, 8) == 0) {
+			if (nToolgun::currentTool == toolnames::TOOL_SPAWNER) {
+				if ((short)(HIWORD(wParam)) > 0 && (LOWORD(wParam) & MK_SHIFT)) {
+					spawner::voxScale += 0.05f;
+					lockoutScroll = true;
+				}
+				if ((short)(HIWORD(wParam)) < 0 && (LOWORD(wParam) & MK_SHIFT)) {
+					spawner::voxScale -= 0.05f;
+					if (spawner::voxScale < 0.0f) { spawner::voxScale = 0.05f; }
+					lockoutScroll = true;
+				}
 			}
-			if ((short)(HIWORD(wParam)) < 0 && (LOWORD(wParam) & MK_SHIFT)) {
-				spawner::voxScale -= 0.05f;
-				if (spawner::voxScale < 0.0f) { spawner::voxScale = 0.05f; }
-				lockoutScroll = true;
+			else if (nToolgun::currentTool == toolnames::TOOL_WIRE) {
+				wireObjects::wireObj* hitObj = 0;
+				raycaster::rayData rd = raycaster::castRayPlayer();
+				if (wireObjects::getWireObjectByShape(rd.hitShape, &hitObj) && rd.distance <= 3.f) {
+					if ((short)(HIWORD(wParam)) > 0 && (LOWORD(wParam) & MK_SHIFT)) {
+						hitObj->memory++;
+						lockoutScroll = true;
+					}
+					if ((short)(HIWORD(wParam)) < 0 && (LOWORD(wParam) & MK_SHIFT)) {
+						hitObj->memory--;
+						lockoutScroll = true;
+					}
+				}
 			}
 		}
 	}
@@ -802,6 +820,10 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 		else if (selectedTab == 2) {
 			ImGui::Text("Wire tab");
 
+			if (!(nToolgun::currentTool == toolnames::TOOL_WIRE)) {
+				nToolgun::currentTool = toolnames::TOOL_WIRE;
+			}
+
 			if (ImGui::RadioButton("Wire mode", (wireObjects::toolgunSetting == wireObjects::wireToolSetting::WTS_Interact))) {
 				(wireObjects::toolgunSetting = wireObjects::wireToolSetting::WTS_Interact);
 			}
@@ -810,14 +832,24 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				(wireObjects::toolgunSetting = wireObjects::wireToolSetting::WTS_Place);
 			}
 
+			if (ImGui::RadioButton("Set memory mode", (wireObjects::toolgunSetting == wireObjects::wireToolSetting::WTS_SetUserMemory))) {
+				(wireObjects::toolgunSetting = wireObjects::wireToolSetting::WTS_SetUserMemory);
+			}
+
+			ImGui::InputInt("Memory", &wireObjects::targetUserMemory);
+
 			ImGui::Separator();
 
-			if (ImGui::RadioButton("OBJ_IntBus", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_IntBus))) {
-				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_IntBus);
+			if (ImGui::RadioButton("OBJ_BalloonDeployer", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_BalloonDeployer))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_BalloonDeployer);
 			};
 
 			if (ImGui::RadioButton("OBJ_BoolBus", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_BoolBus))) {
 				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_BoolBus);
+			};
+
+			if (ImGui::RadioButton("OBJ_Button", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Button))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Button);
 			};
 
 			if (ImGui::RadioButton("OBJ_ConstantValue", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_ConstantValue))) {
@@ -832,6 +864,10 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_GreaterThan);
 			};
 
+			if (ImGui::RadioButton("OBJ_IntBus", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_IntBus))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_IntBus);
+			};
+
 			if (ImGui::RadioButton("OBJ_Lamp", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Lamp))) {
 				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Lamp);
 			};
@@ -840,16 +876,12 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_LessThan);
 			};
 
+			if (ImGui::RadioButton("OBJ_PositionTracker", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_PositionTracker))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_PositionTracker);
+			};
+
 			if (ImGui::RadioButton("OBJ_Raycast", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Raycast))) {
 				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Raycast);
-			};
-
-			if (ImGui::RadioButton("OBJ_Button", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Button))) {
-				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Button);
-			};
-
-			if (ImGui::RadioButton("OBJ_BalloonDeployer", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_BalloonDeployer))) {
-				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_BalloonDeployer);
 			};
 
 			if (ImGui::RadioButton("OBJ_ANDgate", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_ANDgate))) {

@@ -23,7 +23,9 @@ namespace wireObjects {
 
 	enum class nodeType {
 		NT_Bool,
-		NT_Numeric
+		NT_Numeric,
+		NT_WirelessBool,
+		NT_WirelessNumeric
 	};
 
 	enum class nodeResponse {
@@ -144,6 +146,7 @@ namespace wireObjects {
 	};
 
 	nodeResponse connectNodes(wireNode* nodeA, wireNode* nodeB);
+	int convFloatToInt(float input);
 
 	class wireObj {
 	public:
