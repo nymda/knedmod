@@ -23,9 +23,11 @@ namespace wireObjects {
 		if (this->onTimeCountdown > 0) {
 			this->onTimeCountdown--;
 			this->nodes[0]->setValue(1);
+			this->housing->Intergrity = 1.f;
 		}
 		else {
 			this->nodes[0]->setValue(0);
+			this->housing->Intergrity = 0.f;
 		}
 
 		this->memory = this->onTimeCountdown;

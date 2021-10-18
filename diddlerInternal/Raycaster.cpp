@@ -32,7 +32,7 @@ namespace raycaster {
 
         //this is very very naughty and you shouldnt do it ever
         __try {
-            glb::oRC(glb::scene, &pCopy, &rCopy, 250.f, filterCus, &outDist, &output, &oShape, (uintptr_t*)&rdp.palette);
+            glb::oRC(glb::scene, &pCopy, &rCopy, 1000.f, filterCus, &outDist, &output, &oShape, (uintptr_t*)&rdp.palette);
         }
         __except (filterException(GetExceptionCode(), GetExceptionInformation())) {
             printf_s("Raycast caused an exception\n");
@@ -66,7 +66,7 @@ namespace raycaster {
         td::Vec3 output{};
         uintptr_t oShape;
         float outDist = 0.f;
-        glb::oRC(glb::scene, &camPos, &euler, 250.f, &filter, &outDist, &output, &oShape, (uintptr_t*)&rdp.palette);
+        glb::oRC(glb::scene, &camPos, &euler, 1000.f, &filter, &outDist, &output, &oShape, (uintptr_t*)&rdp.palette);
         if (outDist == 0) {
             oShape = 0;
             outDist = 1000.f;

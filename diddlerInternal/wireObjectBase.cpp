@@ -15,9 +15,11 @@ namespace wireObjects {
 			td::Vec3 nodeAposition = math::v3_glm2td(nodeA->getWorldPosition());
 			td::Vec3 nodeBposition = math::v3_glm2td(nodeB->getWorldPosition());
 
-			TDJoint* newJoint = (TDJoint*)glb::oTMalloc(208);
-			glb::tdConstructJoint(newJoint, nullptr);
-			glb::tdInitWire(newJoint, &nodeAposition, &nodeBposition, newJoint->m_Size, nodeColourActive[7], 0.f, 0.001f, 0.f);
+			if (nodeA->getType() == nodeType::NT_Bool || nodeA->getType() == nodeType::NT_Numeric) {
+				TDJoint* newJoint = (TDJoint*)glb::oTMalloc(208);
+				glb::tdConstructJoint(newJoint, nullptr);
+				glb::tdInitWire(newJoint, &nodeAposition, &nodeBposition, newJoint->m_Size, nodeColourActive[7], 0.f, 0.001f, 0.f);
+			}
 
 			return wireObjects::nodeResponse::NR_Ok;
 		}

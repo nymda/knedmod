@@ -37,11 +37,6 @@ namespace wireObjects {
 
 		nodes[0]->setValue(convFloatToInt(rd.distance));
 
-
-		//glm::vec3 hhhh = rayCastPosition + ((vz * 2.f) + (vy * 0.f) + (vx * 0.f));
-
-		//drawCube(rd.worldPos, 0.1f, nodeColourActive[0]);
-
 		return 0x01;
 	};
 

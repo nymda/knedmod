@@ -19,7 +19,9 @@ namespace wireObjects {
 		OBJ_ANDgate = 10,
 		OBJ_ORgate = 11,
 		OBJ_NOTgate = 12,
-		OBJ_PositionTracker
+		OBJ_PositionTracker = 13,
+		OBJ_RadioTx = 14,
+		OBJ_RadioRx = 15
 	};
 
 	struct wireObjectInfo {
@@ -43,6 +45,8 @@ namespace wireObjects {
 		{wireObjectName::OBJ_ORgate, "KM_Misc\\KM_Wire\\w_ORgate\\object.vox", 0},
 		{wireObjectName::OBJ_NOTgate, "KM_Misc\\KM_Wire\\w_NOTgate\\object.vox", 0},
 		{wireObjectName::OBJ_PositionTracker, "KM_Misc\\KM_Wire\\w_gps\\object.vox", 0},
+		{wireObjectName::OBJ_RadioTx, "KM_Misc\\KM_Wire\\w_transciever\\tx.vox", 0},
+		{wireObjectName::OBJ_RadioRx, "KM_Misc\\KM_Wire\\w_transciever\\rx.vox", 0},
 	};
 
 	wireObjectInfo findByName(wireObjectName name);

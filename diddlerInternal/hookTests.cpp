@@ -481,9 +481,18 @@ char hkRayCrashB(void* a1, void* a2) {
     return glb::tdRaycastCrashB(a1, a2);
 }
 
+void hkFunRuiner(DWORD a1, DWORD a2, DWORD a3) {
+    return;
+}
+
 void initTestHook() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
+
+    mem::Nop((byte*)(glb::moduleBase + 0x115b35), 8);
+
+    //DetourAttach(&(PVOID&)glb::tdFunRuiner, hkFunRuiner);
+
     //DetourAttach(&(PVOID&)glb::oCreateTextureThing, hkcreateTextureThing);
     //DetourAttach(&(PVOID&)glb::tdConstructScreen, hkInitScreen);
     //DetourAttach(&(PVOID&)glb::tdInitScreenSecondary, hkInitScreenSecondary);
@@ -496,6 +505,9 @@ void initTestHook() {
 void terminateTestHook() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
+
+    //DetourDetach(&(PVOID&)glb::tdFunRuiner, hkFunRuiner);
+
     //DetourDetach(&(PVOID&)glb::oCreateTextureThing, hkcreateTextureThing);
     //DetourDetach(&(PVOID&)glb::tdConstructScreen, hkInitScreen);
     //DetourDetach(&(PVOID&)glb::tdInitScreenSecondary, hkInitScreenSecondary);

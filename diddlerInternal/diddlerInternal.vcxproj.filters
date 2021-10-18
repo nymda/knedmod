@@ -333,6 +333,15 @@
     <ClInclude Include="wirePlacementRaycaster.h">
       <Filter>Header Files\wire\wireObjects</Filter>
     </ClInclude>
+    <ClInclude Include="wirePlacementTemplate.h">
+      <Filter>Header Files\wire\wireObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="crashHandler.h">
+      <Filter>Header Files\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="wirePlacementRadio.h">
+      <Filter>Header Files\wire\wireObjects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -573,6 +582,15 @@
       <Filter>Source Files\wire\wireObjects</Filter>
     </ClCompile>
     <ClCompile Include="wirePlacementRaycaster.cpp">
+      <Filter>Source Files\wire\wireObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="wirePlacementTemplate.cpp">
+      <Filter>Source Files\wire\wireObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="crashHandler.cpp">
+      <Filter>Source Files\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="wirePlacementRadio.cpp">
       <Filter>Source Files\wire\wireObjects</Filter>
     </ClCompile>
   </ItemGroup>

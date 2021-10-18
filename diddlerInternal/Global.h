@@ -16,6 +16,7 @@
 #include <random>
 #include "TDObjects.h"
 #include "glm/glm.hpp"
+#include "crashHandler.h"
 
 struct RaycastFilter
 {
@@ -31,7 +32,7 @@ struct RaycastFilter
 
 //world
 typedef void(__fastcall* environmentUpdate)(uintptr_t env);
-typedef void(__fastcall* rayCast)(TDScene* scene, td::Vec3* pos, td::Vec3* rot, float dist, RaycastFilter* filter, float* outDist, td::Vec3* out, uintptr_t* out_shape, uintptr_t* out_palette);
+typedef bool(__fastcall* rayCast)(TDScene* scene, td::Vec3* pos, td::Vec3* rot, float dist, RaycastFilter* filter, float* outDist, td::Vec3* out, uintptr_t* out_shape, uintptr_t* out_palette);
 typedef void(__fastcall* frameDrawLine)(TDRenderer* renderer, const td::Vec3& p1, const td::Vec3& p2, const td::Color& c1, const td::Color& c2, bool use_depth);
 typedef void(__fastcall* highlightShape)(TDRenderer* renderer, TDShape* shape, float opacity);
 typedef void(__fastcall* outlineShape)(TDRenderer* renderer, TDShape* shape, td::Color* colour, float opacity);
@@ -84,6 +85,7 @@ typedef void(__fastcall* attachJoint)(TDJoint* joint, TDShape* shape1, TDShape* 
 typedef void(__fastcall* updateJoint)(TDJoint* joint);
 
 //misc
+typedef void(__fastcall* funRuiner)(DWORD a1, DWORD a2, DWORD a3);
 typedef void(__stdcall* damageObject)(uintptr_t a1, uintptr_t a2, td::Vec3* a3, float a4, float a5, uintptr_t a6, uintptr_t a7, uintptr_t a8);
 typedef void(__stdcall* createExplosionWrapped)(double unkn, td::Vec3* pos, float power);
 typedef void(__fastcall* spawnParticleWrapped)(double a1, __int64 a2);
@@ -156,6 +158,7 @@ namespace glb {
     extern unknReadVoxData oIUnReadVox;
     extern isActiveWindow oIsActive;
 
+    extern funRuiner tdFunRuiner;
     extern joinConstructor tdConstructJoint;
     extern initBall tdInitBall;
     extern initHinge tdInitHinge;

@@ -255,17 +255,20 @@ byte* pixelBuffer;
 int lightness = 0;
 
 int newRes = 100;
-bool hwglSwapBuffers(_In_ HDC hDc)
-{
+
+void swapBuffersHook() {
 	std::call_once(swapBuffersInit, onSwapBuffersInit);
 
 
 	if (needToLoadObjects) {
 		needToLoadObjects = false;
+		cHandler::stageCode = 7;
 		spawner::spawnerObjectsDatabase = spawner::enumerateSpawnableObjects();
 		wireObjects::loadWireObjectVoxs();
 		//wireObjects::wireObjectsDatabase = spawner::enumerateWireObjects();
 	}
+
+	cHandler::stageCode = 8;
 
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplWin32_NewFrame();
@@ -285,6 +288,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 
 	if (glb::displayMenu) {
 		ImGui::Begin("KnedMod");
+		cHandler::stageCode = 9;
 		int counter = 0;
 
 		ImGuiWindowFlags window_flags1 = ImGuiWindowFlags_MenuBar;
@@ -350,7 +354,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 
 			}
 			//ImGui::Columns(1);
-			
+
 			//if (ImGui::CollapsingHeader(catigory.name.c_str(), collapse)) {
 
 			//}
@@ -392,6 +396,11 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 
 
 			ImGui::Separator();
+
+			if (ImGui::Button("Fard")) {
+				int coom = *(int*)(0x0FCF);
+				printf_s("E: %i\n", coom);
+			}
 
 			if (ImGui::Button("Wire##tselect", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_WIRE; };
 			if (nToolgun::currentTool == toolnames::TOOL_WIRE) {
@@ -437,7 +446,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				ImGui::Separator();
 			}
 
-			if (ImGui::Button("Weld", ImVec2(ImGui::GetWindowWidth() - 16, 20))) {nToolgun::currentTool = toolnames::TOOL_WELD; };
+			if (ImGui::Button("Weld", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_WELD; };
 			if (nToolgun::currentTool == toolnames::TOOL_WELD) {
 				ImGui::Separator();
 				ImGui::Text("Weld settings:");
@@ -538,7 +547,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 				}
 				ImGui::Separator();
 			}
-		
+
 			if (ImGui::Button("Camera", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_CAMERA; };
 			if (nToolgun::currentTool == toolnames::TOOL_CAMERA) {
 				ImGui::Separator();
@@ -582,6 +591,13 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			//	ImGui::Separator();
 			//}
 
+			if (ImGui::Button("Debug", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_DEBUG; };
+			if (nToolgun::currentTool == toolnames::TOOL_DEBUG) {
+				ImGui::Separator();
+				ImGui::Text("Debug settings:");
+				ImGui::Separator();
+			}
+			
 			if (ImGui::Button("testing (dev stuff dont use)", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_DEV; };
 			if (nToolgun::currentTool == toolnames::TOOL_DEV) {
 				ImGui::Separator();
@@ -590,7 +606,7 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			}
 
 		}
-		else if(selectedTab == 1) {
+		else if (selectedTab == 1) {
 			if (ImGui::CollapsingHeader("debug")) {
 				if (ImGui::Button("Spawn DebugCube")) {
 					objectTesting::spawnDebugObject();
@@ -895,6 +911,14 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			if (ImGui::RadioButton("OBJ_NOTgate", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_NOTgate))) {
 				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_NOTgate);
 			};
+
+			if (ImGui::RadioButton("OBJ_RadioTx", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_RadioTx))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_RadioTx);
+			};
+
+			if (ImGui::RadioButton("OBJ_RadioRx", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_RadioRx))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_RadioRx);
+			};
 		}
 		ImGui::EndTabBar();
 
@@ -955,11 +979,11 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 			break;
 		}
 
-		//if (nToolgun::currentTool == toolnames::TOOL_DEBUG && nToolgun::holdingToolgun) {
-		//	ImGui::Separator();
-		//	ImGui::Text("Shape : %p", nToolgun::instance_debug->tShape);
-		//	ImGui::Text("Body   : %p", toolgun::dbgObject.tBody);
-		//}
+		if (nToolgun::currentTool == toolnames::TOOL_DEBUG && nToolgun::holdingToolgun) {
+			ImGui::Separator();
+			ImGui::Text("Shape : %p", nToolgun::instance_debug->dbgShape);
+			ImGui::Text("Body  : %p", nToolgun::instance_debug->dbgBody);
+		}
 
 		ImGui::End();
 	}
@@ -1008,6 +1032,19 @@ bool hwglSwapBuffers(_In_ HDC hDc)
 	ImGui::EndFrame();
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+
+
+bool hwglSwapBuffers(_In_ HDC hDc)
+{
+	__try {
+		swapBuffersHook();
+	}
+	__except (cHandler::handleException(GetExceptionCode(), GetExceptionInformation())) {
+		exit(0);
+	}
+
 	return glb::owglSwapBuffers(hDc);
 }
 

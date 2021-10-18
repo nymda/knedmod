@@ -10,3 +10,4 @@
 #include "wirePlacementGPS.h"
 #include "wirePlacementConstInt.h"
 #include "wirePlacementRaycaster.h"
+#include "wirePlacementRadio.h"

@@ -59,7 +59,7 @@ namespace balloons {
 					b.hasString = true;
 				}
 
-				if (b.body->Position.y > 500.f) {
+				if (b.body->Position.y > 1000.f) {
 					td::Vec3 centerpoint = { b.shape->posMax.x - ((b.shape->posMax.x - b.shape->posMin.x) / 2.f), b.shape->posMax.y - ((b.shape->posMax.y - b.shape->posMin.y) / 2.f), b.shape->posMax.z - ((b.shape->posMax.z - b.shape->posMin.z) / 2.f) };
 					glb::TDcreateExplosion((uintptr_t)glb::scene, &centerpoint, 0.5f);
 					b.destroyed = true;

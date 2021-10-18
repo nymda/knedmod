@@ -285,6 +285,18 @@ struct comm_health : public command {
 	}
 };
 
+struct comm_plDump : public command {
+	comm_plDump() {
+		commandT = "plDump";
+		helpText = "Dumps player info to file | Args: None";
+	}
+
+	DWORD exec(std::vector<std::string> args) override {
+		consoleItems.clear();
+		return COMM_OK;
+	}
+};
+
 struct comm_clear : public command {
 	comm_clear() {
 		commandT = "clear";

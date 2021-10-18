@@ -3,6 +3,7 @@
 #include <TlHelp32.h>
 #include <Psapi.h>
 #include <winternl.h>
+#include <iostream>
 
 //https://guidedhacking.com/threads/how-to-hack-any-game-first-internal-hack-dll-tutorial.12142/
 
@@ -52,6 +53,42 @@ bool mem::Compare(const BYTE* pData, const BYTE* bMask, const char* szMask)
 	return true;
 }
 
+bool compareExact(const BYTE* pData, const BYTE* bMask, const char* szMask)
+{
+	for (; *szMask; ++szMask, ++pData, ++bMask)
+	{
+		if (*szMask == 'x' && *pData != *bMask)
+			return false;
+	}
+	return true;
+}
+
+int compareClosest(const BYTE* pData, const BYTE* bMask, const char* szMask) {
+	int cCount = 0;
+
+	for (; *szMask; ++szMask, ++pData, ++bMask)
+	{
+		if (*szMask == 'x' && *pData == *bMask) {
+			cCount++;
+		}
+	}
+
+	return cCount;
+
+	//for (; *szMask; ++szMask, ++pData, ++bMask)
+	//{
+	//	if (*szMask == 'x') {
+	//		if (*pData == *bMask) {
+	//			cCount++;
+	//		}
+	//	}
+	//	else {
+	//		return cCount;
+	//	}
+	//}
+	//return cCount;
+}
+
 DWORD64 mem::FindPattern(BYTE* bMask, const char* szMask, HMODULE hModule)
 {
 	MODULEINFO moduleInfo = { 0 };
@@ -59,13 +96,35 @@ DWORD64 mem::FindPattern(BYTE* bMask, const char* szMask, HMODULE hModule)
 
 	DWORD64 dwBaseAddress = (DWORD64)hModule;
 	DWORD64 dwModuleSize = (DWORD64)moduleInfo.SizeOfImage;
+	
+	int searchLen = strlen(szMask);
+	int high = searchLen / 2;
+	DWORD64 cPtr = 0;
 
-	for (DWORD64 i = 0; i < dwModuleSize; i++)
+	//attempt sigscanning using the faster exact match method
+	for (DWORD64 i = 0; i < dwModuleSize - searchLen; i++)
 	{
-		if (Compare((BYTE*)(dwBaseAddress + i), bMask, szMask))
+		if (compareExact((BYTE*)(dwBaseAddress + i), bMask, szMask)) {
 			return (DWORD64)(dwBaseAddress + i);
+		}
 	}
-	return 0;
+
+	//if exact scanning fails, begin scanning for closest match
+	for (DWORD64 i = 0; i < dwModuleSize - searchLen; i++)
+	{
+		int c = compareClosest((BYTE*)(dwBaseAddress + i), bMask, szMask);
+		if (c > high) {
+			high = c;
+			cPtr = (DWORD64)(dwBaseAddress + i);
+		}
+
+		if (high == searchLen) {
+			return cPtr;
+		}
+	}
+
+	//return closest match, or 0 if nothing found
+	return cPtr;
 }
 
 bool mem::Hook(char* src, char* dst, int len)

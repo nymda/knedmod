@@ -70,12 +70,20 @@ namespace wireObjects {
 			case wireObjectName::OBJ_PositionTracker:
 				newObject = new wirePlacementGPS();
 				break;
+
+            case wireObjectName::OBJ_RadioTx:
+                newObject = new wirePlacementRadioTx();
+                break;
+
+            case wireObjectName::OBJ_RadioRx:
+                newObject = new wirePlacementRadioRx();
+                break;
 		}
 
 		if (!newObject) { return 0; };
 
 		spawner::childObjectSpawnParams params = {};
-		params.useUserRotation = true;
+		params.useUserRotation = false;
 		params.nocull = true;
 		spawner::spawnedObject sp = spawner::placeChildObject(wobject.path, params);
 

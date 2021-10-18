@@ -245,7 +245,7 @@ namespace threadCamera {
 				if (rd.successful && rd.distance < 1000.f) {
 					if (threadCamera::method == CT_Colour) {
 						if (rd.distance > 0.f) {
-							int iThisDist = (rd.distance) / 2;
+							int iThisDist = (rd.distance) / 4;
 							int iPxNoise = rand() % rndLvl;
 							iColourR = (iPxNoise + (rd.palette.m_Color.m_R * 255) - iThisDist);
 							if (iColourR < 0) { iColourR = 0; }
@@ -266,7 +266,7 @@ namespace threadCamera {
 						bufferWrite[pxPointer] = { (byte)iColourR,(byte)iColourG, (byte)iColourB, 0xFF };
 					}
 					else if (threadCamera::method == CT_Monochrome) {
-						int iThisDist = (rd.distance) / 2;
+						int iThisDist = (rd.distance) / 4;
 						int iPxNoise = rand() % rndLvl;
 						iColourR = (iPxNoise + (rd.palette.m_Color.m_R * 255) - iThisDist);
 						if (iColourR < 0) { iColourR = 0; }

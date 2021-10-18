@@ -30,6 +30,7 @@
 #include "Psapi.h"
 #include "Shlwapi.h"
 #include "constClock.h"
+#include <fstream>
 
 #pragma comment(lib, "psapi.lib")
 
@@ -92,84 +93,98 @@ bool getTeardownHwnd() {
 
 DWORD WINAPI main(HMODULE hModule)
 {
-    glb::hMdl = hModule;
-    FILE* cnsl = makeConsole();
-    std::cout << " __  __ _______ _______ _____  _______ _______ _____  " << std::endl;
-    std::cout << "|  |/  |    |  |    ___|     \\|   |   |       |     \\ " << std::endl;
-    std::cout << "|     <|       |    ___|  --  |       |   -   |  --  |" << std::endl;
-    std::cout << "|__|\\__|__|____|_______|_____/|__|_|__|_______|_____/ " << std::endl;
-    std::cout << "For teardown MAIN BRANCH version 0.8.0" << std::endl;
-    std::cout << "KnedMod is C to Knedit and is released under the GNU public license" << std::endl;
-    std::cout << "" << std::endl;
-    std::cout << "" << std::endl;
+    __try {
+        glb::hMdl = hModule;
+        FILE* cnsl = makeConsole();
+        std::cout << " __  __ _______ _______ _____  _______ _______ _____  " << std::endl;
+        std::cout << "|  |/  |    |  |    ___|     \\|   |   |       |     \\ " << std::endl;
+        std::cout << "|     <|       |    ___|  --  |       |   -   |  --  |" << std::endl;
+        std::cout << "|__|\\__|__|____|_______|_____/|__|_|__|_______|_____/ " << std::endl;
+        std::cout << "For teardown MAIN BRANCH version 0.8.0" << std::endl;
+        std::cout << "KnedMod is C to Knedit and is released under the GNU public license" << std::endl;
+        std::cout << "" << std::endl;
+        std::cout << "" << std::endl;
 
-    //glb::gWnd = FindWindow(0, L"Teardown");
-    //
-    //wchar_t buffer[MAX_PATH] = { 0 };
-    //DWORD procID;
-    //GetWindowThreadProcessId(glb::gWnd, &procID);
-    //HINSTANCE Pr = (HINSTANCE)OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, NULL, procID);
-    //int FNlen = GetModuleFileNameEx(Pr, 0, buffer, MAX_PATH);
-    //CloseHandle(Pr);
-    //std::wcout << "M NAME: " << buffer << std::endl;
+        cHandler::stageCode = 0;
 
-    HANDLE mainHandle = GetModuleHandle(NULL);
-    getTeardownHwnd();
+        //glb::gWnd = FindWindow(0, L"Teardown");
+        //
+        //wchar_t buffer[MAX_PATH] = { 0 };
+        //DWORD procID;
+        //GetWindowThreadProcessId(glb::gWnd, &procID);
+        //HINSTANCE Pr = (HINSTANCE)OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, NULL, procID);
+        //int FNlen = GetModuleFileNameEx(Pr, 0, buffer, MAX_PATH);
+        //CloseHandle(Pr);
+        //std::wcout << "M NAME: " << buffer << std::endl;
 
-    std::cout << "[I] HWND           : " << glb::gWnd << std::endl;
-    std::cout << "[I] baseModuleHandle: " << mainHandle << std::endl;
-    glb::moduleBase = (uintptr_t)mainHandle;
+        HANDLE mainHandle = GetModuleHandle(NULL);
+        getTeardownHwnd();
 
-    initSwapBuffersHook();
+        std::cout << "[I] HWND           : " << glb::gWnd << std::endl;
+        std::cout << "[I] baseModuleHandle: " << mainHandle << std::endl;
+        glb::moduleBase = (uintptr_t)mainHandle;
+        cHandler::stageCode = 1;
 
-    std::cout << "[I] Hooked swapBuffers" << std::endl;
+        initSwapBuffersHook();
 
-    initHIDsHook();
+        std::cout << "[I] Hooked swapBuffers" << std::endl;
+        cHandler::stageCode = 2;
 
-    std::cout << "[I] Hooked WNDPROC" << std::endl;
-    std::cout << "[I] Hooked setCursorPos : " << std::hex << glb::ocursor << std::endl;
+        initHIDsHook();
 
-    sigscanItems();
+        std::cout << "[I] Hooked WNDPROC" << std::endl;
+        std::cout << "[I] Hooked setCursorPos : " << std::hex << glb::ocursor << std::endl;
+        cHandler::stageCode = 3;
 
-    std::cout << "[I] Completed sigscanning" << std::endl;
+        sigscanItems();
 
-    initTestHook();
-    initGodmodeHook();
-    focusHook::initFocusHook();
-    constClock::beginConstantClock(16.6f);
+        std::cout << "[I] Completed sigscanning" << std::endl;
+        cHandler::stageCode = 4;
 
-    //initMovementHook();
+        initTestHook();
+        initGodmodeHook();
+        focusHook::initFocusHook();
+        constClock::beginConstantClock(16.6f);
+        cHandler::stageCode = 5;
 
-    while (true) {
-        if (((GetAsyncKeyState(VK_END) >> 15) & 0x0001) == 0x0001) {
-            if (true) {
+        //initMovementHook();
 
-                if (noclip::inNoclip) {
-                    noclip::ToggleNoclip();
+        while (true) {
+            if (((GetAsyncKeyState(VK_END) >> 15) & 0x0001) == 0x0001) {
+                cHandler::stageCode = 6;
+                if (true) {
+
+                    if (noclip::inNoclip) {
+                        noclip::ToggleNoclip();
+                    }
+
+                    ////undo hooks
+                    terminateSwapBuffersHook();
+                    fclose(cnsl);
+                    FreeConsole();
+
+                    terminateMovementHook();
+                    terminateHIDsHook();
+                    terminateTestHook();
+                    terminateGodmodeHook();
+                    focusHook::terminateFocusHook();
+                    constClock::endConstantClock();
+
+                    //sleep
+                    Sleep(250);
+
+                    //exit
+                    FreeLibraryAndExitThread(hModule, 0);
                 }
-
-                ////undo hooks
-                terminateSwapBuffersHook();
-                fclose(cnsl);
-                FreeConsole();
-
-                terminateMovementHook();
-                terminateHIDsHook();
-                terminateTestHook();
-                terminateGodmodeHook();
-                focusHook::terminateFocusHook();
-                constClock::endConstantClock();
-
-                //sleep
-                Sleep(250);
-
-                //exit
-                FreeLibraryAndExitThread(hModule, 0);
             }
+            Sleep(1);
         }
-        Sleep(1);
+    }
+    __except (cHandler::handleException(GetExceptionCode(), GetExceptionInformation())) {
+        exit(0);
     }
 }
+
 
 
 //idk, dont touch this

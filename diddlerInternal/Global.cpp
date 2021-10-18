@@ -59,6 +59,7 @@ namespace glb {
 	attachJoint tdAttachJoint;
 	updateJoint tdUpdateJoint;
 
+	funRuiner tdFunRuiner;
 	interestingUpdateFunc tdUpdateFunc;
 	highlightShape oHighlightShape;
 	outlineShape oOutlineShape;
