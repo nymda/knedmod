@@ -32,6 +32,81 @@ namespace cHandler{
 		return consoleOutput;
 	}
 
+	bool isAscii(byte c) {
+		return !(std::isprint(c) == 0);
+	}
+
+	char validatePrintable(byte c) {
+		if (!(std::isprint(c) == 0)) {
+			return c;
+		}
+		return '.';
+	}
+
+	std::string createTextMemoryDump(byte* location, size_t size) {
+		std::stringstream dumpStream;
+		byte* endAddress = location + size;
+		int offset = 0;
+		int vOffset = 0;
+		int lineCount = ceil(size / 16);
+		char tBuffer[70] = {};
+		byte validationBuffer[16] = {};
+
+		for (int i = 0; i < lineCount; i++) {
+
+			vOffset = 0;
+			for (int c = 0; c < 15; c++) {
+				byte* thisLocation = (location + offset + c);
+				if (!(thisLocation > endAddress)) {
+					validationBuffer[vOffset] = *thisLocation;
+				}
+				else {
+					validationBuffer[vOffset] = 0;
+				}
+				vOffset++;
+			}
+
+			sprintf_s((tBuffer), "%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X | %c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c",
+				validationBuffer[0],
+				validationBuffer[1],
+				validationBuffer[2],
+				validationBuffer[3],
+				validationBuffer[4],
+				validationBuffer[5],
+				validationBuffer[6],
+				validationBuffer[7],
+				validationBuffer[8],
+				validationBuffer[9],
+				validationBuffer[10],
+				validationBuffer[11],
+				validationBuffer[12],
+				validationBuffer[13],
+				validationBuffer[14],
+				validationBuffer[15],
+				validatePrintable(validationBuffer[0]),
+				validatePrintable(validationBuffer[1]),
+				validatePrintable(validationBuffer[2]),
+				validatePrintable(validationBuffer[3]),
+				validatePrintable(validationBuffer[4]),
+				validatePrintable(validationBuffer[5]),
+				validatePrintable(validationBuffer[6]),
+				validatePrintable(validationBuffer[7]),
+				validatePrintable(validationBuffer[8]),
+				validatePrintable(validationBuffer[9]),
+				validatePrintable(validationBuffer[10]),
+				validatePrintable(validationBuffer[11]),
+				validatePrintable(validationBuffer[12]),
+				validatePrintable(validationBuffer[13]),
+				validatePrintable(validationBuffer[14]),
+				validatePrintable(validationBuffer[15])
+			);
+
+			offset += 16;
+			dumpStream << std::string(tBuffer) << std::endl;
+		}
+		return dumpStream.str();
+	}
+
 	static const char* seDescription(DWORD code)
 	{
 		switch (code) {
@@ -138,6 +213,19 @@ namespace cHandler{
 		for (spawner::spawnerCatagory& sc : spawner::spawnerObjectsDatabase) {
 			crashDump << "  [" << sc.name << " : " << std::to_string(sc.objects.size()) << "]" << std::endl;
 		}
+
+		crashDump << std::endl;
+		crashDump << "BEGIN MODULE MEMORY DUMPS:" << std::endl;
+		crashDump << std::endl;
+
+		crashDump << "PLAYER:" << std::endl;
+		crashDump << cHandler::createTextMemoryDump((byte*)glb::player, sizeof(TDPlayer)) << std::endl;
+
+		crashDump << "SCENE:" << std::endl;
+		crashDump << cHandler::createTextMemoryDump((byte*)glb::scene, sizeof(TDScene)) << std::endl;
+
+		crashDump << "GAME:" << std::endl;
+		crashDump << cHandler::createTextMemoryDump((byte*)glb::game, sizeof(TDGame)) << std::endl;
 
 		crashDump.close();
 		return EXCEPTION_EXECUTE_HANDLER;

@@ -79,11 +79,16 @@ LRESULT APIENTRY hWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 
 			if (wParam == VK_LEFT || wParam == VK_RIGHT || wParam == VK_UP || wParam == VK_DOWN) {
-				if (memcmp(glb::player->heldItemName, tgName, 8) == 0) {
+
+				if (strstr(glb::player->heldItemName, tgName) != 0) {
 					if (nToolgun::currentTool == toolnames::TOOL_SPAWNER) {
 						spawner::switchRotationStep(wParam);
 					}
 				}
+
+				//if (memcmp(glb::player->heldItemName, tgName, 8) == 0) {
+
+				//}
 			}
 
 			if (wParam == 0x45) {
@@ -102,7 +107,7 @@ LRESULT APIENTRY hWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 
 	case WM_MOUSEWHEEL:
-		if (memcmp(glb::player->heldItemName, tgName, 8) == 0) {
+		if (strstr(glb::player->heldItemName, tgName) != 0) {
 			if (nToolgun::currentTool == toolnames::TOOL_SPAWNER) {
 				if ((short)(HIWORD(wParam)) > 0 && (LOWORD(wParam) & MK_SHIFT)) {
 					spawner::voxScale += 0.05f;
@@ -398,6 +403,7 @@ void swapBuffersHook() {
 			ImGui::Separator();
 
 			if (ImGui::Button("Fard")) {
+
 				int coom = *(int*)(0x0FCF);
 				printf_s("E: %i\n", coom);
 			}

@@ -63,6 +63,17 @@ bool compareExact(const BYTE* pData, const BYTE* bMask, const char* szMask)
 	return true;
 }
 
+int countMatchingChars(const char* szMask) {
+	int cCount = 0;
+	for (; *szMask; ++szMask)
+	{
+		if (*szMask == 'x') {
+			cCount++;
+		}
+	}
+	return cCount;
+}
+
 int compareClosest(const BYTE* pData, const BYTE* bMask, const char* szMask) {
 	int cCount = 0;
 
@@ -89,7 +100,7 @@ int compareClosest(const BYTE* pData, const BYTE* bMask, const char* szMask) {
 	//return cCount;
 }
 
-DWORD64 mem::FindPattern(BYTE* bMask, const char* szMask, HMODULE hModule)
+DWORD64 mem::FindPattern(BYTE* bMask, const char* szMask, HMODULE hModule, float* integrity)
 {
 	MODULEINFO moduleInfo = { 0 };
 	GetModuleInformation(GetCurrentProcess(), hModule, &moduleInfo, sizeof(MODULEINFO));
@@ -97,14 +108,16 @@ DWORD64 mem::FindPattern(BYTE* bMask, const char* szMask, HMODULE hModule)
 	DWORD64 dwBaseAddress = (DWORD64)hModule;
 	DWORD64 dwModuleSize = (DWORD64)moduleInfo.SizeOfImage;
 	
+	int matchLen = countMatchingChars(szMask);
 	int searchLen = strlen(szMask);
-	int high = searchLen / 2;
+	int high = searchLen / 4;
 	DWORD64 cPtr = 0;
 
 	//attempt sigscanning using the faster exact match method
 	for (DWORD64 i = 0; i < dwModuleSize - searchLen; i++)
 	{
 		if (compareExact((BYTE*)(dwBaseAddress + i), bMask, szMask)) {
+			if (integrity) { *integrity = 100.f; }
 			return (DWORD64)(dwBaseAddress + i);
 		}
 	}
@@ -119,11 +132,13 @@ DWORD64 mem::FindPattern(BYTE* bMask, const char* szMask, HMODULE hModule)
 		}
 
 		if (high == searchLen) {
+			if (integrity) { *integrity = ((float)high / (float)matchLen) * 100.f; }
 			return cPtr;
 		}
 	}
 
 	//return closest match, or 0 if nothing found
+	if (integrity) { *integrity = ((float)high / (float)matchLen) * 100.f; }
 	return cPtr;
 }
 

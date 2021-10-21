@@ -19,6 +19,8 @@ namespace nToolgun {
 
     bool holdingToolgun = false;
 
+    std::vector<tgt*> tools = {};
+
     //tool instances
     tgt_camera* instance_camera = 0;
     tgt_damage* instance_damage = 0;
@@ -42,21 +44,52 @@ namespace nToolgun {
 
     void init() {
         instance_camera = new tgt_camera;
+        tools.push_back(instance_camera);
+
         instance_damage = new tgt_damage;
+        tools.push_back(instance_damage);
+
         instance_debug = new tgt_debug;
+        tools.push_back(instance_debug);
+
         instance_dev = new tgt_dev;
+        tools.push_back(instance_dev);
+
         instance_explode = new tgt_explode;
+        tools.push_back(instance_explode);
+
         instance_leafblower = new tgt_leafblower;
+        tools.push_back(instance_leafblower);
+
         instance_minigun = new tgt_minigun;
+        tools.push_back(instance_minigun);
+
         instance_remove = new tgt_remove;
+        tools.push_back(instance_remove);
+
         instance_rope = new tgt_rope;
+        tools.push_back(instance_rope);
+
         instance_slice = new tgt_slice;
+        tools.push_back(instance_slice);
+
         instance_spawner = new tgt_spawner;
+        tools.push_back(instance_spawner);
+
         instance_weld = new tgt_weld;
+        tools.push_back(instance_weld);
+
         instance_flamethrower = new tgt_flamethrower;
+        tools.push_back(instance_flamethrower);
+
         instance_attribute = new tgt_attribute;
+        tools.push_back(instance_attribute);
+
         instance_balloon = new tgt_balloon;
+        tools.push_back(instance_balloon);
+
         instance_wire = new tgt_wire;
+        tools.push_back(instance_wire);
 
         isInit = true;
     }
@@ -67,7 +100,7 @@ namespace nToolgun {
             return;
         }
 
-        if (memcmp(glb::player->heldItemName, tgName, 8) == 0) {
+        if (strstr(glb::player->heldItemName, tgName) != 0) {
             holdingToolgun = true;
 
             switch (currentTool) {
