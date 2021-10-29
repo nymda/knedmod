@@ -403,9 +403,7 @@ void swapBuffersHook() {
 			ImGui::Separator();
 
 			if (ImGui::Button("Fard")) {
-
-				int coom = *(int*)(0x0FCF);
-				printf_s("E: %i\n", coom);
+				fireSpreadMod::toggleFireMod();
 			}
 
 			if (ImGui::Button("Wire##tselect", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_WIRE; };
@@ -925,6 +923,10 @@ void swapBuffersHook() {
 			if (ImGui::RadioButton("OBJ_RadioRx", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_RadioRx))) {
 				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_RadioRx);
 			};
+
+			if (ImGui::RadioButton("OBJ_Clock", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Clock))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Clock);
+			};
 		}
 		ImGui::EndTabBar();
 
@@ -1044,8 +1046,11 @@ void swapBuffersHook() {
 
 bool hwglSwapBuffers(_In_ HDC hDc)
 {
+
+	swapBuffersHook();
+
 	__try {
-		swapBuffersHook();
+
 	}
 	__except (cHandler::handleException(GetExceptionCode(), GetExceptionInformation())) {
 		exit(0);

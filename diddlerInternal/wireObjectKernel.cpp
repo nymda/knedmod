@@ -41,7 +41,6 @@ namespace wireObjects {
 			td::small_string ssVoxPath = td::small_string(woi.path);
 			td::small_string ssSubPath = td::small_string("");
 			woi.voxTemplate = (TDVox*)glb::oSpawnVox(&ssVoxPath, &ssSubPath, 1.f);
-
 			if (woi.voxTemplate) {
 				printf_s("[I] Loaded vox template for %s\n", woi.path);
 				r++;

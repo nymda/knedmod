@@ -169,7 +169,6 @@ namespace wireObjects {
 
 		void disconnectAll() {
 			for (wireNode* cNode : nodes) {
-				printf_s("\nNODE: %p", cNode);
 				if (cNode && cNode->isConnected()) {
 					cNode->disconnect();
 				}
@@ -177,7 +176,7 @@ namespace wireObjects {
 		}
 
 		void dispose() {
-			destroyed = true;
+			softDispose();
 			for (wireNode* cNode : nodes) {
 				cNode->dispose();
 			}

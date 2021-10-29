@@ -11,3 +11,4 @@
 #include "wirePlacementConstInt.h"
 #include "wirePlacementRaycaster.h"
 #include "wirePlacementRadio.h"
+#include "WirePlacementClock.h"

@@ -342,6 +342,9 @@
     <ClInclude Include="wirePlacementRadio.h">
       <Filter>Header Files\wire\wireObjects</Filter>
     </ClInclude>
+    <ClInclude Include="wirePlacementClock.h">
+      <Filter>Header Files\wire\wireObjects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -591,6 +594,9 @@
       <Filter>Source Files\misc</Filter>
     </ClCompile>
     <ClCompile Include="wirePlacementRadio.cpp">
+      <Filter>Source Files\wire\wireObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="wirePlacementClock.cpp">
       <Filter>Source Files\wire\wireObjects</Filter>
     </ClCompile>
   </ItemGroup>

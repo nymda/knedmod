@@ -5,6 +5,27 @@
 #include "objectSpawner.h"
 
 namespace wireObjects {
+
+    wireObjectInfo validWireObjects[17] = {
+        {wireObjectName::OBJ_IntBus, "KM_Misc\\KM_Wire\\w_bus\\object.vox", 0},
+        {wireObjectName::OBJ_BoolBus, "KM_Misc\\KM_Wire\\w_bus\\object.vox", 0},
+        {wireObjectName::OBJ_ConstantValue, "KM_Misc\\KM_Wire\\w_constantValue\\object.vox", 0},
+        {wireObjectName::OBJ_Explosive, "KM_Misc\\KM_Wire\\w_explosive\\object.vox", 0},
+        {wireObjectName::OBJ_GreaterThan, "KM_Misc\\KM_Wire\\w_greaterThan\\object.vox", 0},
+        {wireObjectName::OBJ_Lamp, "KM_Misc\\KM_Wire\\w_lamp\\object.vox", 0},
+        {wireObjectName::OBJ_LessThan, "KM_Misc\\KM_Wire\\w_lessThan\\object.vox", 0},
+        {wireObjectName::OBJ_Raycast, "KM_Misc\\KM_Wire\\w_raycaster\\object.vox", 0},
+        {wireObjectName::OBJ_Button, "KM_Misc\\KM_Wire\\w_button\\object.vox", 0},
+        {wireObjectName::OBJ_BalloonDeployer, "KM_Misc\\KM_Wire\\w_balloonDeployer\\object.vox", 0},
+        {wireObjectName::OBJ_ANDgate, "KM_Misc\\KM_Wire\\w_ANDgate\\object.vox", 0},
+        {wireObjectName::OBJ_ORgate, "KM_Misc\\KM_Wire\\w_ORgate\\object.vox", 0},
+        {wireObjectName::OBJ_NOTgate, "KM_Misc\\KM_Wire\\w_NOTgate\\object.vox", 0},
+        {wireObjectName::OBJ_PositionTracker, "KM_Misc\\KM_Wire\\w_gps\\object.vox", 0},
+        {wireObjectName::OBJ_RadioTx, "KM_Misc\\KM_Wire\\w_transciever\\tx.vox", 0},
+        {wireObjectName::OBJ_RadioRx, "KM_Misc\\KM_Wire\\w_transciever\\rx.vox", 0},
+        {wireObjectName::OBJ_Clock, "KM_Misc\\KM_Wire\\w_clock\\object.vox", 0},
+    };
+
     float objectPlacementRotationSteps_H[] = { 0.f, 45.f, 90.f, 135.f, 180.f, 225.f, 270.f, 315.f };
     float objectPlacementRotationSteps_V[] = { 0.f, 90.f, 180.f, 270.f };
     int currentRotationStep_H = 0;
@@ -78,6 +99,10 @@ namespace wireObjects {
             case wireObjectName::OBJ_RadioRx:
                 newObject = new wirePlacementRadioRx();
                 break;
+
+            case wireObjectName::OBJ_Clock:
+                newObject = new wirePlacementClock();
+                break;
 		}
 
 		if (!newObject) { return 0; };
@@ -97,7 +122,9 @@ namespace wireObjects {
 
 	wireObjectInfo findByName(wireObjectName name) {
 		for (wireObjectInfo& woi : validWireObjects) {
-			if (woi.name == name) { return woi; };
+			if (woi.name == name) { 
+                return woi; 
+            };
 		}
 		return validWireObjects[0];
 	}

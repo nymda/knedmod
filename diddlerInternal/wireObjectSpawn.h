@@ -21,7 +21,8 @@ namespace wireObjects {
 		OBJ_NOTgate = 12,
 		OBJ_PositionTracker = 13,
 		OBJ_RadioTx = 14,
-		OBJ_RadioRx = 15
+		OBJ_RadioRx = 15,
+		OBJ_Clock = 16
 	};
 
 	struct wireObjectInfo {
@@ -30,24 +31,7 @@ namespace wireObjects {
 		TDVox* voxTemplate;
 	};
 
-	static wireObjectInfo validWireObjects[] = {
-		{wireObjectName::OBJ_IntBus, "KM_Misc\\KM_Wire\\w_bus\\object.vox", 0},
-		{wireObjectName::OBJ_BoolBus, "KM_Misc\\KM_Wire\\w_bus\\object.vox", 0},
-		{wireObjectName::OBJ_ConstantValue, "KM_Misc\\KM_Wire\\w_constantValue\\object.vox", 0},
-		{wireObjectName::OBJ_Explosive, "KM_Misc\\KM_Wire\\w_explosive\\object.vox", 0},
-		{wireObjectName::OBJ_GreaterThan, "KM_Misc\\KM_Wire\\w_greaterThan\\object.vox", 0},
-		{wireObjectName::OBJ_Lamp, "KM_Misc\\KM_Wire\\w_lamp\\object.vox", 0},
-		{wireObjectName::OBJ_LessThan, "KM_Misc\\KM_Wire\\w_lessThan\\object.vox", 0},
-		{wireObjectName::OBJ_Raycast, "KM_Misc\\KM_Wire\\w_raycaster\\object.vox", 0},
-		{wireObjectName::OBJ_Button, "KM_Misc\\KM_Wire\\w_button\\object.vox", 0},
-		{wireObjectName::OBJ_BalloonDeployer, "KM_Misc\\KM_Wire\\w_balloonDeployer\\object.vox", 0},
-		{wireObjectName::OBJ_ANDgate, "KM_Misc\\KM_Wire\\w_ANDgate\\object.vox", 0},
-		{wireObjectName::OBJ_ORgate, "KM_Misc\\KM_Wire\\w_ORgate\\object.vox", 0},
-		{wireObjectName::OBJ_NOTgate, "KM_Misc\\KM_Wire\\w_NOTgate\\object.vox", 0},
-		{wireObjectName::OBJ_PositionTracker, "KM_Misc\\KM_Wire\\w_gps\\object.vox", 0},
-		{wireObjectName::OBJ_RadioTx, "KM_Misc\\KM_Wire\\w_transciever\\tx.vox", 0},
-		{wireObjectName::OBJ_RadioRx, "KM_Misc\\KM_Wire\\w_transciever\\rx.vox", 0},
-	};
+	extern wireObjectInfo validWireObjects[17];
 
 	wireObjectInfo findByName(wireObjectName name);
 
