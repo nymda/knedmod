@@ -22,7 +22,8 @@ namespace wireObjects {
 		OBJ_PositionTracker = 13,
 		OBJ_RadioTx = 14,
 		OBJ_RadioRx = 15,
-		OBJ_Clock = 16
+		OBJ_Clock = 16,
+		OBJ_Delay = 17
 	};
 
 	struct wireObjectInfo {
@@ -31,7 +32,7 @@ namespace wireObjects {
 		TDVox* voxTemplate;
 	};
 
-	extern wireObjectInfo validWireObjects[17];
+	extern wireObjectInfo validWireObjects[18];
 
 	wireObjectInfo findByName(wireObjectName name);
 

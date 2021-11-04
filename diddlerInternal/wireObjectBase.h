@@ -150,8 +150,11 @@ namespace wireObjects {
 
 	class wireObj {
 	public:
-		bool destroyed = false;
+		const char* name;
+		const char* voxPath;
 		TDShape* housing = 0;
+		bool destroyed = false;
+
 		int memory = 0;
 		std::vector<wireNode*> nodes = {};
 
@@ -159,7 +162,7 @@ namespace wireObjects {
 		DWORD drawNodes(wireNode* selected = 0);
 		virtual DWORD init(TDShape* housing, int memoryVal) = 0;	//run when the object is created
 		virtual DWORD exec() = 0;									//run every frame
-		virtual DWORD usrExec() = 0;								//run with the E key (handled externally)
+		virtual DWORD usrExec() = 0;								//run externally when required
 
 		void softDispose() {
 			if (destroyed) { return; }
@@ -180,7 +183,7 @@ namespace wireObjects {
 			for (wireNode* cNode : nodes) {
 				cNode->dispose();
 			}
-			delete(this);
+			delete(this); //this terrifies the suicide hater
 		}
 	};
 }

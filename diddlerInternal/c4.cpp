@@ -20,6 +20,7 @@ namespace c4 {
     };
 
     struct spawnedC4 {
+        int blinkCountdown = 0;
         spawner::spawnedObject object;
         int explosionSize;
     };
@@ -47,11 +48,27 @@ namespace c4 {
         }
 
         if (glb::game) {
-            if (glb::game->State == gameState::menu) {
+            if (glb::game->State == gameState::menu || glb::game->m_LoadingEffect != 0) {
                 if (explosiveObjects.size() > 0) {
                     std::cout << "Cleaning up c4 objects" << std::endl;
                     cleanup();
                 }
+            }
+        }
+
+        
+        for (spawnedC4& cc4 : explosiveObjects) {
+            if (cc4.blinkCountdown == 0) {
+                cc4.blinkCountdown = 30;
+                if (cc4.object.shapes[0]->Intergrity == 1.f) {
+                    cc4.object.shapes[0]->Intergrity = 0.f;
+                }
+                else {
+                    cc4.object.shapes[0]->Intergrity = 1.f;
+                }
+            }
+            else {
+                cc4.blinkCountdown--;
             }
         }
 
@@ -69,7 +86,7 @@ namespace c4 {
                         spawner::spawnedObject object = spawner::placeChildObject(currentPath);
                         glb::setObjectAttribute(object.shapes[0], "unbreakable", "");
                         glb::setObjectAttribute(object.shapes[0], "nocull", "");
-                        explosiveObjects.push_back({ object,  bombSizePowers[selectedBombSizeInt - 1] });
+                        explosiveObjects.push_back({ 30, object,  bombSizePowers[selectedBombSizeInt - 1] });
                     }
                     else {
                         const char* currentPath = bombSizeStr[selectedBombSizeInt - 1];
@@ -79,7 +96,7 @@ namespace c4 {
                         params.power = 20.f;
                         params.nocull = true;
                         spawner::spawnedObject object = spawner::throwFreeObject(currentPath, params);
-                        explosiveObjects.push_back({ object,  bombSizePowers[selectedBombSizeInt - 1] });
+                        explosiveObjects.push_back({ 30, object,  bombSizePowers[selectedBombSizeInt - 1] });
                     }
 
                     //osp.customRotation = rd.angle;

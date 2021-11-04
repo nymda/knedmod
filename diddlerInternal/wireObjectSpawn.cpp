@@ -6,7 +6,7 @@
 
 namespace wireObjects {
 
-    wireObjectInfo validWireObjects[17] = {
+    wireObjectInfo validWireObjects[18] = {
         {wireObjectName::OBJ_IntBus, "KM_Misc\\KM_Wire\\w_bus\\object.vox", 0},
         {wireObjectName::OBJ_BoolBus, "KM_Misc\\KM_Wire\\w_bus\\object.vox", 0},
         {wireObjectName::OBJ_ConstantValue, "KM_Misc\\KM_Wire\\w_constantValue\\object.vox", 0},
@@ -24,6 +24,7 @@ namespace wireObjects {
         {wireObjectName::OBJ_RadioTx, "KM_Misc\\KM_Wire\\w_transciever\\tx.vox", 0},
         {wireObjectName::OBJ_RadioRx, "KM_Misc\\KM_Wire\\w_transciever\\rx.vox", 0},
         {wireObjectName::OBJ_Clock, "KM_Misc\\KM_Wire\\w_clock\\object.vox", 0},
+        {wireObjectName::OBJ_Delay, "KM_Misc\\KM_Wire\\w_delay\\object.vox", 0},
     };
 
     float objectPlacementRotationSteps_H[] = { 0.f, 45.f, 90.f, 135.f, 180.f, 225.f, 270.f, 315.f };
@@ -102,6 +103,10 @@ namespace wireObjects {
 
             case wireObjectName::OBJ_Clock:
                 newObject = new wirePlacementClock();
+                break;
+
+            case wireObjectName::OBJ_Delay:
+                newObject = new wirePlacementDelay();
                 break;
 		}
 

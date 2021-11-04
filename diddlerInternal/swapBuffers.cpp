@@ -927,6 +927,10 @@ void swapBuffersHook() {
 			if (ImGui::RadioButton("OBJ_Clock", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Clock))) {
 				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Clock);
 			};
+
+			if (ImGui::RadioButton("OBJ_Delay", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Delay))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Delay);
+			};
 		}
 		ImGui::EndTabBar();
 
