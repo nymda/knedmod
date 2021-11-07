@@ -165,6 +165,7 @@
   <ItemGroup>
     <ClInclude Include="balloons.h" />
     <ClInclude Include="crashHandler.h" />
+    <ClInclude Include="jpge.h" />
     <ClInclude Include="snapPoints.h" />
     <ClInclude Include="tgtAttribute.h" />
     <ClInclude Include="tgtBalloon.h" />
@@ -279,6 +280,7 @@
     <ClCompile Include="Harop.cpp" />
     <ClCompile Include="hookTests.cpp" />
     <ClCompile Include="Jetpack.cpp" />
+    <ClCompile Include="jpge.cpp" />
     <ClCompile Include="lantern.cpp" />
     <ClCompile Include="lidar.cpp" />
     <ClCompile Include="mainHook.cpp" />

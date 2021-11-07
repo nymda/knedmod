@@ -13,7 +13,7 @@
 #include "camera.h"
 #include "threadedCamera.h"
 #include "TDObjects.h"
-
+#include "jpge.h"
 #define rndLvl 16
 
 namespace threadCamera {
@@ -160,7 +160,7 @@ namespace threadCamera {
 
 		if (bufferUpdateNeeded) {
 			resolutionX = nextResolutionX;
-			resolutionY = nextResolutionX;
+			resolutionY = nextResolutionY;
 			bufferUpdateNeeded = false;
 
 			delete(bufferA);
@@ -288,13 +288,23 @@ namespace threadCamera {
 					int iPxNoise = rand() % rndLvl;
 					bufferWrite[pxPointer] = {(byte)iPxNoise, (byte)(iPxNoise + 77), (byte)(iPxNoise + 77), 0xFF };
 				}
-				
+
 
 				bufferDistances[pxPointer] = rd.distance;
 
 				pxPointer++;
 			}
 		}
+
+
+		jpge::params pr;
+		pr.m_quality = 75;
+		pr.m_subsampling = jpge::subsampling_t::H2V2;
+		pr.m_no_chroma_discrim_flag = false;
+		pr.m_two_pass_flag = false;
+		pr.m_use_std_tables = true;
+
+		jpge::compress_image_to_jpeg_file("TestJpg.jpg", resolutionX, resolutionY, 4, (jpge::uint8*)bufferWrite, pr);
 
 		//printf_s("Min: %0.2f, Max: %0.2f\n", frameMinDist, frameMaxDist);
 

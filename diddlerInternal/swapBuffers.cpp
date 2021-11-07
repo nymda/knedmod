@@ -967,7 +967,7 @@ void swapBuffersHook() {
 
 		ImGui::Text("X: %.2f, Y: %.2f, Z: %.2f", (glb::player->cameraPosition.x), (glb::player->cameraPosition.y), (glb::player->cameraPosition.z));
 		ImGui::Text("Pitch: %.2f Yaw: %.2f", glb::player->camPitch, glb::player->camYaw);
-		ImGui::Text("Health: %i", (int)(glb::player->health * 100));
+		ImGui::Text("Health: %.1f%%", (float)(glb::player->health * 100.f));
 
 		switch (glb::game->State)
 		{

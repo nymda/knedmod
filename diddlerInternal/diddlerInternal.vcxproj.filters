@@ -348,6 +348,9 @@
     <ClInclude Include="wirePlacementDelay.h">
       <Filter>Header Files\wire\wireObjects</Filter>
     </ClInclude>
+    <ClInclude Include="jpge.h">
+      <Filter>Header Files\Misc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -604,6 +607,9 @@
     </ClCompile>
     <ClCompile Include="wirePlacementDelay.cpp">
       <Filter>Source Files\wire\wireObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="jpge.cpp">
+      <Filter>Source Files\misc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
