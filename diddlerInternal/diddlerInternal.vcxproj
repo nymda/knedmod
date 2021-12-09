@@ -166,6 +166,7 @@
     <ClInclude Include="balloons.h" />
     <ClInclude Include="crashHandler.h" />
     <ClInclude Include="jpge.h" />
+    <ClInclude Include="removeDownwardsVelocityLimit.h" />
     <ClInclude Include="snapPoints.h" />
     <ClInclude Include="tgtAttribute.h" />
     <ClInclude Include="tgtBalloon.h" />
@@ -258,6 +259,7 @@
     <ClInclude Include="wirePlacementRaycaster.h" />
     <ClInclude Include="wirePlacements.h" />
     <ClInclude Include="wirePlacementTemplate.h" />
+    <ClInclude Include="wirePlacementToggle.h" />
     <ClInclude Include="wireTool.h" />
   </ItemGroup>
   <ItemGroup>
@@ -296,6 +298,7 @@
     <ClCompile Include="physCamera.cpp" />
     <ClCompile Include="physMonitor.cpp" />
     <ClCompile Include="Raycaster.cpp" />
+    <ClCompile Include="removeDownwardsVelocityLimit.cpp" />
     <ClCompile Include="snapPoints.cpp" />
     <ClCompile Include="tgtAttribute.cpp" />
     <ClCompile Include="tgtBalloon.cpp" />
@@ -346,6 +349,7 @@
     <ClCompile Include="wirePlacementRadio.cpp" />
     <ClCompile Include="wirePlacementRaycaster.cpp" />
     <ClCompile Include="wirePlacementTemplate.cpp" />
+    <ClCompile Include="wirePlacementToggle.cpp" />
     <ClCompile Include="wireTool.cpp" />
   </ItemGroup>
   <ItemGroup>

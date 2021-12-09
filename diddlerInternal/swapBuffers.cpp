@@ -25,6 +25,7 @@
 #include "wireObjectKernel.h"
 #include "wireObjectSpawn.h"
 #include "wireTool.h"
+#include "removeDownwardsVelocityLimit.h"
 
 #pragma comment(lib, "glew32s.lib")
 
@@ -158,6 +159,7 @@ bool hwCursor(int x, int y) {
 bool terminator = true;
 void onSwapBuffersInit()
 {
+	rdvl::enableRDVL();
 	if (!ImGui::GetCurrentContext()) {
 		std::cout << "[i] Creating ImGui instance" << std::endl;
 		glewInit(); // initialize glew
@@ -475,6 +477,8 @@ void swapBuffersHook() {
 				nToolgun::instance_minigun->bulletType = bullet_current;
 				ImGui::SliderFloat("Minigun spread", &nToolgun::instance_minigun->minigunFov, 0.f, 5.f, "%.2f");
 				ImGui::SliderInt("Minigun bullet count", &nToolgun::instance_minigun->bulletCount, 1, 50);
+				ImGui::SliderFloat("Unknown-1", &nToolgun::instance_minigun->u1, 0.f, 5000.f, "%.2f");
+				ImGui::SliderInt("Unknown-2", &nToolgun::instance_minigun->u2, 0, 5000);
 				ImGui::Separator();
 			}
 
@@ -931,6 +935,10 @@ void swapBuffersHook() {
 			if (ImGui::RadioButton("OBJ_Delay", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Delay))) {
 				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Delay);
 			};
+
+			if (ImGui::RadioButton("OBJ_Toggle", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Toggle))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Toggle);
+			};
 		}
 		ImGui::EndTabBar();
 
@@ -993,8 +1001,10 @@ void swapBuffersHook() {
 
 		if (nToolgun::currentTool == toolnames::TOOL_DEBUG && nToolgun::holdingToolgun) {
 			ImGui::Separator();
-			ImGui::Text("Shape : %p", nToolgun::instance_debug->dbgShape);
-			ImGui::Text("Body  : %p", nToolgun::instance_debug->dbgBody);
+			ImGui::Text("Shape       : %p", nToolgun::instance_debug->dbgShape);
+			ImGui::Text("Shape offse : %p", &nToolgun::instance_debug->dbgShape->pOffset);
+			ImGui::Text("Shape broke : %p", &nToolgun::instance_debug->dbgShape->isBroken);
+			ImGui::Text("Body        : %p", nToolgun::instance_debug->dbgBody);
 		}
 
 		ImGui::End();

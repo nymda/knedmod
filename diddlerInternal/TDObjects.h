@@ -66,7 +66,6 @@ public:
 	Entity* pParent;		//0x10
 	Entity* pSibling;		//0x18
 	Entity* pChild;			//0x20
-
 	virtual void	Destroy(Entity* entity, bool freeMemory);
 	virtual Entity* SetParent(Entity* entity, Entity* parent);
 	virtual void	Function2();
@@ -164,30 +163,17 @@ public:
 class TDShape : public Entity
 {
 public:
-//0x0028
-
-	//byte fuckYouPadding[8];
-	//byte attributes;
-	//char pad_008[19];
-	td::Vec3 pOffset;
-	td::Vec4 rOffset;
-	td::Vec3 posMin; //0x0044
-	td::Vec3 posMax; //0x0050
-	char pad_005C[4]; //0x005C
-	void* pDormantSomething; //0x0060
-	void* pActiveSomething; //0x0068
-	char pad_0070[4]; //0x0070
-	float Density; //0x0074
-	float Hardness; //0x0078
+	td::Vec3 pOffset; //0x0000
+	td::Vec4 rOffset; //0x000C
+	td::Vec3 posMin; //0x001C
+	td::Vec3 posMax; //0x0028
+	char pad_0034[32]; //0x0034
 	int32_t Texture; //0x007C
-	char pad_0080[12]; //0x0080
-	float TextureIntensity; //0x008C
-	TDVox* pVox; //0x0090
-	char pad_0098[8]; //0x0098
-	void* pJoints; //0x00A0 
-	float Intergrity; //0x00A8
-	bool isBroken; //0x00AC
-	char pad_00AD[3]; //0x00AD
+	char pad_0080[24]; //0x0080
+	TDVox* pVox; //0x0098
+	char pad_00A0[16]; //0x00A0
+	float Intergrity; //0x00B0
+	bool isBroken; //0x00B4
 
 	TDBody* getParentBody() {
 		return (TDBody*)(this->pParent);
@@ -245,7 +231,7 @@ public:
 	byte isAttacking;			//0x0EA - 0x0EB
 	byte paddingF[0x70];		//0x0EB - 0x154
 	float health;				//0x15C - 0x160
-	byte paddingG[0x2C0];		//0x160 - 0x418
+	byte paddingG[0x488];		//0x160 - 0x418
 	char heldItemName[13];		//0x3CB - 0x3D8
 
 	td::Vec3 cameraEuler() {

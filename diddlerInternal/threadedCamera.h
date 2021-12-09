@@ -52,6 +52,8 @@ namespace threadCamera {
 		glm::mat4 invViewMat;
 
 	public:
+		int frameCount = 0;
+		char* timeBuffer = new char[255];
 		bool cameraActive = true;
 		bool cameraDestroyed = false;
 		int DCF = 0;
@@ -77,7 +79,7 @@ namespace threadCamera {
 		void setResolution(int X, int Y);
 		void setFov(float fov);
 		float updateImage();
-
+		void writeCurrentFrontToJPG();
 		float getFps();
 		float getLastFrameTime();
 

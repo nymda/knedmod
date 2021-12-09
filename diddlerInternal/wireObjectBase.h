@@ -152,6 +152,7 @@ namespace wireObjects {
 	public:
 		const char* name;
 		const char* voxPath;
+
 		TDShape* housing = 0;
 		bool destroyed = false;
 

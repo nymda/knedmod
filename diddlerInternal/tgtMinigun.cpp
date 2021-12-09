@@ -41,7 +41,7 @@ DWORD tgt_minigun::exec() {
             glm::vec4 rayWorld = invViewMat * eyeCoords;
             td::Vec3 rayDirection = math::v3_glm2td(glm::normalize(glm::vec3(rayWorld)));
 
-            glb::oPewpew(glb::scene, &glb::player->cameraPosition, &rayDirection, bulletType, 50000.f);
+            glb::oPewpew(glb::scene, &glb::player->cameraPosition, &rayDirection, bulletType, u1, u2);
         }
     }
 

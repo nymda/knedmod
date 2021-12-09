@@ -52,7 +52,7 @@ typedef void(__fastcall* createLight)(TDRenderer* renderer, td::Vec3* a2, td::Ve
 typedef void(__fastcall* spawnFire)(uintptr_t scene, td::Vec3* pos);
 typedef void(__fastcall* CreateTexture) (uintptr_t ptr);
 typedef void(__fastcall* CreatePhysics) (uintptr_t ptr);
-typedef void(__fastcall* createProjectile)(TDScene* scene, td::Vec3* pos, td::Vec3* dir, INT32 type, float unkn);
+typedef void(__fastcall* createProjectile)(TDScene* scene, td::Vec3* pos, td::Vec3* dir, INT32 type, float un1, int un2);
 typedef void(__fastcall* deleteBody) (INT64 a1, INT64 a2, INT64 a3, INT64 a4, INT64 a5, INT64 a6, INT64 a7, INT64 a8);
 typedef void(__fastcall* UpdateShapes) (uintptr_t ptr);
 typedef void(__fastcall* B_Constructor) (uintptr_t ptr, uintptr_t parent);

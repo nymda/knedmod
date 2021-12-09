@@ -856,7 +856,8 @@ namespace spawner {
         std::cout << "PHY: " << ((TDVox*)VOX)->PhysicsBuffer << std::endl;
         std::cout << "MAT: " << ((TDVox*)VOX)->MaterialBuffer << std::endl;
 
-        SHAPE->pVox = (TDVox*)VOX;
+        //SHAPE->pVox = (TDVox*)VOX;
+        *(uintptr_t*)((uintptr_t)SHAPE + 152) = VOX;
 
         object->shapes.push_back(SHAPE);
         object->voxes.push_back((TDVox*)VOX);
@@ -866,7 +867,7 @@ namespace spawner {
         }
 
         ((TDShape*)SHAPE)->Texture = 3;
-        ((TDShape*)SHAPE)->TextureIntensity = 1.f;
+        //((TDShape*)SHAPE)->TextureIntensity = 1.f;
 
         object->body = BODY;
         glb::oUpdateShapes(uBODY);
@@ -921,11 +922,13 @@ namespace spawner {
 
         if (params.useSnaps) {
             object.body->Position = { params.snapPosition.x - translation.x, params.snapPosition.y - translation.y, params.snapPosition.z - translation.z };
+            printf_s("Position: X: %0.2f, Y: %0.2f, Z: %0.2f\n", object.body->Position.x, object.body->Position.y, object.body->Position.z);
             //*(glm::quat*)&object.body->Rotation = math::expandRotation(math::q_td2glm(rd.hitShape->getParentBody()->Rotation), math::q_td2glm(rd.hitShape->rOffset));
             *(glm::quat*)&object.body->Rotation = q;
         }
         else {
             object.body->Position = { rd.worldPos.x - translation.x, (rd.worldPos.y - translation.y), rd.worldPos.z - translation.z };
+            printf_s("Position: X: %0.2f, Y: %0.2f, Z: %0.2f\n", object.body->Position.x, object.body->Position.y, object.body->Position.z);
             *(glm::quat*)&object.body->Rotation = q;
         }
 
@@ -976,7 +979,8 @@ namespace spawner {
             glb::oCreateTexture(VOX);
             glb::oCreatePhysics(VOX);
 
-            SHAPE->pVox = (TDVox*)VOX;
+            //SHAPE->pVox = (TDVox*)VOX;
+            *(uintptr_t*)((uintptr_t)SHAPE + 152) = VOX;
 
             std::cout << "Shape: 0x" << std::hex << SHAPE << std::endl;
             std::cout << "Vox:   0x" << std::hex << (TDVox*)VOX << std::endl;
@@ -989,7 +993,7 @@ namespace spawner {
             }
 
             ((TDShape*)SHAPE)->Texture = 3;
-            ((TDShape*)SHAPE)->TextureIntensity = 1.f;
+            //((TDShape*)SHAPE)->TextureIntensity = 1.f;
         }
 
         object->body = BODY;
@@ -1092,7 +1096,8 @@ namespace spawner {
             glb::oCreateTexture(VOX);
             glb::oCreatePhysics(VOX);
 
-            SHAPE->pVox = (TDVox*)VOX;
+            //SHAPE->pVox = (TDVox*)VOX;
+            *(uintptr_t*)((uintptr_t)SHAPE + 152) = VOX;
 
             object->shapes.push_back(SHAPE);
             object->voxes.push_back((TDVox*)VOX);
@@ -1105,7 +1110,7 @@ namespace spawner {
             }
 
             ((TDShape*)SHAPE)->Texture = 3;
-            ((TDShape*)SHAPE)->TextureIntensity = 1.f;
+            //((TDShape*)SHAPE)->TextureIntensity = 1.f;
         }
 
         object->body = params.parentBody;
@@ -1189,7 +1194,7 @@ namespace spawner {
         }
 
         ((TDShape*)SHAPE)->Texture = 3;
-        ((TDShape*)SHAPE)->TextureIntensity = 1.f;
+        //((TDShape*)SHAPE)->TextureIntensity = 1.f;
 
         glb::oUpdateShapes((uintptr_t)BODY);
         glb::tdUpdateFunc((TDBody*)BODY, 0, 1);

@@ -141,6 +141,8 @@ DWORD WINAPI main(HMODULE hModule)
         std::cout << "[I] Completed sigscanning" << std::endl;
         cHandler::stageCode = 4;
 
+        std::cout << "[I] Player held item name addy: 0x" << (uintptr_t)&glb::player->heldItemName << std::endl;
+
         initTestHook();
         initGodmodeHook();
         focusHook::initFocusHook();

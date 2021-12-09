@@ -73,11 +73,13 @@ namespace physCamera {
             if (!threadCamera::runInSeperateThread && objCamera->cameraDestroyed) {
                 objCamera->updateImage();
             }
+            //objCamera->writeCurrentFrontToJPG();
             threadCamera::drawCameraWndw(objCamera);
             objCamera->cameraActive = true;
         }
         else {
             objCamera->cameraActive = false;
+            objCamera->frameCount = 0;
         }
 
         TDBody* cameraBody = camera.body;

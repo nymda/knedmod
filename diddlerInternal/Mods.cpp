@@ -14,6 +14,7 @@
 #include "objectTranslationTest.h"
 #include "balloons.h"
 #include "wireObjectKernel.h"
+#include "removeDownwardsVelocityLimit.h"
 
 namespace mods {
 	char jetpackKey = VK_SPACE;

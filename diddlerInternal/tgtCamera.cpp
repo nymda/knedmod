@@ -21,10 +21,12 @@ DWORD tgt_camera::exec() {
         if (!threadCamera::runInSeperateThread) {
             playerCamera->updateImage();
         }
+        //playerCamera->writeCurrentFrontToJPG();
     }
     else {
         playerCamera->cameraActive = false;
     }
+
 
     threadCamera::drawCameraWndw(playerCamera);
 

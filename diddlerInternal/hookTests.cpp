@@ -489,7 +489,7 @@ void initTestHook() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
 
-    mem::Nop((byte*)(glb::moduleBase + 0x115b35), 8);
+    
 
     //DetourAttach(&(PVOID&)glb::tdFunRuiner, hkFunRuiner);
 

@@ -351,6 +351,12 @@
     <ClInclude Include="jpge.h">
       <Filter>Header Files\Misc</Filter>
     </ClInclude>
+    <ClInclude Include="wirePlacementToggle.h">
+      <Filter>Header Files\wire\wireObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="removeDownwardsVelocityLimit.h">
+      <Filter>Header Files\Mods</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -610,6 +616,12 @@
     </ClCompile>
     <ClCompile Include="jpge.cpp">
       <Filter>Source Files\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="wirePlacementToggle.cpp">
+      <Filter>Source Files\wire\wireObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="removeDownwardsVelocityLimit.cpp">
+      <Filter>Source Files\Mods</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

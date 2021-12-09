@@ -41,7 +41,7 @@ namespace wireObjects {
 									shootOnce = false;
 									nodeB = tNode;
 
-									printf_s("Connecting nodes: %p <-> %p", nodeA, nodeB);
+									printf_s("Connecting nodes: %p <-> %p\n", nodeA, nodeB);
 									connectNodes(nodeA, nodeB);
 									nodeA = 0;
 									nodeB = 0;

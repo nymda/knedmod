@@ -13,3 +13,4 @@
 #include "wirePlacementRadio.h"
 #include "WirePlacementClock.h"
 #include "wirePlacementDelay.h"
+#include "wirePlacementToggle.h"

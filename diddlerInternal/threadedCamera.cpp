@@ -148,6 +148,20 @@ namespace threadCamera {
 		return cameraDestroyed;
 	}
 
+	void KMCamera::writeCurrentFrontToJPG() {
+		jpge::params pr;
+		pr.m_quality = 100;
+		pr.m_subsampling = jpge::subsampling_t::H2V2;
+		pr.m_no_chroma_discrim_flag = false;
+		pr.m_two_pass_flag = false;
+		pr.m_use_std_tables = true;
+
+		std::string filename = "JPEG/JPG_" + std::to_string(frameCount++) + ".jpg";
+
+		printf_s("%s\n", filename.c_str());
+		jpge::compress_image_to_jpeg_file(filename.c_str(), resolutionX, resolutionY, 4, (jpge::uint8*)bufferShow, pr);
+	}
+
 	float KMCamera::updateImage() {
 		rcf.m_RejectTransparent = true;
 
@@ -296,16 +310,7 @@ namespace threadCamera {
 			}
 		}
 
-
-		jpge::params pr;
-		pr.m_quality = 75;
-		pr.m_subsampling = jpge::subsampling_t::H2V2;
-		pr.m_no_chroma_discrim_flag = false;
-		pr.m_two_pass_flag = false;
-		pr.m_use_std_tables = true;
-
-		jpge::compress_image_to_jpeg_file("TestJpg.jpg", resolutionX, resolutionY, 4, (jpge::uint8*)bufferWrite, pr);
-
+		//writeCurrentFrontToJPG();
 		//printf_s("Min: %0.2f, Max: %0.2f\n", frameMinDist, frameMaxDist);
 
 		pxPointer = 0;

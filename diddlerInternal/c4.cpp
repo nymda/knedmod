@@ -231,9 +231,9 @@ namespace c4 {
                     *(byte*)(brick.shape + 8) = 1;
                     *(byte*)(brick.shape + 229) = 1;
 
-                    brick.body->density = 50.f;
-                    brick.shape->Density = 50.f;
-                    brick.shape->Hardness = 50.f;
+                    //brick.body->density = 50.f;
+                    //brick.shape->Density = 50.f;
+                    //brick.shape->Hardness = 50.f;
                 }
             }
             else {
