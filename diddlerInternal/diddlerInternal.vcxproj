@@ -23,32 +23,32 @@
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{12c37ac2-2e7d-4116-abab-0ee888627fd3}</ProjectGuid>
     <RootNamespace>diddlerInternal</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -167,6 +167,7 @@
     <ClInclude Include="crashHandler.h" />
     <ClInclude Include="jpge.h" />
     <ClInclude Include="removeDownwardsVelocityLimit.h" />
+    <ClInclude Include="shapeHightlightManager.h" />
     <ClInclude Include="snapPoints.h" />
     <ClInclude Include="tgtAttribute.h" />
     <ClInclude Include="tgtBalloon.h" />
@@ -255,10 +256,14 @@
     <ClInclude Include="wirePlacementGPS.h" />
     <ClInclude Include="wirePlacementIntBus.h" />
     <ClInclude Include="wirePlacementLamp.h" />
+    <ClInclude Include="wirePlacementPower.h" />
+    <ClInclude Include="wirePlacementPusher.h" />
     <ClInclude Include="wirePlacementRadio.h" />
     <ClInclude Include="wirePlacementRaycaster.h" />
     <ClInclude Include="wirePlacements.h" />
+    <ClInclude Include="wirePlacementSpawner.h" />
     <ClInclude Include="wirePlacementTemplate.h" />
+    <ClInclude Include="wirePlacementThruster.h" />
     <ClInclude Include="wirePlacementToggle.h" />
     <ClInclude Include="wireTool.h" />
   </ItemGroup>
@@ -299,6 +304,7 @@
     <ClCompile Include="physMonitor.cpp" />
     <ClCompile Include="Raycaster.cpp" />
     <ClCompile Include="removeDownwardsVelocityLimit.cpp" />
+    <ClCompile Include="shapeHighlightManager.cpp" />
     <ClCompile Include="snapPoints.cpp" />
     <ClCompile Include="tgtAttribute.cpp" />
     <ClCompile Include="tgtBalloon.cpp" />
@@ -346,9 +352,13 @@
     <ClCompile Include="wirePlacementGPS.cpp" />
     <ClCompile Include="wirePlacementIntBus.cpp" />
     <ClCompile Include="wirePlacementLamp.cpp" />
+    <ClCompile Include="wirePlacementPower.cpp" />
+    <ClCompile Include="wirePlacementPusher.cpp" />
     <ClCompile Include="wirePlacementRadio.cpp" />
     <ClCompile Include="wirePlacementRaycaster.cpp" />
+    <ClCompile Include="wirePlacementSpawner.cpp" />
     <ClCompile Include="wirePlacementTemplate.cpp" />
+    <ClCompile Include="wirePlacementThruster.cpp" />
     <ClCompile Include="wirePlacementToggle.cpp" />
     <ClCompile Include="wireTool.cpp" />
   </ItemGroup>

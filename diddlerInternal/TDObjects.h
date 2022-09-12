@@ -167,7 +167,9 @@ public:
 	td::Vec4 rOffset; //0x000C
 	td::Vec3 posMin; //0x001C
 	td::Vec3 posMax; //0x0028
-	char pad_0034[32]; //0x0034
+	char pad_0034[22]; //0x0034
+	bool collide; //0x004A
+	char pad_004B[9]; //0x004B
 	int32_t Texture; //0x007C
 	char pad_0080[24]; //0x0080
 	TDVox* pVox; //0x0098
@@ -230,8 +232,9 @@ public:
 	byte isAttackingPadding;
 	byte isAttacking;			//0x0EA - 0x0EB
 	byte paddingF[0x70];		//0x0EB - 0x154
+	float distanceCariedObject;
 	float health;				//0x15C - 0x160
-	byte paddingG[0x488];		//0x160 - 0x418
+	byte paddingG[0x484];		//0x160 - 0x418
 	char heldItemName[13];		//0x3CB - 0x3D8
 
 	td::Vec3 cameraEuler() {

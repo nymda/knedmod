@@ -53,7 +53,7 @@ void sigscanItems() {
     bool sigScanError = false;
     float percentage = 0;
 
-    glb::TDOL = *(TDObjectList**)(glb::moduleBase + 0x00455100);
+    glb::TDOL = *(TDObjectList**)(glb::moduleBase + 0x00456140);
     glb::game = (TDGame*)glb::TDOL;
     glb::scene = (TDScene*)glb::TDOL->objs[9];
     glb::renderer = (TDRenderer*)glb::TDOL->objs[8];
@@ -62,28 +62,24 @@ void sigscanItems() {
     std::cout << "" << std::endl;
     std::cout << "[Function Addresses:       ]" << std::endl;
     std::cout << "cursor               : " << std::hex << glb::ocursor << std::endl;
+    std::cout << "swapbuffers          : " << std::hex << glb::owglSwapBuffers << std::endl;
 
-    glb::oLoadResource = (loadResource)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x54\x41\x55\x41\x56\x41\x57\x48\x8D\x68\xA1\x48\x81\xEC\x90\x00\x00\x00\x48\xC7\x45\xD7\xFE\xFF\xFF\xFF\x48", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    glb::oLoadResource = (loadResource)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x54\x41\x55\x41\x56\x41\x57\x48\x8D\x68\xA1\x48\x81\xEC\x90\x00\x00\x00\x48\xC7\x45\xD7\xFE\xFF\xFF\xFF\x48", "xxxxxxxxxxxxxxxxxxxx???xxxxxxxxx", GetModuleHandle(NULL), &percentage);
     printf_s("loadResource         : %p", glb::oLoadResource);
     printIntegPercentage(percentage);
     if (!glb::oLoadResource) { sigScanError = true; }
 
-    glb::oValidatePath = (validatePath)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x56\x41\x57\x48\x8D\x68\xA1\x48\x81\xEC\x90\x00\x00\x00\x48\xC7\x45\xDF\xFE\xFF\xFF\xFF\x48\x89\x58\x08\x48", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    glb::oValidatePath = (validatePath)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x56\x41\x57\x48\x8D\x68\xA1\x48\x81\xEC\x90\x00\x00\x00\x48\xC7\x45\xDF\xFE\xFF\xFF\xFF\x48\x89\x58\x08\x48", "xxxxxxxxxxxxxxxx???xxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
     printf_s("oValidatePath        : %p", glb::oValidatePath);
     printIntegPercentage(percentage);
     if (!glb::oValidatePath) { sigScanError = true; }
 
-    glb::oCreateTextureThing = (createTextureThing)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x50\x48\x8B\xF2\x48\x8B\xD9\x8B\x51\x0C\x41\x0F\xB6\xF8\xB9\xE1\x0D\x00", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    glb::oCreateTextureThing = (createTextureThing)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x50\x48\x8B\xF2\x48\x8B\xD9\x8B\x51\x0C\x41\x0F\xB6\xF8\xB9\xE1\x0D\x00", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx?", GetModuleHandle(NULL), &percentage);
     printf_s("oCreateTextureThing  : %p", glb::oCreateTextureThing);
     printIntegPercentage(percentage);
     if (!glb::oCreateTextureThing) { sigScanError = true; }
 
-    glb::tdUpdateScreen = (updateScreen)mem::FindPattern((PBYTE)"\x48\x89\x4C\x24\x08\x55\x53\x56\x57\x41\x54\x41\x55\x41\x56\x41\x57\x48\x8D\xAC\x24\x98\xD7\xFF\xFF\xB8\x68\x29\x00\x00\xE8\x9D", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
-    printf_s("tdUpdateScreen       : %p", glb::tdUpdateScreen);
-    printIntegPercentage(percentage);
-    if (!glb::tdUpdateScreen) { sigScanError = true; }
-
-    glb::tdConstructJoint = (joinConstructor)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x4C\x8B\xC2\x48\x8B\xD9\xBA\x07\x00\x00\x00\xE8\x3A\x82\x05\x00\xC7\x43\x4C\xCD\xCC\xCC\x3D\x48\x8D\x05", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    glb::tdConstructJoint = (joinConstructor)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x4C\x8B\xC2\x48\x8B\xD9\xBA\x07\x00\x00", "xxxxxxxxxxxxxx??", GetModuleHandle(NULL), &percentage);
     printf_s("tdConstructJoint     : %p", glb::tdConstructJoint);
     printIntegPercentage(percentage);
     if (!glb::tdConstructJoint) { sigScanError = true; }
@@ -93,7 +89,7 @@ void sigscanItems() {
     printIntegPercentage(percentage);
     if (!glb::tdInitBall) { sigScanError = true; }
 
-    glb::tdInitWire = (initWire)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x56\x41\x57\x48\x8D\x68\xC1\x48\x81\xEC\xD0\x00\x00\x00\x48\xC7\x45\x1F\xFE\xFF\xFF\xFF\x48\x89\x58\x08\x48", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    glb::tdInitWire = (initWire)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x56\x41\x57\x48\x8D\x68\xC1\x48\x81\xEC\xD0\x00\x00\x00\x48\xC7\x45\x1F\xFE\xFF\xFF\xFF\x48\x89\x58\x08\x48", "xxxxxxxxxxxxxxxx???xxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
     printf_s("tdInitWire           : %p", glb::tdInitWire);
     printIntegPercentage(percentage);
     if (!glb::tdInitWire) { sigScanError = true; }
@@ -108,7 +104,7 @@ void sigscanItems() {
     printIntegPercentage(percentage);
     if (!glb::oPaint) { sigScanError = true; }
 
-    glb::oFDL = (frameDrawLine)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x48\x89\x6C\x24\x10\x48\x89\x74\x24\x18\x57\x41\x56\x41\x57\x48\x83\xEC\x20\x44\x8B\xB9\x10\x89\x00\x00\x48", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    glb::oFDL = (frameDrawLine)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x48\x89\x6C\x24\x10\x48\x89\x74\x24\x18\x57\x41\x56\x41\x57\x48\x83\xEC\x20\x44\x8B\xB9\x10\x89\x00\x00\x48", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx??x", GetModuleHandle(NULL), &percentage);
     printf_s("drawLine             : %p", glb::oFDL);
     printIntegPercentage(percentage);
     if (!glb::oFDL) { sigScanError = true; }
@@ -118,7 +114,7 @@ void sigscanItems() {
     printIntegPercentage(percentage);
     if (!glb::oRC) { sigScanError = true; }
 
-    glb::TDcreateExplosion = (createExplosion)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x54\x41\x55\x41\x56\x41\x57\x48\x8D\xA8\xA8\xFD\xFF\xFF\x48\x81\xEC\x30\x03\x00\x00\x48\xC7\x45\x20\xFE\xFF", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    glb::TDcreateExplosion = (createExplosion)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x54\x41\x55\x41\x56\x41\x57\x48\x8D\xA8\xA8\xFD\xFF\xFF\x48\x81\xEC\x30\x03\x00\x00\x48\xC7\x45\x20\xFE\xFF", "xxxxxxxxxxxxxxxxxxxxxxxx??xxxxxx", GetModuleHandle(NULL), &percentage);
     printf_s("create explosion     : %p", glb::TDcreateExplosion);
     printIntegPercentage(percentage);
     if (!glb::TDcreateExplosion) { sigScanError = true; }
@@ -138,27 +134,27 @@ void sigscanItems() {
     printIntegPercentage(percentage);
     if (!glb::oCreateTexture) { sigScanError = true; }
 
-    glb::oCreatePhysics = (CreatePhysics)mem::FindPattern((PBYTE)"\x40\x53\x48\x81\xEC\x50\x04\x00\x00\x48\x8B\xD9\xE8\xCF\x67\x00\x00\x48\x8B\x4B\x18\xC7\x43\x5C\x00\x00\x00\x00\xE8\x6F\xD1\x06", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    glb::oCreatePhysics = (CreatePhysics)mem::FindPattern((PBYTE)"\x40\x53\x48\x81\xEC\x50\x04\x00\x00\x48\x8B\xD9\xE8\xFF\x67\x00\x00\x48", "xxxxxxx??xxxxxx??x", GetModuleHandle(NULL), &percentage);
     printf_s("create physics       : %p", glb::oCreatePhysics);
     printIntegPercentage(percentage);
     if (!glb::oCreatePhysics) { sigScanError = true; }
 
-    glb::oUpdateShapes = (UpdateShapes)mem::FindPattern((PBYTE)"\x40\x55\x41\x54\x41\x55\x41\x56\x41\x57\x48\x8D\xAC\x24\x10\xEB\xFF\xFF\xB8\xF0\x15\x00\x00\xE8\x84\x72\x26\x00\x48\x2B\xE0\x48", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    glb::oUpdateShapes = (UpdateShapes)mem::FindPattern((PBYTE)"\x40\x55\x41\x54\x41\x55\x41\x56\x41\x57\x48\x8D\xAC\x24\x10\xEB", "xxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
     printf_s("update shapes        : %p", glb::oUpdateShapes);
     printIntegPercentage(percentage);
     if (!glb::oUpdateShapes) { sigScanError = true; }
 
-    glb::oB_Constructor = (B_Constructor)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x4C\x8B\xC2\x48\x8B\xD9\xBA\x01\x00\x00\x00", "xxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    glb::oB_Constructor = (B_Constructor)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x4C\x8B\xC2\x48\x8B\xD9\xBA\x01\x00\x00\x00", "xxxxxxxxxxxxxx???", GetModuleHandle(NULL), &percentage);
     printf_s("construct body       : %p", glb::oB_Constructor);
     printIntegPercentage(percentage);
     if (!glb::oB_Constructor) { sigScanError = true; }
 
-    glb::oS_Constructor = (S_Constructor)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x4C\x8B\xC2\x48\x8B\xD9\xBA\x02\x00\x00\x00", "xxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    glb::oS_Constructor = (S_Constructor)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x4C\x8B\xC2\x48\x8B\xD9\xBA\x02\x00\x00\x00", "xxxxxxxxxxxxxx???", GetModuleHandle(NULL), &percentage);
     printf_s("construct shape      : %p", glb::oS_Constructor);
     printIntegPercentage(percentage);
     if (!glb::oS_Constructor) { sigScanError = true; }
 
-    glb::oSetDynamic = (SetDynamic)mem::FindPattern((PBYTE)"\x88\x91\xDC\x00\x00\x00\x4C\x8B\xC1\x84\xD2\x74\x29\x0F\xB6\x81\xE4\x00\x00\x00\xC6\x81\xE4\x00\x00\x00\x3C\x84\xC0\x75\x17\x48", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    glb::oSetDynamic = (SetDynamic)mem::FindPattern((PBYTE)"\x88\x91\xDC\x00\x00\x00\x4C\x8B\xC1\x84\xD2\x74\x29\x0F\xB6\x81\xE4\x00\x00\x00\xC6\x81\xE4\x00\x00\x00\x3C\x84\xC0\x75\x17\x48", "xxx???xxxxxxxxxxx???xxx???xxxxxx", GetModuleHandle(NULL), &percentage);
     printf_s("set dynamic          : %p", glb::oSetDynamic);
     printIntegPercentage(percentage);
     if (!glb::oSetDynamic) { sigScanError = true; }
@@ -173,17 +169,17 @@ void sigscanItems() {
     printIntegPercentage(percentage);
     if (!glb::oTFree) { sigScanError = true; }
 
-    glb::oSpawnFire = (spawnFire)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x48\x8D\x68\xB8\x48\x81\xEC\x40\x01\x00\x00\x48\xC7\x45\x20\xFE\xFF\xFF\xFF\x48\x89\x58\x08\x48\x89\x70\x10\x48", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage); //td.exe+B94C0
+    glb::oSpawnFire = (spawnFire)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x41\x54\x41\x55\x41\x56\x41\x57\x48\x8D\x68\x98", "xxxxxxxxxxxxx??x", GetModuleHandle(NULL), &percentage); //td.exe+B94C0
     printf_s("spawn fire           : %p", glb::oSpawnFire);
     printIntegPercentage(percentage);
     if (!glb::oSpawnFire) { sigScanError = true; }
 
-    glb::oPewpew = (createProjectile)mem::FindPattern((PBYTE)"\x40\x53\x48\x81\xEC\x80\x00\x00\x00\xF2\x0F\x10\x02\xF3\x0F\x10\x8C\x24\xB8\x00\x00\x00\x8B\x42\x08\xF2\x0F\x11\x44\x24\x30\xF3", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    glb::oPewpew = (createProjectile)mem::FindPattern((PBYTE)"\x40\x53\x48\x81\xEC\x80\x00\x00\x00\xF2\x0F\x10\x02\xF3\x0F\x10\x8C\x24\xB8\x00\x00\x00\x8B\x42\x08\xF2\x0F\x11\x44\x24\x30\xF3", "xxxxxx???xxxxxxxxxx???xxxxxxxxxx", GetModuleHandle(NULL), &percentage);
     printf_s("shoot projectile     : %p", glb::oPewpew);
     printIntegPercentage(percentage);
     if (!glb::oPewpew) { sigScanError = true; }
 
-    glb::TDspawnParticle = (spawnParticle)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x48\x89\x6C\x24\x10\x48\x89\x74\x24\x18\x57\x48\x83\xEC\x20\x48\x8D\x99\x80\x00\x00\x00\x49\x8B\xF1\x81\x3B", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    glb::TDspawnParticle = (spawnParticle)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x48\x89\x6C\x24\x10\x48\x89\x74\x24\x18\x57\x48\x83\xEC\x20\x48\x8D\x99\x80\x00\x00\x00\x49\x8B\xF1\x81\x3B", "xxxxxxxxxxxxxxxxxxxxxxxx???xxxxx", GetModuleHandle(NULL), &percentage);
     printf_s("spawn particle       : %p", glb::TDspawnParticle);
     printIntegPercentage(percentage);
     if (!glb::TDspawnParticle) { sigScanError = true; }
@@ -193,12 +189,12 @@ void sigscanItems() {
     printIntegPercentage(percentage);
     if (!glb::oDamagePlayer) { sigScanError = true; }
 
-    glb::oDamageObject = (damageObject)mem::FindPattern((PBYTE)"\x48\x81\xEC\xC8\x00\x00\x00\x48\xC7\x44\x24\x48\xFE\xFF\xFF\xFF\x48\x8D\x44\x24\x60\x48\x89\x44\x24\x58\xC7\x44\x24\x54\x04\x00", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    glb::oDamageObject = (damageObject)mem::FindPattern((PBYTE)"\x48\x81\xEC\xC8\x00\x00\x00\x48\xC7\x44\x24\x48\xFE\xFF\xFF\xFF\x48\x8D\x44\x24\x60\x48\x89\x44\x24\x58\xC7\x44\x24\x54\x04\x00", "xxxx???xxxxxxxxxxxxxxxxxxxxxxxx?", GetModuleHandle(NULL), &percentage);
     printf_s("damage object 2      : %p", glb::oDamageObject);
     printIntegPercentage(percentage);
     if (!glb::oDamageObject) { sigScanError = true; }
 
-    glb::oCamPos = (cameraPositioning)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x48\x8D\xA8\x38\xFF\xFF\xFF\x48\x81\xEC\xC0\x01\x00\x00\x48\xC7\x45\x10\xFE\xFF\xFF\xFF\x48\x89\x58\x08\x48\x89", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    glb::oCamPos = (cameraPositioning)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x48\x8D\xA8\x38\xFF\xFF\xFF\x48\x81\xEC\xC0\x01\x00\x00\x48\xC7\x45\x10\xFE\xFF\xFF\xFF\x48\x89\x58\x08\x48\x89", "xxxxxxxxxxxxxxxx??xxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
     printf_s("cam positioner       : %p", glb::oCamPos);
     printIntegPercentage(percentage);
     if (!glb::oCamPos) { sigScanError = true; }
@@ -213,42 +209,42 @@ void sigscanItems() {
     printIntegPercentage(percentage);
     if (!glb::oSOA) { sigScanError = true; }
 
-    glb::oSOAS = (SetObjectAttributeSingle)mem::FindPattern((PBYTE)"\x40\x57\x41\x57\x48\x83\xEC\x58\xF6\x41\x09\x01\x4C\x8B\xFA\x48\x8B\xF9\x0F\x84\x21\x01\x00\x00\x48\x89\x5C\x24\x70\x48\x8D\x15", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
-    printf_s("remove attribute     : %p", glb::oSOAS);
-    printIntegPercentage(percentage);
-    if (!glb::oSOAS) { sigScanError = true; }
+    //glb::oSOAS = (SetObjectAttributeSingle)mem::FindPattern((PBYTE)"\x40\x57\x41\x57\x48\x83\xEC\x58\xF6\x41\x09\x01\x4C\x8B\xFA\x48\x8B\xF9\x0F\x84\x21\x01\x00\x00\x48\x89\x5C\x24\x70\x48\x8D\x15", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    //printf_s("remove attribute     : %p", glb::oSOAS);
+    //printIntegPercentage(percentage);
+    //if (!glb::oSOAS) { sigScanError = true; }
 
-    glb::oHighlightShape = (highlightShape)mem::FindPattern((PBYTE)"\x48\x83\xEC\x48\x48\x8B\x05\x65\x68\x3F\x00\x0F\x29\x74\x24\x30\x0F\x28\xF2\x80\xB8\x18\x04\x00\x00\x00\x75\x20\x48\x89\x54\x24", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    glb::oHighlightShape = (highlightShape)mem::FindPattern((PBYTE)"\x48\x83\xEC\x48\x48\x8B\x05\x25\xA1\x40\x00\x0F\x29\x74\x24\x30", "xxxxxxxxxx?xxxxx", GetModuleHandle(NULL), &percentage);
     printf_s("highlight shape      : %p", glb::oHighlightShape);
     printIntegPercentage(percentage);
     if (!glb::oHighlightShape) { sigScanError = true; }
 
-    glb::oOutlineShape = (outlineShape)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x40\x48\x8B\x05\x13\x68\x3F\x00\x49\x8B\xD8", "xxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    glb::oOutlineShape = (outlineShape)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x40\x48\x8B\x05\xD3\xA0\x40\x00\x49\x8B\xD8", "xxxxxxxxxxxx?xxx", GetModuleHandle(NULL), &percentage);
     printf_s("outline shape        : %p", glb::oOutlineShape);
     printIntegPercentage(percentage);
     if (!glb::oOutlineShape) { sigScanError = true; }
 
-    glb::oOutlineBody = (outlineBody)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x57\x48\x81\xEC\x00\x01\x00\x00\x48\xC7\x44\x24\x30\xFE\xFF\xFF\xFF\x48\x89\x58\x08\x0F\x29\x70\xE8\x0F\x29\x78\xD8", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    glb::oOutlineBody = (outlineBody)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x57\x48\x81\xEC\x00\x01\x00\x00\x48\xC7\x44\x24\x30\xFE\xFF\xFF\xFF\x48\x89\x58\x08\x0F\x29\x70\xE8\x0F\x29\x78\xD8", "xxxxxxx?x??xxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
     printf_s("outline body         : %p", glb::oOutlineBody);
     printIntegPercentage(percentage);
     if (!glb::oOutlineBody) { sigScanError = true; }
 
-    glb::oQuatEul = (apiQuatEuler)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x48\x89\x58\x08\x57\x48\x81\xEC\x80\x00\x00\x00\x0F\x29\x70\xE8\x48\x8B\xDA\xF3\x0F\x10\x72\x04\x48\x8B\xF9\x0F\x29", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    glb::oQuatEul = (apiQuatEuler)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x48\x89\x58\x08\x57\x48\x81\xEC\x80\x00\x00\x00\x0F\x29\x70\xE8\x48\x8B\xDA\xF3\x0F\x10\x72\x04\x48\x8B\xF9\x0F\x29", "xxxxxxxxxxxx???xxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
     printf_s("QuatEuler            : %p", glb::oQuatEul);
     printIntegPercentage(percentage);
     if (!glb::oQuatEul) { sigScanError = true; }
 
-    glb::oSetBody = (setBodySomething)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x20\x48\x8B\x59\x20\x41\x0F\xB6\xF8\x0F\xB6\xF2\x48\x85\xDB\x74\x20\x90", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    glb::oSetBody = (setBodySomething)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x20\x48", "xxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
     printf_s("setBody              : %p", glb::oSetBody);
     printIntegPercentage(percentage);
     if (!glb::oSetBody) { sigScanError = true; }
 
-    glb::TDreadSubobjects = (ReadSubobjectsFromVox)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x57\x41\x56\x48\x8D\x68\xA1\x48\x81\xEC\xB0\x00\x00\x00\x48\xC7\x45\x3F\xFE\xFF\xFF\xFF\x48\x89\x58\x10\x48\x89", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    glb::TDreadSubobjects = (ReadSubobjectsFromVox)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x55\x57\x41\x56\x48\x8D\x68\xA1\x48\x81\xEC\xB0\x00\x00\x00\x48\xC7\x45\x3F\xFE\xFF\xFF\xFF\x48\x89\x58\x10\x48\x89", "xxxxxxxxxxxxxxx???xxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
     printf_s("Read subobjects      : %p", glb::TDreadSubobjects);
     printIntegPercentage(percentage);
     if (!glb::TDreadSubobjects) { sigScanError = true; }
 
-    glb::oIsActive = (isActiveWindow)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x48\x8B\xD9\xFF\x15\x41\x1E\x1D\x00\x48", "xxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    glb::oIsActive = (isActiveWindow)mem::FindPattern((PBYTE)"\x40\x53\x48\x83\xEC\x20\x48\x8B\xD9\xFF\x15\xC1\x20\x1D\x00\x48\x8B\x4B\x08\x48\x3B\x41\x10\x0F\x94\xC0\x48\x83\xC4\x20\x5B\xC3", "xxxxxxxxxxxxxx?xxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
     printf_s("oIsActiveWindow      : %p", glb::oIsActive);
     printIntegPercentage(percentage);
     if (!glb::oIsActive) { sigScanError = true; }
@@ -258,7 +254,7 @@ void sigscanItems() {
     printIntegPercentage(percentage);
     if (!glb::tdUpdateShapeBody) { sigScanError = true; }
 
-    glb::tdUpdateFunc = (interestingUpdateFunc)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x20\x48\x8B\x59\x20\x41\x0F\xB6\xF8\x0F\xB6\xF2\x48\x85\xDB\x74\x20\x90", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    glb::tdUpdateFunc = (interestingUpdateFunc)mem::FindPattern((PBYTE)"\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x20\x48", "xxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
     printf_s("update body weird    : %p", glb::tdUpdateFunc);
     printIntegPercentage(percentage);
     if (!glb::tdUpdateFunc) { sigScanError = true; }
@@ -268,6 +264,10 @@ void sigscanItems() {
     printIntegPercentage(percentage);
     if (!glb::tdFunRuiner) { sigScanError = true; }
 
+    glb::tdApplyForce = (applyForce)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x48\x89\x70\x18\x55\x41\x56\x41\x57\x48\x8D\x68\xA9\x48\x81\xEC\x00\x01\x00\x00\x80\xB9\xDC\x00\x00\x00\x00\x4D\x8B", "xxxxxxxxxxxxxxxxxxx?x??xxx????xx", GetModuleHandle(NULL), &percentage);
+    printf_s("apply force          : %p", glb::tdApplyForce);
+    printIntegPercentage(percentage);
+    if (!glb::tdApplyForce) { sigScanError = true; }
 
     if (sigScanError) {
         std::cout << "[F] FAILED TO FIND A CRITICAL FUNCTION, EXPECT ISSUES" << std::endl;

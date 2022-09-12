@@ -116,14 +116,30 @@ namespace wireObjects {
 			if (nodeA != 0) { nodeA = 0; }
 			if (nodeB != 0) { nodeB = 0; }
 
-			if (glb::player->isAttacking) {
+            raycaster::rayData rd = raycaster::castRayPlayer();
+            bool isWireObj = wireObjects::getWireObjectByShape(rd.hitShape, &tObj);
+
+            if (isWireObj) {
+                infoBoxFlags = 0;
+                infoBoxFlags |= ImGuiWindowFlags_NoMove;
+                infoBoxFlags |= ImGuiWindowFlags_NoCollapse;
+                infoBoxFlags |= ImGuiWindowFlags_NoTitleBar;
+                infoBoxFlags |= ImGuiWindowFlags_AlwaysAutoResize;
+
+                ImGui::SetNextWindowPos({ (float)((glb::game->m_ResX / 2)), (float)((glb::game->m_ResY / 2)) });
+                ImGui::Begin("WireObjInfo", (bool*)false, infoBoxFlags);
+                ImGui::Text("Object: %p", tObj);
+                ImGui::Text("Memory: %i", tObj->memory);
+                ImGui::End();
+            }
+
+			if (glb::player->isAttacking && isWireObj) {
 				if (shootOnce) {
 					shootOnce = false;
-
-					wireObjects::wireObj* hitObj = 0;
-					raycaster::rayData rd = raycaster::castRayPlayer();
-					if (wireObjects::getWireObjectByShape(rd.hitShape, &hitObj) && rd.distance <= 3.f) {
-						hitObj->memory = targetUserMemory;
+					if (rd.distance <= 3.f) {
+                        td::Color white = { 1.f, 1.f, 1.f, 1.f };
+                        glb::oOutlineShape(glb::renderer, rd.hitShape, &white, 1.f);
+                        tObj->memory = targetUserMemory;
 					}
 				}
 			}

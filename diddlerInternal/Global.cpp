@@ -50,6 +50,7 @@ namespace glb {
 	initScreenSecondary tdInitScreenSecondary;
 	raycastCrashA tdRaycastCrashA;
 	raycastCrashB tdRaycastCrashB;
+	applyForce tdApplyForce;
 
 	joinConstructor tdConstructJoint;
 	initBall tdInitBall;

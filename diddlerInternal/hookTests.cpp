@@ -257,7 +257,7 @@ uintptr_t hkSpawnVox(td::small_string* path, td::small_string* subpath, float sc
 
     td::small_string cube = ("vox\\Default\\dbgcube_glassBig\\object.vox");
 
-    return glb::oSpawnVox(&cube, subpath, scale);
+    return glb::oSpawnVox(&cube, subpath, 1.f);
 }
 
 void hkSetAttribute(TDShape* object, td::small_string* a1, td::small_string* a2) {
@@ -485,15 +485,27 @@ void hkFunRuiner(DWORD a1, DWORD a2, DWORD a3) {
     return;
 }
 
+//typedef void(__fastcall* unknMathFunc)(void* a1, float* a2, float* a3, float a4);
+//unknMathFunc tdUnknMathFunc;
+void hkApplyForce(TDBody* body, glm::vec3* position, glm::vec3* direction, float power) { //body, position, direction, power
+
+    *direction = *direction * 100.f;
+    power = power * 2.f;
+
+   // printf_s("Body: %p | a2: %p | a2Deref: {%0.2f, %0.2f, %0.2f} | a3: %p | a3Deref: {%0.2f, %0.2f, %0.2f} | a4: %0.2f\n", a1, a2, a2V3.x, a2V3.y, a2V3.z, a3, a3V3.x, a3V3.y, a3V3.z, a4);
+
+    return glb::tdApplyForce(body, position, direction, power);
+}
+
 void initTestHook() {
+    //float percentage = 0.f;
+    //tdUnknMathFunc = (unknMathFunc)mem::FindPattern((PBYTE)"\x48\x8B\xC4\x48\x89\x70\x18\x55\x41\x56\x41\x57\x48\x8D\x68\xA9\x48\x81\xEC\x00\x01\x00\x00\x80\xB9\xDC\x00\x00\x00\x00\x4D\x8B", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", GetModuleHandle(NULL), &percentage);
+    //printf_s("unkn math func : %p\n", glb::tdUpdateFunc);
+
+
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-
-    
-
-    //DetourAttach(&(PVOID&)glb::tdFunRuiner, hkFunRuiner);
-
-    //DetourAttach(&(PVOID&)glb::oCreateTextureThing, hkcreateTextureThing);
+    //DetourAttach(&(PVOID&)glb::tdApplyForce, hkApplyForce);
     //DetourAttach(&(PVOID&)glb::tdConstructScreen, hkInitScreen);
     //DetourAttach(&(PVOID&)glb::tdInitScreenSecondary, hkInitScreenSecondary);
     //DetourAttach(&(PVOID&)glb::tdUpdateScreen, hkUpdateScreen);
@@ -505,10 +517,7 @@ void initTestHook() {
 void terminateTestHook() {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-
-    //DetourDetach(&(PVOID&)glb::tdFunRuiner, hkFunRuiner);
-
-    //DetourDetach(&(PVOID&)glb::oCreateTextureThing, hkcreateTextureThing);
+    //DetourDetach(&(PVOID&)glb::tdApplyForce, hkApplyForce);
     //DetourDetach(&(PVOID&)glb::tdConstructScreen, hkInitScreen);
     //DetourDetach(&(PVOID&)glb::tdInitScreenSecondary, hkInitScreenSecondary);
     //DetourDetach(&(PVOID&)glb::tdUpdateScreen, hkUpdateScreen);

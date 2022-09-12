@@ -85,10 +85,12 @@ namespace dotProjector {
                 responseContainer.data[pixelOffset] = { 
                     { rayDirection.x, rayDirection.y, rayDirection.z }, 
                     rd.worldPos,
+                    rd.hitShape,
                     rd.distance, 
                     (int)(rd.palette.m_Color.m_R * 255), 
                     (int)(rd.palette.m_Color.m_G * 255), 
-                    (int)(rd.palette.m_Color.m_B * 255) 
+                    (int)(rd.palette.m_Color.m_B * 255),
+                    rd.successful
                 };
 
                 pixelOffset++;

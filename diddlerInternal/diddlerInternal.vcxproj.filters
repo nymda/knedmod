@@ -357,6 +357,21 @@
     <ClInclude Include="removeDownwardsVelocityLimit.h">
       <Filter>Header Files\Mods</Filter>
     </ClInclude>
+    <ClInclude Include="wirePlacementSpawner.h">
+      <Filter>Header Files\wire\wireObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="wirePlacementThruster.h">
+      <Filter>Header Files\wire\wireObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="wirePlacementPusher.h">
+      <Filter>Header Files\wire\wireObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="wirePlacementPower.h">
+      <Filter>Header Files\wire\wireObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="shapeHightlightManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -622,6 +637,21 @@
     </ClCompile>
     <ClCompile Include="removeDownwardsVelocityLimit.cpp">
       <Filter>Source Files\Mods</Filter>
+    </ClCompile>
+    <ClCompile Include="wirePlacementSpawner.cpp">
+      <Filter>Source Files\wire\wireObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="wirePlacementThruster.cpp">
+      <Filter>Source Files\wire\wireObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="wirePlacementPusher.cpp">
+      <Filter>Source Files\wire\wireObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="wirePlacementPower.cpp">
+      <Filter>Source Files\wire\wireObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="shapeHighlightManager.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

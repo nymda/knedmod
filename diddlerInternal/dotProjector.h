@@ -5,10 +5,12 @@ namespace dotProjector {
 	struct rayPixel {
 		td::Vec3 dirVec = { 0.f, 0.f, 0.f };
 		td::Vec3 worldPos = { 0.f, 0.f, 0.f };
+		TDShape* hitshape = 0;
 		float dist = 0.f;
 		int color_R = 0;
 		int color_G = 0;
 		int color_B = 0;
+		bool RCSuccessful = false;
 	};
 
 	struct pixelResponse {

@@ -14,3 +14,7 @@
 #include "WirePlacementClock.h"
 #include "wirePlacementDelay.h"
 #include "wirePlacementToggle.h"
+#include "wirePlacementSpawner.h"
+#include "wirePlacementThruster.h"
+#include "wirePlacementPusher.h"
+#include "wirePlacementPower.h"

@@ -40,7 +40,7 @@ namespace raycaster {
             return rdp;
         }
         
-        if (outDist == 0) {
+        if (outDist == 0.f) {
             oShape = 0;
             outDist = 1000.f;
         }
@@ -48,11 +48,14 @@ namespace raycaster {
         td::Vec4 worldPos = { outDist, pCopy.x + (rCopy.x * outDist),  pCopy.y + (rCopy.y * outDist),  pCopy.z + (rCopy.z * outDist) };
         td::Vec3 worldPosV3 = { worldPos.x, worldPos.y, worldPos.z };
 
+        if (oShape) {
+            rdp.successful = true;
+        }
+
         rdp.distance = outDist;
         rdp.worldPos = worldPosV3;
         rdp.angle = output;
         rdp.hitShape = (TDShape*)oShape;
-        rdp.successful = true;
         return rdp;
     }
 

@@ -26,7 +26,7 @@ DWORD tgt_debug::exec() {
 		TDShape* cshape = rayDat.hitShape;
 		TDBody* cbody = rayDat.hitShape->getParentBody();
 
-		ImGui::Text("Shape: 0x%p", cshape);
+		ImGui::Text("Shape: 0x%p (0x%p)", cshape, (TDShape*)((uintptr_t)cshape + (uintptr_t)0x28));
 		Entity* currentShapeSibling = cshape->pSibling;
 		int shapeSiblingCount = 0;
 		while (currentShapeSibling != 0x00 && shapeSiblingCount<10) {
@@ -40,7 +40,7 @@ DWORD tgt_debug::exec() {
 
 		ImGui::Spacing();
 
-		ImGui::Text("Body: 0x%p", cbody);
+		ImGui::Text("Body: 0x%p (0x%p)", cbody, (TDBody*)((uintptr_t)cbody + (uintptr_t)0x28));
 		Entity* currentBodySibling = cbody->pSibling;
 		int bodySiblingCount = 0;
 		while (currentBodySibling != 0x00 && bodySiblingCount<10) {

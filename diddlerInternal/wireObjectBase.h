@@ -21,6 +21,32 @@ namespace wireObjects {
 	Each node has one public int called "memory" that can be read from and written to outside of the nodes exec function. 
 	*/
 
+	static enum class wireObjectName : int {
+		OBJ_IntBus = 0,
+		OBJ_BoolBus = 1,
+		OBJ_ConstantValue = 2,
+		OBJ_Explosive = 3,
+		OBJ_GreaterThan = 4,
+		OBJ_Lamp = 5,
+		OBJ_LessThan = 6,
+		OBJ_Raycast = 7,
+		OBJ_Button = 8,
+		OBJ_BalloonDeployer = 9,
+		OBJ_ANDgate = 10,
+		OBJ_ORgate = 11,
+		OBJ_NOTgate = 12,
+		OBJ_PositionTracker = 13,
+		OBJ_RadioTx = 14,
+		OBJ_RadioRx = 15,
+		OBJ_Clock = 16,
+		OBJ_Delay = 17,
+		OBJ_Toggle = 18,
+		OBJ_Spawner = 19,
+		OBJ_Thruster = 20,
+		OBJ_Pusher = 21,
+		OBJ_Power = 22
+	};
+
 	enum class nodeType {
 		NT_Bool,
 		NT_Numeric,
@@ -152,6 +178,7 @@ namespace wireObjects {
 	public:
 		const char* name;
 		const char* voxPath;
+		wireObjectName type;
 
 		TDShape* housing = 0;
 		bool destroyed = false;

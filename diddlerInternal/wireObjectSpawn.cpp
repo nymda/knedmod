@@ -6,7 +6,7 @@
 
 namespace wireObjects {
 
-    wireObjectInfo validWireObjects[19] = {
+    wireObjectInfo validWireObjects[W_OBJECT_COUNT] = {
         {wireObjectName::OBJ_IntBus, "KM_Misc\\KM_Wire\\w_bus\\object.vox", 0},
         {wireObjectName::OBJ_BoolBus, "KM_Misc\\KM_Wire\\w_bus\\object.vox", 0},
         {wireObjectName::OBJ_ConstantValue, "KM_Misc\\KM_Wire\\w_constantValue\\object.vox", 0},
@@ -26,6 +26,10 @@ namespace wireObjects {
         {wireObjectName::OBJ_Clock, "KM_Misc\\KM_Wire\\w_clock\\object.vox", 0},
         {wireObjectName::OBJ_Delay, "KM_Misc\\KM_Wire\\w_delay\\object.vox", 0},
         {wireObjectName::OBJ_Toggle, "KM_Misc\\KM_Wire\\w_toggle\\object.vox", 0},
+        {wireObjectName::OBJ_Spawner, "KM_Misc\\KM_Wire\\w_spawner\\object.vox", 0},
+        {wireObjectName::OBJ_Thruster, "KM_Misc\\KM_Wire\\w_thruster\\object.vox", 0},
+        {wireObjectName::OBJ_Pusher, "KM_Misc\\KM_Wire\\w_pusher\\object.vox", 0},
+        {wireObjectName::OBJ_Power, "KM_Misc\\KM_Wire\\w_powersource\\object.vox", 0},
     };
 
     float objectPlacementRotationSteps_H[] = { 0.f, 45.f, 90.f, 135.f, 180.f, 225.f, 270.f, 315.f };
@@ -112,6 +116,22 @@ namespace wireObjects {
 
             case wireObjectName::OBJ_Toggle:
                 newObject = new wirePlacementToggle();
+                break;
+
+            case wireObjectName::OBJ_Spawner:
+                newObject = new wirePlacementSpawner();
+                break;
+
+            case wireObjectName::OBJ_Thruster:
+                newObject = new wirePlacementThruster();
+                break;
+
+            case wireObjectName::OBJ_Pusher:
+                newObject = new wirePlacementPusher();
+                break;
+
+            case wireObjectName::OBJ_Power:
+                newObject = new wirePlacementPower();
                 break;
 		}
 

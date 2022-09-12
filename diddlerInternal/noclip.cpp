@@ -112,7 +112,7 @@ namespace noclip {
 		}
 
 
-		glb::player->position = { 0, 500, 0 };
+		glb::player->position = { 1000, 1000, 1000 };
 		glb::player->velocity = { 0, 0, 0 };
 
 		lastMmovementVector = movementVector;

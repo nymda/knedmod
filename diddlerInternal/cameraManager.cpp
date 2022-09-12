@@ -8,7 +8,7 @@ namespace cameraManager{
 
 	void takeCamera() {
 		uintptr_t baseAddy = (uintptr_t)glb::oCamPos;
-		uintptr_t xInstruction = baseAddy + 0x7B7; // ok
+		uintptr_t xInstruction = baseAddy + 0x7B7; // okset attribute
 		uintptr_t yInstruction = baseAddy + 0x7A6; // ok 
 		//uintptr_t yInstruction2 = baseAddy + 0x66E; // ok 
 		uintptr_t zInstruction = baseAddy + 0x770; // ok

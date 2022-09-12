@@ -257,7 +257,6 @@ namespace spawner {
 
         glm::vec3 clippingOffset = math::v3_td2glm(getClippingTranslation(currentVox, rd, true));
 
-
         td::Vec3 target = rd.worldPos;
 
         td::Color boxColour = { 1.f, 1.f, 1.f, 1.f };
@@ -940,8 +939,6 @@ namespace spawner {
                 glb::oSOA(cShape, &att.attribute, &att.level);
             }
         }
-
-
 
         return object;
     }

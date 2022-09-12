@@ -11,7 +11,6 @@
 #include "lidar.h"
 #include "dotProjector.h"
 #include <glm/gtx/quaternion.hpp>
-
 #include "tgtIncludes.h"
 
 namespace nToolgun {

@@ -43,6 +43,7 @@ typedef void(__fastcall* handleBombObjs)(uintptr_t a1);
 typedef void(__fastcall* setShapeParentBody)(TDShape* shape, byte unkn, TDBody* body);
 typedef char(__fastcall* raycastCrashA)(void* a1, float* a2, float* a3, float* a4, float* a5);
 typedef char(__fastcall* raycastCrashB)(void* a1, void* a2);
+typedef void(__fastcall* applyForce)(TDBody* body, glm::vec3* position, glm::vec3* direction, float power);
 
 //creation
 typedef uintptr_t(__fastcall* tSpawnVox) (td::small_string* path, td::small_string* subpath, float scale);
@@ -140,6 +141,7 @@ namespace glb {
     extern loadResource oLoadResource;
     extern raycastCrashA tdRaycastCrashA;
     extern raycastCrashB tdRaycastCrashB;
+    extern applyForce tdApplyForce;
 
     extern sub_140105F30 osub_140105F30;
     extern sub_140146470 osub_140146470;

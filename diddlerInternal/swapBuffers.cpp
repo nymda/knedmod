@@ -153,6 +153,7 @@ bool hwCursor(int x, int y) {
 		return false;
 	}
 
+
 	return glb::ocursor(x, y);
 }
 
@@ -246,7 +247,7 @@ void showWelcomeMessage() {
 	ImGui::Text("Welcome to knedmod");
 	ImGui::Text("To access the main menu, press [F1]. To enter noclip, press [V]");
 	ImGui::Separator();
-	ImGui::Text("This build of knedmod is designed for teardown 0.8.0");
+	ImGui::Text("This build of knedmod is designed for teardown 0.9.2");
 	ImGui::Text("Knedmod is in beta, you are likely to encounter bugs / crashes");
 	ImGui::Text("Press [ESC] to close this message");
 
@@ -403,10 +404,6 @@ void swapBuffersHook() {
 
 
 			ImGui::Separator();
-
-			if (ImGui::Button("Fard")) {
-				fireSpreadMod::toggleFireMod();
-			}
 
 			if (ImGui::Button("Wire##tselect", ImVec2(ImGui::GetWindowWidth() - 16, 20))) { nToolgun::currentTool = toolnames::TOOL_WIRE; };
 			if (nToolgun::currentTool == toolnames::TOOL_WIRE) {
@@ -638,7 +635,10 @@ void swapBuffersHook() {
 				ImGui::Checkbox("Show bodies", &showBodes);
 				ImGui::Checkbox("Show shapes", &showShapes);
 				ImGui::Checkbox("Run when unfocused", &mods::dontLockWhenOutOfFocus);
-				ImGui::Checkbox("Remove map boundary", &mods::removeWalls);
+				if (ImGui::RadioButton("Everything burns", fireSpreadMod::isFireModEnabled)) {
+					fireSpreadMod::toggleFireMod();
+				}
+				//ImGui::Checkbox("Remove map boundary", &mods::removeWalls);
 				//if (ImGui::Checkbox("Remove plank length limit", &miscPatches::plankPatch)) {
 				//	miscPatches::updatePlankPatch();
 				//}
@@ -864,81 +864,282 @@ void swapBuffersHook() {
 
 			ImGui::Separator();
 
+			if (ImGui::RadioButton("OBJ_ANDgate", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_ANDgate))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_ANDgate);
+			};
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::TextUnformatted("Performs a boolean AND on RED and BLUE, outputs on GREEN\nRED: AND input 1 (bool)\nBLUE: AND input 2 (bool)\nGREEN: AND output (bool)\nMEM: Unused");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+
 			if (ImGui::RadioButton("OBJ_BalloonDeployer", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_BalloonDeployer))) {
 				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_BalloonDeployer);
 			};
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::TextUnformatted("Creates a balloon\nRED: Creates balloon on FALSE -> TRUE transition (bool)\nMEM: Balloon strength");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
 
 			if (ImGui::RadioButton("OBJ_BoolBus", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_BoolBus))) {
 				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_BoolBus);
 			};
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::TextUnformatted("Copies value on YELLOW to RED, GREEN and BLUE\nYELLOW: Input (bool)\nRED: Output duplicate of YELLOW (bool)\nGREEN: Output duplicate of YELLOW (bool)\nBLUE: Output duplicate of YELLOW (bool)\nMEM: Unused");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
 
 			if (ImGui::RadioButton("OBJ_Button", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Button))) {
 				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Button);
 			};
-
-			if (ImGui::RadioButton("OBJ_ConstantValue", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_ConstantValue))) {
-				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_ConstantValue);
-			};
-
-			if (ImGui::RadioButton("OBJ_Explosive", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Explosive))) {
-				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Explosive);
-			};
-
-			if (ImGui::RadioButton("OBJ_GreaterThan", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_GreaterThan))) {
-				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_GreaterThan);
-			};
-
-			if (ImGui::RadioButton("OBJ_IntBus", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_IntBus))) {
-				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_IntBus);
-			};
-
-			if (ImGui::RadioButton("OBJ_Lamp", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Lamp))) {
-				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Lamp);
-			};
-
-			if (ImGui::RadioButton("OBJ_LessThan", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_LessThan))) {
-				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_LessThan);
-			};
-
-			if (ImGui::RadioButton("OBJ_PositionTracker", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_PositionTracker))) {
-				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_PositionTracker);
-			};
-
-			if (ImGui::RadioButton("OBJ_Raycast", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Raycast))) {
-				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Raycast);
-			};
-
-			if (ImGui::RadioButton("OBJ_ANDgate", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_ANDgate))) {
-				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_ANDgate);
-			};
-
-			if (ImGui::RadioButton("OBJ_ORgate", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_ORgate))) {
-				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_ORgate);
-			};
-
-			if (ImGui::RadioButton("OBJ_NOTgate", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_NOTgate))) {
-				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_NOTgate);
-			};
-
-			if (ImGui::RadioButton("OBJ_RadioTx", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_RadioTx))) {
-				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_RadioTx);
-			};
-
-			if (ImGui::RadioButton("OBJ_RadioRx", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_RadioRx))) {
-				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_RadioRx);
-			};
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::TextUnformatted("Outputs TRUE when E is pressed on it\nRED: Button state output (bool)\nMEM: Unused");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
 
 			if (ImGui::RadioButton("OBJ_Clock", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Clock))) {
 				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Clock);
 			};
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::TextUnformatted("Switches its state at regular intervals\nRED: Clock state output (bool)\nMEM: Clock period duration");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+
+			if (ImGui::RadioButton("OBJ_ConstantValue", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_ConstantValue))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_ConstantValue);
+			};
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::TextUnformatted("Outputs its MEM value on RED\nRED: Value in MEM (numeric)\nMEM: Output value");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
 
 			if (ImGui::RadioButton("OBJ_Delay", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Delay))) {
 				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Delay);
 			};
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::TextUnformatted("Outputs value of RED on GREEN after a set delay\nRED: Input (bool)\nGREEN: Output (bool)\nMEM: Delay time");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+
+			if (ImGui::RadioButton("OBJ_Explosive", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Explosive))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Explosive);
+			};
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::TextUnformatted("Explodes if RED is true\nRED: Input (bool)\nMEM: Unused");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+
+			if (ImGui::RadioButton("OBJ_GreaterThan", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_GreaterThan))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_GreaterThan);
+			};
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::TextUnformatted("Outputs TRUE if RED is greater than GREEN\nRED: Input (bool)\nGREEN: Input (bool)\nBLUE: Output (bool)\nMEM: Unused");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+
+			if (ImGui::RadioButton("OBJ_IntBus", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_IntBus))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_IntBus);
+			};
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::TextUnformatted("Copies value on YELLOW to RED, GREEN and BLUE\nYELLOW: Input (numeric)\nRED: Output duplicate of YELLOW (numeric)\nGREEN: Output duplicate of YELLOW (numeric)\nBLUE: Output duplicate of YELLOW (numeric)\nMEM: Unused");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+
+			if (ImGui::RadioButton("OBJ_Lamp", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Lamp))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Lamp);
+			};
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::TextUnformatted("Indicator lamp\nRED: Turns lamp on/off (bool)\nGREEN: Lamp brightness (numeric)\nMEM: Lamp brightness if GREEN is disconnected");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+
+			if (ImGui::RadioButton("OBJ_LessThan", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_LessThan))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_LessThan);
+			};
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::TextUnformatted("Outputs TRUE if RED is smaller than GREEN\nRED: Input (bool)\nGREEN: Input (bool)\nBLUE: Output (bool)\nMEM: Unused");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+
+			if (ImGui::RadioButton("OBJ_NOTgate", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_NOTgate))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_NOTgate);
+			};
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::TextUnformatted("Performs a boolean NOT on RED and BLUE, outputs on GREEN\nRED: NOT input 1 (bool)\nBLUE: NOT input 2 (bool)\nGREEN: NOT output (bool)\nMEM: Unused");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+
+			if (ImGui::RadioButton("OBJ_ORgate", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_ORgate))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_ORgate);
+			};
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::TextUnformatted("Performs a boolean OR on RED and BLUE, outputs on GREEN\nRED: OR input 1 (bool)\nBLUE: OR input 2 (bool)\nGREEN: OR output (bool)\nMEM: Unused");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+
+			if (ImGui::RadioButton("OBJ_PositionTracker", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_PositionTracker))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_PositionTracker);
+			};
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::TextUnformatted("Outputs its current position\nRED: X position (numeric)\nGREEN: Y position (numeric)\nBLUE: Z position (numeric)\nMEM: Unused");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+
+			if (ImGui::RadioButton("OBJ_Power", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Power))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Power);
+			};
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::TextUnformatted("Constantly outputs TRUE on all nodes\nRED: constant TRUE (bool)\nMEM: Unused");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+
+			if (ImGui::RadioButton("OBJ_Pusher", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Pusher))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Pusher);
+			};
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::TextUnformatted("Pushes objects away from it, like the leafblower\nRED: Turns device on/off (bool)\nGREEN: Pusher power\nMEM: Pusher FOV");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+
+			if (ImGui::RadioButton("OBJ_RadioRx", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_RadioRx))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_RadioRx);
+			};
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::TextUnformatted("Wirelessly recieves a bool value\nGREEN: Connection to RadioTX (w-bool)\nBLUE: Output (bool)\nMEM: Unused");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+
+			if (ImGui::RadioButton("OBJ_RadioTx", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_RadioTx))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_RadioTx);
+			};
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::TextUnformatted("Wirelessly sends a bool value\nGREEN: Connection to RadioRX (w-bool)\nBLUE: Input (bool)\nMEM: Unused");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+
+			if (ImGui::RadioButton("OBJ_Raycast", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Raycast))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Raycast);
+			};
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::TextUnformatted("Outputs how far away an object infront of it is\nRED: Distance to raycast hit pos (numeric)\nMEM: Unused");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+
+			if (ImGui::RadioButton("OBJ_Spawner", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Spawner))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Spawner);
+			};
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::TextUnformatted("Spawns an object. To set the object, set an object to be spawned with the toolgun, the press E on the spawner.\nRED: Spawns object on FALSE->TRUE transition (bool)\nMEM: Unused");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+
+			if (ImGui::RadioButton("OBJ_Thruster", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Thruster))) {
+				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Thruster);
+			};
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::TextUnformatted("Thruster. Acts like a rocket booster.\nRED: Turns thruster on/off (bool)\nGREEN: Thruster power (numeric)\nMEM: thruster power if GREEN is disconnected");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
 
 			if (ImGui::RadioButton("OBJ_Toggle", (wireObjects::toolgunSelectedObject == wireObjects::wireObjectName::OBJ_Toggle))) {
 				(wireObjects::toolgunSelectedObject = wireObjects::wireObjectName::OBJ_Toggle);
 			};
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::BeginTooltip();
+				ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+				ImGui::TextUnformatted("Toggles on and off\nRED: Toggles the device (bool)\nGREEN: Outputs the current state (bool)\nMEM: unused");
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
+			}
+
 		}
 		ImGui::EndTabBar();
 
@@ -1060,7 +1261,6 @@ void swapBuffersHook() {
 
 bool hwglSwapBuffers(_In_ HDC hDc)
 {
-
 	swapBuffersHook();
 
 	__try {
